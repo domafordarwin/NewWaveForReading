@@ -24,9 +24,12 @@ import {
   TrendingUp as TrendingUpIcon,
   AccountCircle,
   Logout,
+  People,
+  School,
+  BarChart,
 } from '@mui/icons-material';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { currentUser } from '../utils/mockData';
 
 const drawerWidth = 240;
@@ -42,10 +45,23 @@ const studentMenuItems = [
   { text: '학습 이력', icon: <TrendingUpIcon />, path: '/student/progress' },
 ];
 
+const teacherMenuItems = [
+  { text: '대시보드', icon: <DashboardIcon />, path: '/teacher/dashboard' },
+  { text: '학생 관리', icon: <People />, path: '/teacher/students' },
+  { text: '검사 배정', icon: <AssignmentIcon />, path: '/teacher/assessments' },
+  { text: '반별 통계', icon: <BarChart />, path: '/teacher/statistics' },
+];
+
 export default function MainLayout({ children }: MainLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // 현재 경로에 따라 메뉴 결정
+  const isTeacher = location.pathname.startsWith('/teacher');
+  const menuItems = isTeacher ? teacherMenuItems : studentMenuItems;
+  const userRole = isTeacher ? '교사' : '학생';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -72,10 +88,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
           문해력 검사
         </Typography>
       </Toolbar>
+      <Typography variant="caption" sx={{ px: 2, py: 1, display: 'block', color: 'text.secondary' }}>
+        {userRole} 모드
+      </Typography>
       <List>
-        {studentMenuItems.map((item) => (
+        {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
-            <ListItemButton onClick={() => navigate(item.path)}>
+            <ListItemButton 
+              onClick={() => navigate(item.path)}
+              selected={location.pathname === item.path}
+            >
               <ListItemIcon sx={{ color: 'primary.main' }}>
                 {item.icon}
               </ListItemIcon>

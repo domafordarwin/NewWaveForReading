@@ -6,6 +6,10 @@ import StudentDashboard from './pages/StudentDashboard';
 import AssessmentTaking from './pages/AssessmentTaking';
 import EvaluationResult from './pages/EvaluationResult';
 import APITest from './pages/APITest';
+import TeacherDashboard from './pages/TeacherDashboard';
+import StudentManagement from './pages/StudentManagement';
+import AssessmentAssignment from './pages/AssessmentAssignment';
+import ClassStatistics from './pages/ClassStatistics';
 
 const theme = createTheme({
   palette: {
@@ -60,6 +64,18 @@ function App() {
                 <Route path="dashboard" element={<StudentDashboard />} />
                 <Route path="assessment/:assessmentId" element={<AssessmentTaking />} />
                 <Route path="result/:assessmentId" element={<EvaluationResult />} />
+              </Routes>
+            </MainLayout>
+          } />
+          
+          {/* 교사용 라우트 */}
+          <Route path="/teacher/*" element={
+            <MainLayout>
+              <Routes>
+                <Route path="dashboard" element={<TeacherDashboard />} />
+                <Route path="students" element={<StudentManagement />} />
+                <Route path="assessments" element={<AssessmentAssignment />} />
+                <Route path="statistics" element={<ClassStatistics />} />
               </Routes>
             </MainLayout>
           } />
