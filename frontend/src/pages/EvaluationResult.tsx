@@ -30,7 +30,7 @@ import {
   Radar,
   ResponsiveContainer,
 } from 'recharts';
-import { mockEvaluations } from '../../utils/mockData';
+import { mockEvaluations } from '../utils/mockData';
 
 export default function EvaluationResult() {
   const { assessmentId } = useParams<{ assessmentId: string }>();

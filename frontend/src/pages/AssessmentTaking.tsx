@@ -20,7 +20,7 @@ import {
   Timer as TimerIcon,
   MenuBook as BookIcon,
 } from '@mui/icons-material';
-import { mockAssessments } from '../../utils/mockData';
+import { mockAssessments } from '../utils/mockData';
 
 export default function AssessmentTaking() {
   const { assessmentId } = useParams<{ assessmentId: string }>();

@@ -32,8 +32,8 @@ import {
   Legend,
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import { mockAssessments, mockEvaluations, mockProgressHistory, mockStatistics } from '../../utils/mockData';
-import { AssessmentStatus } from '../../types';
+import { mockAssessments, mockEvaluations, mockProgressHistory, mockStatistics } from '../utils/mockData';
+import { AssessmentStatus } from '../types';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
