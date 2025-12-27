@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Paper,
   Typography,
@@ -9,6 +10,8 @@ import {
   Chip,
   LinearProgress,
   Grid,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   TrendingUp,
@@ -32,33 +35,81 @@ import {
   Legend,
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import { mockAssessments, mockEvaluations, mockProgressHistory, mockStatistics } from '../utils/mockData';
+import { getAllAssessments, getAssessmentsByStudentId, getAllEvaluations } from '../services/api';
 import { AssessmentStatus } from '../types/index.js';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [assessments, setAssessments] = useState<any[]>([]);
+  const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [statistics, setStatistics] = useState({
+    averageScore: 0,
+    assessmentCount: 0,
+    percentileRank: 0,
+  });
+
+  // 데이터 로드
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        // TODO: 실제로는 로그인한 학생 ID를 사용해야 함
+        const studentId = 1;
+        
+        // 검사 목록 로드
+        const assessmentData = await getAssessmentsByStudentId(studentId);
+        setAssessments(assessmentData);
+        
+        // 평가 결과 로드
+        const evaluationData = await getAllEvaluations();
+        setEvaluations(evaluationData);
+        
+        // 통계 계산
+        if (evaluationData.length > 0) {
+          const totalScore = evaluationData.reduce((sum: number, e: any) => sum + e.totalScore, 0);
+          const avgScore = Math.round(totalScore / evaluationData.length);
+          setStatistics({
+            averageScore: avgScore,
+            assessmentCount: evaluationData.length,
+            percentileRank: 65, // 임시 백분위
+          });
+        }
+        
+        setError(null);
+      } catch (err: any) {
+        console.error('데이터 로드 실패:', err);
+        setError(err.message || '데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
   
   // 진행 중인 검사
-  const ongoingAssessments = mockAssessments.filter(
-    (a) => a.status === AssessmentStatus.IN_PROGRESS
+  const ongoingAssessments = assessments.filter(
+    (a) => a.status === 'IN_PROGRESS'
   );
   
   // 대기 중인 검사
-  const pendingAssessments = mockAssessments.filter(
-    (a) => a.status === AssessmentStatus.NOT_STARTED
+  const pendingAssessments = assessments.filter(
+    (a) => a.status === 'NOT_STARTED'
   );
   
   // 최근 평가 결과
-  const recentEvaluation = mockEvaluations[0];
+  const recentEvaluation = evaluations.length > 0 ? evaluations[0] : null;
   
   // 성장 추이 차트 데이터
-  const progressChartData = mockProgressHistory.map((h, index) => ({
+  const progressChartData = evaluations.slice(0, 5).reverse().map((e: any, index: number) => ({
     name: `${index + 1}회`,
-    점수: h.totalScore,
+    점수: e.totalScore,
   }));
   
   // 영역별 레이더 차트 데이터
-  const radarChartData = [
+  const radarChartData = recentEvaluation ? [
     {
       subject: '대상도서\n분석력',
       score: recentEvaluation.bookAnalysisScore,
@@ -76,40 +127,63 @@ export default function StudentDashboard() {
     },
     {
       subject: '문장력/\n표현력',
-      score: recentEvaluation.languageExpressionScore,
+      score: recentEvaluation.expressionScore,
       fullMark: 25,
     },
-  ];
+  ] : [];
 
-  const getStatusColor = (status: AssessmentStatus) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case AssessmentStatus.IN_PROGRESS:
+      case 'IN_PROGRESS':
         return 'warning';
-      case AssessmentStatus.NOT_STARTED:
+      case 'NOT_STARTED':
         return 'default';
-      case AssessmentStatus.SUBMITTED:
+      case 'SUBMITTED':
         return 'info';
-      case AssessmentStatus.EVALUATED:
+      case 'EVALUATED':
         return 'success';
       default:
         return 'default';
     }
   };
 
-  const getStatusText = (status: AssessmentStatus) => {
+  const getStatusText = (status: string) => {
     switch (status) {
-      case AssessmentStatus.IN_PROGRESS:
+      case 'IN_PROGRESS':
         return '진행 중';
-      case AssessmentStatus.NOT_STARTED:
+      case 'NOT_STARTED':
         return '대기 중';
-      case AssessmentStatus.SUBMITTED:
+      case 'SUBMITTED':
         return '제출 완료';
-      case AssessmentStatus.EVALUATED:
+      case 'EVALUATED':
         return '평가 완료';
       default:
         return status;
     }
   };
+
+  // 로딩 중
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // 에러 발생
+  if (error) {
+    return (
+      <Box>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button variant="contained" onClick={() => window.location.reload()}>
+          다시 시도
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -119,7 +193,7 @@ export default function StudentDashboard() {
 
       {/* 통계 카드 */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <Paper
             sx={{
               p: 3,
@@ -135,15 +209,15 @@ export default function StudentDashboard() {
               <Typography variant="h6">평균 점수</Typography>
             </Box>
             <Typography variant="h3" fontWeight="bold">
-              {mockStatistics.averageScore}점
+              {statistics.averageScore}점
             </Typography>
             <Typography variant="body2" sx={{ mt: 'auto' }}>
-              상위 {100 - mockStatistics.percentileRank}%
+              상위 {100 - statistics.percentileRank}%
             </Typography>
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <Paper
             sx={{
               p: 3,
@@ -159,12 +233,12 @@ export default function StudentDashboard() {
               <Typography variant="h6">완료한 검사</Typography>
             </Box>
             <Typography variant="h3" fontWeight="bold">
-              {mockStatistics.assessmentCount}회
+              {statistics.assessmentCount}회
             </Typography>
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <Paper
             sx={{
               p: 3,
@@ -185,7 +259,7 @@ export default function StudentDashboard() {
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <Paper
             sx={{
               p: 3,
@@ -208,132 +282,141 @@ export default function StudentDashboard() {
       </Grid>
 
       {/* 차트 영역 */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, md: 8 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom fontWeight="bold">
-              성장 추이
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={progressChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="점수"
-                  stroke="#1976d2"
-                  strokeWidth={3}
-                  dot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
+      {evaluations.length > 0 && (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                성장 추이
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={progressChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="점수"
+                    stroke="#1976d2"
+                    strokeWidth={3}
+                    dot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom fontWeight="bold">
-              영역별 점수
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <RadarChart data={radarChartData}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="subject" style={{ fontSize: '12px' }} />
-                <PolarRadiusAxis domain={[0, 25]} />
-                <Radar
-                  name="점수"
-                  dataKey="score"
-                  stroke="#1976d2"
-                  fill="#1976d2"
-                  fillOpacity={0.6}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </Paper>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                영역별 점수
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart data={radarChartData}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="subject" style={{ fontSize: '12px' }} />
+                  <PolarRadiusAxis domain={[0, 25]} />
+                  <Radar
+                    name="점수"
+                    dataKey="score"
+                    stroke="#1976d2"
+                    fill="#1976d2"
+                    fillOpacity={0.6}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
         </Grid>
-      </Grid>
+      )}
 
       {/* 검사 목록 */}
       <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ mb: 2 }}>
-        진행 중인 검사
+        검사 목록
       </Typography>
-      <Grid container spacing={3}>
-        {mockAssessments.map((assessment) => (
-          <Grid item xs={12} md={6} lg={4} key={assessment.assessmentId}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                  <Typography variant="h6" component="div">
-                    {assessment.topic.topicText.substring(0, 50)}...
-                  </Typography>
-                  <Chip
-                    label={getStatusText(assessment.status)}
-                    color={getStatusColor(assessment.status)}
-                    size="small"
-                  />
-                </Box>
-                <Typography color="text.secondary" gutterBottom>
-                  도서: {mockAssessments[0].topic.topicText.includes('동물농장') ? '동물농장' : '어린왕자'}
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      제한 시간: {assessment.timeLimitMinutes}분
+      
+      {assessments.length === 0 ? (
+        <Alert severity="info">
+          아직 배정된 검사가 없습니다.
+        </Alert>
+      ) : (
+        <Grid container spacing={3}>
+          {assessments.map((assessment) => (
+            <Grid item xs={12} md={6} lg={4} key={assessment.assessmentId}>
+              <Card>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                    <Typography variant="h6" component="div">
+                      {assessment.topic?.topicText?.substring(0, 50) || '검사'}...
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {assessment.wordCountMin}-{assessment.wordCountMax}자
-                    </Typography>
+                    <Chip
+                      label={getStatusText(assessment.status)}
+                      color={getStatusColor(assessment.status)}
+                      size="small"
+                    />
                   </Box>
-                  {assessment.status === AssessmentStatus.IN_PROGRESS && (
-                    <Box sx={{ mb: 1 }}>
-                      <LinearProgress variant="determinate" value={45} />
-                      <Typography variant="caption" color="text.secondary">
-                        진행률: 45%
+                  <Typography color="text.secondary" gutterBottom>
+                    도서: {assessment.topic?.book?.title || '미정'}
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        제한 시간: {assessment.timeLimitMinutes}분
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {assessment.wordCountMin}-{assessment.wordCountMax}자
                       </Typography>
                     </Box>
+                    {assessment.status === 'IN_PROGRESS' && (
+                      <Box sx={{ mb: 1 }}>
+                        <LinearProgress variant="determinate" value={45} />
+                        <Typography variant="caption" color="text.secondary">
+                          진행률: 45%
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </CardContent>
+                <CardActions>
+                  {assessment.status === 'NOT_STARTED' && (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      fullWidth
+                      onClick={() => navigate(`/student/assessment/${assessment.assessmentId}`)}
+                    >
+                      시작하기
+                    </Button>
                   )}
-                </Box>
-              </CardContent>
-              <CardActions>
-                {assessment.status === AssessmentStatus.NOT_STARTED && (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    fullWidth
-                    onClick={() => navigate(`/student/assessment/${assessment.assessmentId}`)}
-                  >
-                    시작하기
-                  </Button>
-                )}
-                {assessment.status === AssessmentStatus.IN_PROGRESS && (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="warning"
-                    fullWidth
-                    onClick={() => navigate(`/student/assessment/${assessment.assessmentId}`)}
-                  >
-                    이어서 작성
-                  </Button>
-                )}
-                {assessment.status === AssessmentStatus.EVALUATED && (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    fullWidth
-                    onClick={() => navigate(`/student/result/${assessment.assessmentId}`)}
-                  >
-                    결과 보기
-                  </Button>
-                )}
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                  {assessment.status === 'IN_PROGRESS' && (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="warning"
+                      fullWidth
+                      onClick={() => navigate(`/student/assessment/${assessment.assessmentId}`)}
+                    >
+                      이어서 작성
+                    </Button>
+                  )}
+                  {assessment.status === 'EVALUATED' && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => navigate(`/student/result/${assessment.assessmentId}`)}
+                    >
+                      결과 보기
+                    </Button>
+                  )}
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
     </Box>
   );
 }

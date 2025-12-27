@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://8080-ixw1syp6xumzqdvj2fcdg-0e616f0a.sandbox.novita.ai/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -75,6 +75,38 @@ export const startAssessment = async (assessmentId: number) => {
 
 export const submitAssessment = async (assessmentId: number) => {
   const response = await api.put(`/assessments/${assessmentId}/submit`);
+  return response.data;
+};
+
+// Answer APIs
+export const createAnswer = async (answerData: any) => {
+  const response = await api.post('/answers', answerData);
+  return response.data;
+};
+
+export const getAnswerById = async (answerId: number) => {
+  const response = await api.get(`/answers/${answerId}`);
+  return response.data;
+};
+
+export const analyzeAnswer = async (answerId: number) => {
+  const response = await api.post(`/answers/${answerId}/analyze`);
+  return response.data;
+};
+
+// Evaluation APIs
+export const getAllEvaluations = async () => {
+  const response = await api.get('/evaluations');
+  return response.data;
+};
+
+export const getEvaluationById = async (evaluationId: number) => {
+  const response = await api.get(`/evaluations/${evaluationId}`);
+  return response.data;
+};
+
+export const getEvaluationByAnswerId = async (answerId: number) => {
+  const response = await api.get(`/evaluations/answer/${answerId}`);
   return response.data;
 };
 
