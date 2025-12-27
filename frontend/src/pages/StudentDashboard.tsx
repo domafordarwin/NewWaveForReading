@@ -1,5 +1,4 @@
 import {
-  Grid,
   Paper,
   Typography,
   Box,
@@ -10,6 +9,7 @@ import {
   Chip,
   LinearProgress,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import {
   TrendingUp,
   Assignment,
@@ -33,7 +33,7 @@ import {
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { mockAssessments, mockEvaluations, mockProgressHistory, mockStatistics } from '../utils/mockData';
-import { AssessmentStatus } from '../types';
+import { AssessmentStatus } from '../types/index.js';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -119,7 +119,7 @@ export default function StudentDashboard() {
 
       {/* 통계 카드 */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper
             sx={{
               p: 3,
@@ -143,7 +143,7 @@ export default function StudentDashboard() {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper
             sx={{
               p: 3,
@@ -164,7 +164,7 @@ export default function StudentDashboard() {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper
             sx={{
               p: 3,
@@ -185,7 +185,7 @@ export default function StudentDashboard() {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Paper
             sx={{
               p: 3,
@@ -209,7 +209,7 @@ export default function StudentDashboard() {
 
       {/* 차트 영역 */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom fontWeight="bold">
               성장 추이
@@ -233,7 +233,7 @@ export default function StudentDashboard() {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom fontWeight="bold">
               영역별 점수

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테스트 페이지</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .status {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        .test-link {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background: #1976d2;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .test-link:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 문해력 검사 플랫폼 - 연결 테스트</h1>
+    
+    <div class="status">
+        <h2>✅ 서버 상태</h2>
+        <p><strong>서버:</strong> 정상 작동 중</p>
+        <p><strong>포트:</strong> 5173</p>
+        <p><strong>Vite 버전:</strong> 7.3.0</p>
+        <p><strong>시간:</strong> <span id="time"></span></p>
+    </div>
+
+    <h2>🔗 테스트 링크</h2>
+    <a href="/" class="test-link">메인 페이지 (React 앱)</a>
+    <a href="/student/dashboard" class="test-link">학생 대시보드</a>
+    <a href="/test.html" class="test-link">이 테스트 페이지</a>
+
+    <h2>📝 확인 사항</h2>
+    <ol>
+        <li>이 페이지가 보이면 서버는 정상입니다.</li>
+        <li>"메인 페이지" 클릭 시 React 앱이 로드되어야 합니다.</li>
+        <li>빈 화면이 보이면 브라우저 콘솔(F12)을 확인하세요.</li>
+    </ol>
+
+    <h2>🐛 문제 해결</h2>
+    <p><strong>빈 화면인 경우:</strong></p>
+    <ul>
+        <li>브라우저 개발자 도구 열기 (F12)</li>
+        <li>Console 탭에서 빨간색 오류 확인</li>
+        <li>Network 탭에서 실패한 요청 확인</li>
+    </ul>
+
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString('ko-KR');
+        
+        // React 앱 로드 테스트
+        fetch('/src/main.tsx')
+            .then(res => {
+                if (res.ok) {
+                    console.log('✅ React 앱 파일 접근 가능');
+                } else {
+                    console.error('❌ React 앱 파일 접근 실패');
+                }
+            })
+            .catch(err => console.error('❌ 네트워크 오류:', err));
+    </script>
+</body>
+</html>

@@ -1,17 +1,20 @@
 import {
-  User,
   UserType,
-  Book,
   DifficultyLevel,
-  Topic,
   TopicType,
-  Assessment,
   AssessmentStatus,
   AssessmentType,
+} from '../types/index.js';
+
+import type {
+  User,
+  Book,
+  Topic,
+  Assessment,
   Evaluation,
   ProgressHistory,
   Statistics
-} from '../types';
+} from '../types/index.js';
 
 // Mock 사용자 데이터
 export const mockUsers: User[] = [
