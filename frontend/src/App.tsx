@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import MainLayout from './layouts/MainLayout';
+import Login from './pages/Login';
 import StudentDashboard from './pages/StudentDashboard';
 import AssessmentTaking from './pages/AssessmentTaking';
 import EvaluationResult from './pages/EvaluationResult';
@@ -51,8 +52,11 @@ function App() {
       <CssBaseline />
       <Router>
         <Routes>
-          {/* 메인 페이지는 대시보드로 리다이렉트 */}
-          <Route path="/" element={<Navigate to="/student/dashboard" replace />} />
+          {/* 로그인 페이지 */}
+          <Route path="/login" element={<Login />} />
+          
+          {/* 메인 페이지는 로그인으로 리다이렉트 */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
           
           {/* API 테스트 페이지 */}
           <Route path="/api-test" element={<APITest />} />
