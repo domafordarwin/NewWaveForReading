@@ -12,6 +12,12 @@ export default defineConfig({
       '.sandbox.novita.ai',
       'localhost',
     ],
+    hmr: {
+      timeout: 30000,
+    },
+    watch: {
+      usePolling: true,
+    },
   },
   optimizeDeps: {
     include: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled'],
