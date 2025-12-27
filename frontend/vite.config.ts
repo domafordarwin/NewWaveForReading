@@ -13,4 +13,13 @@ export default defineConfig({
       'localhost',
     ],
   },
+  optimizeDeps: {
+    include: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled'],
+    esbuildOptions: {
+      target: 'es2020',
+    },
+  },
+  build: {
+    target: 'es2020',
+  },
 })
