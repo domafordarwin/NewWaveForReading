@@ -1,0 +1,68 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import MainLayout from './layouts/MainLayout';
+import StudentDashboard from './pages/StudentDashboard';
+import AssessmentTaking from './pages/AssessmentTaking';
+import EvaluationResult from './pages/EvaluationResult';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+    success: {
+      main: '#4caf50',
+    },
+    warning: {
+      main: '#ff9800',
+    },
+    info: {
+      main: '#2196f3',
+    },
+  },
+  typography: {
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+      '"Segoe UI Symbol"',
+    ].join(','),
+  },
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Routes>
+          {/* 메인 페이지는 대시보드로 리다이렉트 */}
+          <Route path="/" element={<Navigate to="/student/dashboard" replace />} />
+          
+          {/* 학생용 라우트 */}
+          <Route path="/student/*" element={
+            <MainLayout>
+              <Routes>
+                <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="assessment/:assessmentId" element={<AssessmentTaking />} />
+                <Route path="result/:assessmentId" element={<EvaluationResult />} />
+              </Routes>
+            </MainLayout>
+          } />
+        </Routes>
+      </Router>
+    </ThemeProvider>
+  );
+}
+
+export default App;
