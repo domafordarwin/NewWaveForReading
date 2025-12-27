@@ -5,6 +5,7 @@ import MainLayout from './layouts/MainLayout';
 import StudentDashboard from './pages/StudentDashboard';
 import AssessmentTaking from './pages/AssessmentTaking';
 import EvaluationResult from './pages/EvaluationResult';
+import APITest from './pages/APITest';
 
 const theme = createTheme({
   palette: {
@@ -48,6 +49,9 @@ function App() {
         <Routes>
           {/* 메인 페이지는 대시보드로 리다이렉트 */}
           <Route path="/" element={<Navigate to="/student/dashboard" replace />} />
+          
+          {/* API 테스트 페이지 */}
+          <Route path="/api-test" element={<APITest />} />
           
           {/* 학생용 라우트 */}
           <Route path="/student/*" element={
