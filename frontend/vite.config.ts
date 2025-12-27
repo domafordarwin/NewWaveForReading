@@ -20,10 +20,21 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', '@mui/material', '@emotion/react', '@emotion/styled'],
+    include: [
+      'react', 
+      'react-dom', 
+      '@mui/material', 
+      '@emotion/react', 
+      '@emotion/styled',
+      'recharts',
+      'axios',
+      'react-hook-form',
+      'react-router-dom',
+    ],
     esbuildOptions: {
       target: 'es2020',
     },
+    force: true,
   },
   build: {
     target: 'es2020',
