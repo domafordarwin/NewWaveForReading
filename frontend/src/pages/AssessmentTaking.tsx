@@ -27,7 +27,8 @@ import {
   createAnswer, 
   submitAssessment, 
   startAssessment,
-  analyzeAnswer 
+  analyzeAnswer,
+  getAnswerByAssessment,
 } from '../services/api';
 
 export default function AssessmentTaking() {
@@ -62,6 +63,20 @@ export default function AssessmentTaking() {
         if (data.timeLimitMinutes) {
           setTimeRemaining(data.timeLimitMinutes * 60);
         }
+
+        try {
+          const existingAnswer = await getAnswerByAssessment(Number(assessmentId));
+          if (existingAnswer?.content) {
+            setContent(existingAnswer.content);
+          }
+          if (existingAnswer?.answerId) {
+            setAnswerId(existingAnswer.answerId);
+          }
+        } catch (answerErr: any) {
+          if (answerErr?.response?.status !== 404) {
+            console.error('기존 답안 로드 실패:', answerErr);
+          }
+        }
         
         setError(null);
       } catch (err: any) {
@@ -79,6 +94,7 @@ export default function AssessmentTaking() {
 
   // 글자 수 계산
   const charCount = content.length;
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
 
   // 타이머
   useEffect(() => {
@@ -109,12 +125,25 @@ export default function AssessmentTaking() {
   }, [content, assessment]);
 
   const handleAutoSave = async () => {
-    if (!assessment || !answerId) return;
+    if (!assessment) return;
     
     setAutoSaveStatus('saving');
     try {
-      // 답안이 이미 생성되어 있으면 업데이트만 (현재 API에는 업데이트 없음)
-      console.log('자동 저장:', content.substring(0, 50) + '...');
+      if (!content.trim()) {
+        setAutoSaveStatus('saved');
+        return;
+      }
+
+      const answerData = {
+        assessmentId: Number(assessmentId),
+        content,
+        wordCount,
+        charCount,
+      };
+      const savedAnswer = await createAnswer(answerData);
+      if (savedAnswer?.answerId) {
+        setAnswerId(savedAnswer.answerId);
+      }
       setAutoSaveStatus('saved');
     } catch (err) {
       console.error('자동 저장 실패:', err);
@@ -127,15 +156,15 @@ export default function AssessmentTaking() {
     
     setAutoSaveStatus('saving');
     try {
-      if (!answerId) {
-        // 답안 최초 생성
-        const answerData = {
-          assessment: { assessmentId: Number(assessmentId) },
-          answerText: content,
-          wordCount: charCount,
-        };
-        const createdAnswer = await createAnswer(answerData);
-        setAnswerId(createdAnswer.answerId);
+      const answerData = {
+        assessmentId: Number(assessmentId),
+        content,
+        wordCount,
+        charCount,
+      };
+      const savedAnswer = await createAnswer(answerData);
+      if (savedAnswer?.answerId) {
+        setAnswerId(savedAnswer.answerId);
       }
       setAutoSaveStatus('saved');
       alert('저장되었습니다.');
@@ -163,14 +192,16 @@ export default function AssessmentTaking() {
     try {
       // 1. 답안 저장 (아직 저장 안 했으면)
       let finalAnswerId = answerId;
-      if (!finalAnswerId) {
-        const answerData = {
-          assessment: { assessmentId: Number(assessmentId) },
-          answerText: content,
-          wordCount: charCount,
-        };
-        const createdAnswer = await createAnswer(answerData);
-        finalAnswerId = createdAnswer.answerId;
+      const answerData = {
+        assessmentId: Number(assessmentId),
+        content,
+        wordCount,
+        charCount,
+      };
+      const savedAnswer = await createAnswer(answerData);
+      if (savedAnswer?.answerId) {
+        finalAnswerId = savedAnswer.answerId;
+        setAnswerId(savedAnswer.answerId);
       }
 
       // 2. 검사 제출
@@ -199,9 +230,10 @@ export default function AssessmentTaking() {
     try {
       if (content.trim()) {
         const answerData = {
-          assessment: { assessmentId: Number(assessmentId) },
-          answerText: content,
-          wordCount: charCount,
+          assessmentId: Number(assessmentId),
+          content,
+          wordCount,
+          charCount,
         };
         await createAnswer(answerData);
         await submitAssessment(Number(assessmentId));

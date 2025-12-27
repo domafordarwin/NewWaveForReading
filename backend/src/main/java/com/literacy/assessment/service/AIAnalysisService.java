@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
@@ -22,6 +23,7 @@ public class AIAnalysisService {
     private final AnswerRepository answerRepository;
     private final EvaluationRepository evaluationRepository;
     private final CorrectionRepository correctionRepository;
+    private final AtomicBoolean loggedApiKeyStatus = new AtomicBoolean(false);
     
     /**
      * 답안을 종합 분석하고 평가 결과를 생성
@@ -101,10 +103,17 @@ public class AIAnalysisService {
         Map<String, Object> result = new HashMap<>();
         
         String apiKey = openAIConfig.getApiKey();
+
+        if (loggedApiKeyStatus.compareAndSet(false, true)) {
+            if (apiKey == null || apiKey.isEmpty()) {
+                log.warn("OpenAI API key not configured. Using mock analysis.");
+            } else {
+                log.info("OpenAI API key detected. Using live analysis.");
+            }
+        }
         
         // API Key가 없으면 Mock 데이터 반환
         if (apiKey == null || apiKey.isEmpty()) {
-            log.warn("OpenAI API key not configured. Using mock analysis.");
             return generateMockAnalysis(content, topic);
         }
         

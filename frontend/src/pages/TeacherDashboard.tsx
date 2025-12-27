@@ -295,8 +295,8 @@ export default function TeacherDashboard() {
               <TableBody>
                 {recentEvaluations.map((evaluation: any) => (
                   <TableRow key={evaluation.evaluationId}>
-                    <TableCell>학생 #{evaluation.answer?.assessment?.student?.userId || 'N/A'}</TableCell>
-                    <TableCell>검사 #{evaluation.answer?.assessmentId || 'N/A'}</TableCell>
+                    <TableCell>학생 #{evaluation.studentId || 'N/A'}</TableCell>
+                    <TableCell>검사 #{evaluation.assessmentId || 'N/A'}</TableCell>
                     <TableCell align="center">
                       <Typography fontWeight="bold">{evaluation.totalScore}점</Typography>
                     </TableCell>

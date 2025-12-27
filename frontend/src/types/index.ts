@@ -100,6 +100,8 @@ export interface Answer {
 export interface Evaluation {
   evaluationId: number;
   answerId: number;
+  assessmentId?: number;
+  studentId?: number;
   evaluatorType: 'ai' | 'teacher' | 'hybrid';
   
   // 영역별 점수

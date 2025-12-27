@@ -4,6 +4,10 @@ import CssBaseline from '@mui/material/CssBaseline';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/Login';
 import StudentDashboard from './pages/StudentDashboard';
+import StudentAssessments from './pages/StudentAssessments';
+import StudentResults from './pages/StudentResults';
+import StudentProgress from './pages/StudentProgress';
+import StudentFeedback from './pages/StudentFeedback';
 import AssessmentTaking from './pages/AssessmentTaking';
 import EvaluationResult from './pages/EvaluationResult';
 import APITest from './pages/APITest';
@@ -11,6 +15,8 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import StudentManagement from './pages/StudentManagement';
 import AssessmentAssignment from './pages/AssessmentAssignment';
 import ClassStatistics from './pages/ClassStatistics';
+import ParentDashboard from './pages/ParentDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 const theme = createTheme({
   palette: {
@@ -66,6 +72,10 @@ function App() {
             <MainLayout>
               <Routes>
                 <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="assessments" element={<StudentAssessments />} />
+                <Route path="results" element={<StudentResults />} />
+                <Route path="progress" element={<StudentProgress />} />
+                <Route path="feedback" element={<StudentFeedback />} />
                 <Route path="assessment/:assessmentId" element={<AssessmentTaking />} />
                 <Route path="result/:assessmentId" element={<EvaluationResult />} />
               </Routes>
@@ -80,6 +90,24 @@ function App() {
                 <Route path="students" element={<StudentManagement />} />
                 <Route path="assessments" element={<AssessmentAssignment />} />
                 <Route path="statistics" element={<ClassStatistics />} />
+              </Routes>
+            </MainLayout>
+          } />
+
+          {/* 학부모 라우트 */}
+          <Route path="/parent/*" element={
+            <MainLayout>
+              <Routes>
+                <Route path="dashboard" element={<ParentDashboard />} />
+              </Routes>
+            </MainLayout>
+          } />
+
+          {/* 관리자 라우트 */}
+          <Route path="/admin/*" element={
+            <MainLayout>
+              <Routes>
+                <Route path="dashboard" element={<AdminDashboard />} />
               </Routes>
             </MainLayout>
           } />

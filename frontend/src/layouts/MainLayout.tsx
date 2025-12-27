@@ -27,10 +27,12 @@ import {
   People,
   School,
   BarChart,
+  AdminPanelSettings,
+  FamilyRestroom,
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { currentUser } from '../utils/mockData';
+import { clearCurrentUser, getCurrentUser } from '../utils/session';
 
 const drawerWidth = 240;
 
@@ -43,6 +45,7 @@ const studentMenuItems = [
   { text: '검사 목록', icon: <AssignmentIcon />, path: '/student/assessments' },
   { text: '나의 성적', icon: <AssessmentIcon />, path: '/student/results' },
   { text: '학습 이력', icon: <TrendingUpIcon />, path: '/student/progress' },
+  { text: '피드백', icon: <AssessmentIcon />, path: '/student/feedback' },
 ];
 
 const teacherMenuItems = [
@@ -50,6 +53,19 @@ const teacherMenuItems = [
   { text: '학생 관리', icon: <People />, path: '/teacher/students' },
   { text: '검사 배정', icon: <AssignmentIcon />, path: '/teacher/assessments' },
   { text: '반별 통계', icon: <BarChart />, path: '/teacher/statistics' },
+];
+
+const parentMenuItems = [
+  { text: '대시보드', icon: <DashboardIcon />, path: '/parent/dashboard' },
+  { text: '자녀 검사', icon: <AssignmentIcon />, path: '/parent/dashboard' },
+  { text: '자녀 성적', icon: <AssessmentIcon />, path: '/parent/dashboard' },
+  { text: '학습 이력', icon: <TrendingUpIcon />, path: '/parent/dashboard' },
+];
+
+const adminMenuItems = [
+  { text: '대시보드', icon: <AdminPanelSettings />, path: '/admin/dashboard' },
+  { text: '사용자 현황', icon: <People />, path: '/admin/dashboard' },
+  { text: '검사 현황', icon: <AssignmentIcon />, path: '/admin/dashboard' },
 ];
 
 export default function MainLayout({ children }: MainLayoutProps) {
@@ -60,8 +76,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   // 현재 경로에 따라 메뉴 결정
   const isTeacher = location.pathname.startsWith('/teacher');
-  const menuItems = isTeacher ? teacherMenuItems : studentMenuItems;
-  const userRole = isTeacher ? '교사' : '학생';
+  const isParent = location.pathname.startsWith('/parent');
+  const isAdmin = location.pathname.startsWith('/admin');
+
+  const menuItems = isTeacher
+    ? teacherMenuItems
+    : isParent
+    ? parentMenuItems
+    : isAdmin
+    ? adminMenuItems
+    : studentMenuItems;
+
+  const userRole = isTeacher ? '교사' : isParent ? '학부모' : isAdmin ? '관리자' : '학생';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -78,8 +104,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const handleLogout = () => {
     // 로그아웃 로직
     handleProfileMenuClose();
+    clearCurrentUser();
     navigate('/login');
   };
+
+  const storedUser = getCurrentUser();
+  const displayName = storedUser?.name || '사용자';
 
   const drawer = (
     <div>
@@ -133,7 +163,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {currentUser.name}님, 환영합니다!
+            {displayName}님, 환영합니다!
           </Typography>
           <IconButton
             size="large"
@@ -144,7 +174,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             color="inherit"
           >
             <Avatar sx={{ bgcolor: 'primary.main' }}>
-              {currentUser.name[0]}
+              {displayName[0] || '?'}
             </Avatar>
           </IconButton>
           <Menu

@@ -32,8 +32,9 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // 이미 데이터가 있으면 초기화 건너뛰기
+        // 이미 데이터가 있으면 기본 계정만 보강하고 초기화 건너뛰기
         if (userRepository.count() > 0) {
+            ensureBaseUsers();
             System.out.println("========================================");
             System.out.println("데이터가 이미 존재합니다. 초기화를 건너뜁니다.");
             System.out.println("========================================");
@@ -68,6 +69,28 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
         userRepository.save(teacher2);
         System.out.println("✓ 교사 생성: " + teacher2.getName() + " (" + teacher2.getEmail() + ")");
+        // 1-1. 학부모/관리자 생성
+        User parent1 = User.builder()
+                .email("parent1@school.com")
+                .passwordHash("$2a$10$samplehash_parent")
+                .name("박학부모")
+                .userType(UserType.PARENT)
+                .phone("010-3333-3333")
+                .isActive(true)
+                .build();
+        userRepository.save(parent1);
+        System.out.println("? 학부모 생성: " + parent1.getName() + " (" + parent1.getEmail() + ")");
+
+        User admin1 = User.builder()
+                .email("admin@school.com")
+                .passwordHash("$2a$10$samplehash_admin")
+                .name("관리자")
+                .userType(UserType.ADMIN)
+                .phone("010-9999-9999")
+                .isActive(true)
+                .build();
+        userRepository.save(admin1);
+        System.out.println("? 관리자 생성: " + admin1.getName() + " (" + admin1.getEmail() + ")");
 
         // 2. 학생 10명 생성
         String[] studentNames = {
@@ -303,6 +326,10 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("  - 김선생 (teacher1@school.com / password: teacher123)");
         System.out.println("  - 이선생 (teacher2@school.com / password: teacher123)");
         System.out.println("----------------------------------------");
+        System.out.println("학부모/관리자:");
+        System.out.println("  - 박학부모 (parent1@school.com / password: parent123)");
+        System.out.println("  - 관리자 (admin@school.com / password: admin123)");
+        System.out.println("----------------------------------------");
         System.out.println("학생 10명:");
         for (int i = 0; i < studentNames.length; i++) {
             System.out.println("  - " + studentNames[i] + " (student" + (i+1) + "@school.com / password: student123)");
@@ -310,5 +337,38 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("----------------------------------------");
         System.out.println("도서 5권, 논제 10개, 검사 " + assessmentCount + "개 생성");
         System.out.println("========================================");
+    }
+
+    private void ensureBaseUsers() {
+        ensureUser("teacher1@school.com", "김선생", UserType.TEACHER, "010-1111-1111", "서울초등학교", null);
+        ensureUser("teacher2@school.com", "이선생", UserType.TEACHER, "010-2222-2222", "서울초등학교", null);
+        ensureUser("parent1@school.com", "박학부모", UserType.PARENT, "010-3333-3333", null, null);
+        ensureUser("admin@school.com", "관리자", UserType.ADMIN, "010-9999-9999", null, null);
+    }
+
+    private void ensureUser(
+            String email,
+            String name,
+            UserType userType,
+            String phone,
+            String schoolName,
+            Integer grade
+    ) {
+        if (userRepository.existsByEmail(email)) {
+            return;
+        }
+
+        User user = User.builder()
+                .email(email)
+                .passwordHash("$2a$10$samplehash")
+                .name(name)
+                .userType(userType)
+                .schoolName(schoolName)
+                .phone(phone)
+                .grade(grade)
+                .isActive(true)
+                .build();
+        userRepository.save(user);
+        System.out.println("? 기본 계정 생성: " + user.getName() + " (" + user.getEmail() + ")");
     }
 }

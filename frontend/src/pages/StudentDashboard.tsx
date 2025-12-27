@@ -35,8 +35,8 @@ import {
   Legend,
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import { getAllAssessments, getAssessmentsByStudentId, getAllEvaluations } from '../services/api';
-import { AssessmentStatus } from '../types/index.js';
+import { getAssessmentsByStudentId, getAllEvaluations } from '../services/api';
+import { getCurrentUser } from '../utils/session';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -55,8 +55,14 @@ export default function StudentDashboard() {
     const loadData = async () => {
       try {
         setLoading(true);
-        // TODO: 실제로는 로그인한 학생 ID를 사용해야 함
-        const studentId = 1;
+        const currentUser = getCurrentUser();
+        if (!currentUser) {
+          setError('로그인이 필요합니다.');
+          setLoading(false);
+          return;
+        }
+
+        const studentId = currentUser.userId;
         
         // 검사 목록 로드
         const assessmentData = await getAssessmentsByStudentId(studentId);
@@ -64,15 +70,16 @@ export default function StudentDashboard() {
         
         // 평가 결과 로드
         const evaluationData = await getAllEvaluations();
-        setEvaluations(evaluationData);
+        const studentEvaluations = evaluationData.filter((e: any) => e.studentId === currentUser.userId);
+        setEvaluations(studentEvaluations);
         
         // 통계 계산
-        if (evaluationData.length > 0) {
-          const totalScore = evaluationData.reduce((sum: number, e: any) => sum + e.totalScore, 0);
-          const avgScore = Math.round(totalScore / evaluationData.length);
+        if (studentEvaluations.length > 0) {
+          const totalScore = studentEvaluations.reduce((sum: number, e: any) => sum + e.totalScore, 0);
+          const avgScore = Math.round(totalScore / studentEvaluations.length);
           setStatistics({
             averageScore: avgScore,
-            assessmentCount: evaluationData.length,
+            assessmentCount: studentEvaluations.length,
             percentileRank: 65, // 임시 백분위
           });
         }

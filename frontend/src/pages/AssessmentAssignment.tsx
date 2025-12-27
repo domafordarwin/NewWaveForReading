@@ -83,12 +83,12 @@ export default function AssessmentAssignment() {
       // Note: topicId는 실제로는 도서에서 선택해야 하지만, 
       // 현재는 간단히 하기 위해 1로 설정
       const assessmentData = {
-        student: { userId: parseInt(formData.studentId) },
-        topic: { topicId: 1 }, // TODO: 실제 논제 선택 구현 필요
+        studentId: parseInt(formData.studentId),
+        topicId: formData.topicId ? parseInt(formData.topicId) : 1, // TODO: 실제 논제 선택 구현 필요
+        assessmentType: 'ESSAY',
         timeLimitMinutes: formData.timeLimitMinutes,
         wordCountMin: formData.wordCountMin,
         wordCountMax: formData.wordCountMax,
-        status: 'NOT_STARTED',
       };
       
       await createAssessment(assessmentData);

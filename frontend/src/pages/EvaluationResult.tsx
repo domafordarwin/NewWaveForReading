@@ -33,7 +33,7 @@ import {
   Radar,
   ResponsiveContainer,
 } from 'recharts';
-import { getAssessmentById, getEvaluationByAnswerId } from '../services/api';
+import { getAssessmentById, getEvaluationByAnswerId, getAnswerByAssessment } from '../services/api';
 
 export default function EvaluationResult() {
   const { assessmentId } = useParams<{ assessmentId: string }>();
@@ -53,28 +53,10 @@ export default function EvaluationResult() {
         const assessmentData = await getAssessmentById(Number(assessmentId));
         setAssessment(assessmentData);
         
-        // 평가 결과 로드 (답안 ID를 통해)
-        // Note: 실제로는 검사 정보에서 답안 ID를 가져와야 함
-        // 현재는 간단히 처리
         if (assessmentData.status === 'EVALUATED') {
-          // TODO: 답안 ID를 가져오는 로직 추가 필요
-          // 임시로 Mock 데이터 사용
-          setEvaluation({
-            totalScore: 78,
-            grade: 'B+',
-            bookAnalysisScore: 18,
-            creativeThinkingScore: 20,
-            problemSolvingScore: 16,
-            expressionScore: 24,
-            comprehensiveFeedback: '전반적으로 논제를 잘 이해하고 자신의 생각을 표현하였습니다.',
-            detailedFeedback: '대상 도서의 주요 내용을 잘 파악하고 있으며, 이를 바탕으로 자신의 생각을 전개하였습니다.',
-            strengths: ['논제에 대한 명확한 이해', '구체적인 예시 활용', '논리적인 문장 구성'].join(','),
-            weaknesses: ['깊이 있는 분석 부족', '비판적 사고 미흡', '어휘 다양성 제한적'].join(','),
-            improvements: ['도서의 주제를 더 깊이 탐구하기', '다양한 관점에서 생각해보기', '풍부한 어휘 사용하기'].join(','),
-            spellingErrors: 2,
-            spacingErrors: 5,
-            grammarErrors: 1,
-          });
+          const answerData = await getAnswerByAssessment(Number(assessmentId));
+          const evaluationResponse = await getEvaluationByAnswerId(answerData.answerId);
+          setEvaluation(evaluationResponse.evaluation || null);
         } else {
           setError('아직 평가가 완료되지 않았습니다.');
         }

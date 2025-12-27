@@ -28,7 +28,7 @@ import {
   Search,
   School,
 } from '@mui/icons-material';
-import { getAllUsers, createUser } from '../services/api';
+import { getAllUsers, createUser, updateUser, deleteUser } from '../services/api';
 
 export default function StudentManagement() {
   const [loading, setLoading] = useState(true);
@@ -37,12 +37,23 @@ export default function StudentManagement() {
   const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [newStudent, setNewStudent] = useState({
     email: '',
     name: '',
     schoolName: '',
     grade: '',
     passwordHash: 'default123', // 기본 비밀번호
+  });
+  const [editStudent, setEditStudent] = useState({
+    userId: 0,
+    email: '',
+    name: '',
+    schoolName: '',
+    grade: '',
+    isActive: true,
   });
 
   useEffect(() => {
@@ -67,7 +78,7 @@ export default function StudentManagement() {
     try {
       setLoading(true);
       const allUsers = await getAllUsers();
-      const studentList = allUsers.filter((u: any) => u.userType === 'STUDENT');
+      const studentList = allUsers.filter((u: any) => u.userType === 'STUDENT' && u.isActive !== false);
       setStudents(studentList);
       setFilteredStudents(studentList);
       setError(null);
@@ -99,6 +110,55 @@ export default function StudentManagement() {
     } catch (err: any) {
       console.error('학생 추가 실패:', err);
       alert('학생 추가에 실패했습니다: ' + (err.message || '알 수 없는 오류'));
+    }
+  };
+
+  const handleEditOpen = (student: any) => {
+    setEditStudent({
+      userId: student.userId,
+      email: student.email || '',
+      name: student.name || '',
+      schoolName: student.schoolName || '',
+      grade: student.grade ? String(student.grade) : '',
+      isActive: student.isActive !== false,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditStudent = async () => {
+    try {
+      const updatedData = {
+        email: editStudent.email,
+        name: editStudent.name,
+        schoolName: editStudent.schoolName || null,
+        grade: editStudent.grade ? parseInt(editStudent.grade) : null,
+        userType: 'STUDENT',
+        isActive: editStudent.isActive,
+      };
+      await updateUser(editStudent.userId, updatedData);
+      setEditDialogOpen(false);
+      loadStudents();
+    } catch (err: any) {
+      console.error('학생 수정 실패:', err);
+      alert('학생 수정에 실패했습니다: ' + (err.message || '알 수 없는 오류'));
+    }
+  };
+
+  const handleDeleteOpen = (student: any) => {
+    setSelectedStudent(student);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!selectedStudent) return;
+    try {
+      await deleteUser(selectedStudent.userId);
+      setDeleteDialogOpen(false);
+      setSelectedStudent(null);
+      loadStudents();
+    } catch (err: any) {
+      console.error('학생 삭제 실패:', err);
+      alert('학생 삭제에 실패했습니다: ' + (err.message || '알 수 없는 오류'));
     }
   };
 
@@ -195,13 +255,17 @@ export default function StudentManagement() {
                       {student.createdAt ? new Date(student.createdAt).toLocaleDateString() : '-'}
                     </TableCell>
                     <TableCell align="center">
-                      <Chip label="활성" color="success" size="small" />
+                      <Chip
+                        label={student.isActive === false ? '비활성' : '활성'}
+                        color={student.isActive === false ? 'default' : 'success'}
+                        size="small"
+                      />
                     </TableCell>
                     <TableCell align="center">
-                      <IconButton size="small" color="primary">
+                      <IconButton size="small" color="primary" onClick={() => handleEditOpen(student)}>
                         <Edit />
                       </IconButton>
-                      <IconButton size="small" color="error">
+                      <IconButton size="small" color="error" onClick={() => handleDeleteOpen(student)}>
                         <Delete />
                       </IconButton>
                     </TableCell>
@@ -260,6 +324,70 @@ export default function StudentManagement() {
             disabled={!newStudent.name || !newStudent.email}
           >
             추가
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 학생 수정 다이얼로그 */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>학생 정보 수정</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="이름"
+              fullWidth
+              value={editStudent.name}
+              onChange={(e) => setEditStudent({ ...editStudent, name: e.target.value })}
+              required
+            />
+            <TextField
+              label="이메일"
+              type="email"
+              fullWidth
+              value={editStudent.email}
+              onChange={(e) => setEditStudent({ ...editStudent, email: e.target.value })}
+              required
+            />
+            <TextField
+              label="학교명"
+              fullWidth
+              value={editStudent.schoolName}
+              onChange={(e) => setEditStudent({ ...editStudent, schoolName: e.target.value })}
+            />
+            <TextField
+              label="학년"
+              type="number"
+              fullWidth
+              value={editStudent.grade}
+              onChange={(e) => setEditStudent({ ...editStudent, grade: e.target.value })}
+              inputProps={{ min: 1, max: 12 }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>취소</Button>
+          <Button
+            onClick={handleEditStudent}
+            variant="contained"
+            disabled={!editStudent.name || !editStudent.email}
+          >
+            저장
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 학생 삭제 확인 다이얼로그 */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>학생 삭제</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {selectedStudent?.name} 학생을 삭제하시겠습니까? 삭제 후 목록에서 숨겨집니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>취소</Button>
+          <Button color="error" variant="contained" onClick={handleDeleteStudent}>
+            삭제
           </Button>
         </DialogActions>
       </Dialog>
