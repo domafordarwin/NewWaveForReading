@@ -52,6 +52,10 @@ export default function EvaluationResult() {
         
         if (assessmentData.status === 'EVALUATED') {
           const answerData = await getAnswerByAssessment(Number(assessmentId));
+          if (!answerData?.answerId) {
+            setError('답안을 찾을 수 없습니다.');
+            return;
+          }
           const evaluationResponse = await getEvaluationByAnswerId(answerData.answerId);
           setEvaluation(evaluationResponse?.evaluation || evaluationResponse || null);
         } else {
