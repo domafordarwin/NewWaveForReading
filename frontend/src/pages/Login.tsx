@@ -92,10 +92,17 @@ const Login: React.FC = () => {
       const user = await getUserByEmail(formData.email);
       const normalizedType = String(user.userType || '').toLowerCase() as StoredUserType;
 
-      if (!normalizedType || normalizedType !== formData.userType) {
-        setError('사용자 유형이 일치하지 않습니다.');
+      if (!normalizedType) {
+        setError('사용자 정보를 확인할 수 없습니다.');
         setLoading(false);
         return;
+      }
+
+      if (normalizedType !== formData.userType) {
+        setFormData(prev => ({
+          ...prev,
+          userType: normalizedType,
+        }));
       }
 
       if (user.isActive === false) {
@@ -191,10 +198,10 @@ const Login: React.FC = () => {
   // 테스트용 자동 입력
   const fillTestData = (type: UserType) => {
     const testAccounts = {
-      student: { email: 'student1@school.com', password: 'student123' },
-      teacher: { email: 'teacher1@school.com', password: 'teacher123' },
-      parent: { email: 'parent1@school.com', password: 'parent123' },
-      admin: { email: 'admin@school.com', password: 'admin123' },
+      student: { email: 'student1@example.com', password: 'student123' },
+      teacher: { email: 'teacher1@example.com', password: 'teacher123' },
+      parent: { email: 'parent1@example.com', password: 'parent123' },
+      admin: { email: 'admin1@example.com', password: 'admin123' },
     };
 
     setFormData({
