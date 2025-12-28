@@ -1,5 +1,16 @@
 -- Seed sample data for testing
 
+truncate table
+  public.feedbacks,
+  public.progress_history,
+  public.evaluations,
+  public.answers,
+  public.assessments,
+  public.topics,
+  public.books,
+  public.users
+restart identity cascade;
+
 insert into public.users (email, name, user_type, birth_date, school_name, grade, is_active, password_hash)
 values
   ('student1@example.com', '김민준', 'STUDENT', '2010-03-15', '서울중학교', 2, true, 'ehrtjtoanfruf'),
