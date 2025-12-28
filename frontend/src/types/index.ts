@@ -136,6 +136,25 @@ export interface Evaluation {
   weaknesses: string[];
   
   evaluatedAt: string;
+
+  studentFeedback?: {
+    서론?: string;
+    본론?: string;
+    결론?: string;
+  };
+  rubric?: Array<{
+    criterion: string;
+    level: string;
+    evidence: string;
+    next_action: string;
+  }>;
+  lineEdits?: Array<{
+    original: string;
+    suggested: string;
+    reason: string;
+    category: string;
+  }>;
+  teacherNote?: string;
 }
 
 // 첨삭 타입

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Typography,
@@ -14,7 +14,10 @@ import {
   TableRow,
   Alert,
   Button,
+  CircularProgress,
 } from '@mui/material';
+import { getEvaluationsByStudentId } from '../services/api';
+import { getCurrentUser } from '../utils/session';
 
 const rubricLabels = [
   '논제 충실성/입장 명료성',
@@ -39,28 +42,79 @@ const levelColor = (level: string) => {
 };
 
 export default function StudentFeedback() {
-  const [feedback] = useState({
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState({
     student_feedback: {
-      서론: '문제를 자신의 언어로 정리하고 입장을 제시한 점이 좋습니다. 다만 입장을 한 문장으로 더 선명하게 정리해 주세요.',
-      본론: '도서 내용을 근거로 논리를 전개하려는 시도가 보입니다. 핵심 개념 2개를 인용해 근거의 다양성을 높이고, 반례를 통해 일반화를 줄여보세요.',
-      결론: '요약과 정리의 흐름은 자연스럽습니다. 다음 글에서는 주장 문장을 한 번 더 확인하고, 개선 목표 2가지에 집중해 보세요.',
+      서론: '',
+      본론: '',
+      결론: '',
     },
-    rubric: rubricLabels.map((label, index) => ({
-      criterion: label,
-      level: index === 1 ? '하' : index === 2 ? '중' : '상',
-      evidence: '학생 글에서 근거가 부족하거나 핵심 개념 연결이 약한 부분이 관찰됩니다.',
-      next_action: '핵심 개념 2개를 문장에 삽입하고, 반례를 추가해 논거를 강화하세요.',
-    })),
-    line_edits: [
-      { original: '우리시대의', suggested: '우리 시대의', reason: '띄어쓰기', category: '띄어쓰기' },
-      { original: '말할수있다', suggested: '말할 수 있다', reason: '띄어쓰기', category: '띄어쓰기' },
-      { original: '그렇다면', suggested: '그렇다면,', reason: '문장 호흡 정리', category: '문장다듬기' },
-      { original: '중요하다고한다', suggested: '중요하다고 한다', reason: '띄어쓰기', category: '띄어쓰기' },
-      { original: '대조되며', suggested: '대조되며,', reason: '문장 호흡 정리', category: '문장다듬기' },
-    ],
-    teacher_note:
-      '도서 요약 정보가 충분하지 않아 일부 항목은 제공된 학생 글 기준으로만 평가했습니다. 도서 핵심 요약을 추가하면 더 정밀한 피드백이 가능합니다.',
+    rubric: [] as Array<{
+      criterion: string;
+      level: string;
+      evidence: string;
+      next_action: string;
+    }>,
+    line_edits: [] as Array<{
+      original: string;
+      suggested: string;
+      reason: string;
+      category: string;
+    }>,
+    teacher_note: '',
   });
+
+  useEffect(() => {
+    const loadFeedback = async () => {
+      try {
+        setLoading(true);
+        const currentUser = getCurrentUser();
+        if (!currentUser) {
+          setError('로그인이 필요합니다.');
+          return;
+        }
+
+        const evaluations = await getEvaluationsByStudentId(currentUser.userId);
+        if (!evaluations.length) {
+          setError('피드백이 아직 생성되지 않았습니다.');
+          return;
+        }
+
+        const latest = evaluations[0];
+        const studentFeedback = latest.studentFeedback || {
+          서론: '자동 피드백이 아직 준비되지 않았습니다.',
+          본론: '답안 제출 후 잠시 기다려 주세요.',
+          결론: '추가 분석이 완료되면 표시됩니다.',
+        };
+        const rubric = Array.isArray(latest.rubric) && latest.rubric.length
+          ? latest.rubric
+          : rubricLabels.map((label) => ({
+              criterion: label,
+              level: '중',
+              evidence: '자동 평가가 진행 중입니다.',
+              next_action: '답안 제출 후 다시 확인해 주세요.',
+            }));
+        const lineEdits = Array.isArray(latest.lineEdits) ? latest.lineEdits : [];
+        const teacherNote = latest.teacherNote
+          || '현재 자동 피드백만 제공됩니다. 추가 보정은 추후 반영됩니다.';
+
+        setFeedback({
+          student_feedback: studentFeedback,
+          rubric,
+          line_edits: lineEdits,
+          teacher_note: teacherNote,
+        });
+        setError(null);
+      } catch (err: any) {
+        setError(err.message || '피드백을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFeedback();
+  }, []);
 
   const rubricSummary = useMemo(() => {
     const counts = feedback.rubric.reduce((acc: Record<string, number>, item) => {
@@ -69,6 +123,27 @@ export default function StudentFeedback() {
     }, {});
     return counts;
   }, [feedback.rubric]);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <Alert severity="info" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button variant="contained" onClick={() => window.location.reload()}>
+          다시 시도
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box>

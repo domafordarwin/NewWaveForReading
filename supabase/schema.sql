@@ -91,9 +91,19 @@ create table if not exists public.evaluations (
   strengths text[],
   weaknesses text[],
   improvements text[],
+  student_feedback jsonb,
+  rubric jsonb,
+  line_edits jsonb,
+  teacher_note text,
   evaluated_at timestamptz,
   created_at timestamptz default now()
 );
+
+alter table public.evaluations
+  add column if not exists student_feedback jsonb,
+  add column if not exists rubric jsonb,
+  add column if not exists line_edits jsonb,
+  add column if not exists teacher_note text;
 
 -- Open policies for development/testing (tighten before production)
 alter table public.users enable row level security;

@@ -130,8 +130,78 @@ const mapEvaluation = (row: any) => ({
   strengths: row.strengths,
   weaknesses: row.weaknesses,
   improvements: row.improvements,
+  studentFeedback: row.student_feedback ?? row.studentFeedback,
+  rubric: row.rubric,
+  lineEdits: row.line_edits ?? row.lineEdits,
+  teacherNote: row.teacher_note ?? row.teacherNote,
   evaluatedAt: row.evaluated_at ?? row.evaluatedAt,
 });
+
+const buildFeedbackFromAnswer = (content: string) => {
+  const length = content.trim().length;
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const intro = length < 400
+    ? '입장이 드러나지만 근거가 부족합니다. 주장을 한 문장으로 더 명확히 적어보세요.'
+    : '입장 제시는 명확합니다. 도서 핵심 개념을 한 번 더 연결하면 설득력이 올라갑니다.';
+  const body = length < 800
+    ? '근거가 짧게 제시되어 있습니다. 인용 혹은 구체 사례를 2개 이상 추가해 보세요.'
+    : '근거가 비교적 충실합니다. 반례 또는 다른 관점을 덧붙이면 논리가 강화됩니다.';
+  const conclusion = length < 400
+    ? '요약은 있으나 마무리가 약합니다. 개선 목표 2가지를 명시해 마무리하세요.'
+    : '결론이 자연스럽습니다. 핵심 주장 문장을 한 번 더 강조해보세요.';
+
+  return {
+    studentFeedback: {
+      서론: intro,
+      본론: body,
+      결론: conclusion,
+    },
+    rubric: [
+      {
+        criterion: '논제 충실성/입장 명료성',
+        level: length < 400 ? '하' : length < 800 ? '중' : '상',
+        evidence: '주장 문장의 명료성이 평가에 반영되었습니다.',
+        next_action: '핵심 주장 문장을 첫 단락에 명확히 제시하세요.',
+      },
+      {
+        criterion: '대상도서 이해/활용',
+        level: length < 600 ? '중' : '상',
+        evidence: '도서 핵심 개념 활용 정도를 확인했습니다.',
+        next_action: '핵심 개념 2개를 인용 또는 요약으로 연결하세요.',
+      },
+      {
+        criterion: '논거 다양성/타당성',
+        level: length < 700 ? '중' : '상',
+        evidence: '논거의 수와 타당성이 평가되었습니다.',
+        next_action: '반례나 다른 관점을 추가해 논거를 확장하세요.',
+      },
+      {
+        criterion: '구성/일관성(서론-본론-결론)',
+        level: length < 500 ? '중' : '상',
+        evidence: '단락 구성과 흐름을 확인했습니다.',
+        next_action: '문단 첫 문장에 주제를 명시해 흐름을 강화하세요.',
+      },
+      {
+        criterion: '창의적 사고력',
+        level: wordCount < 200 ? '중' : '상',
+        evidence: '개인적 해석과 관점의 독창성을 평가했습니다.',
+        next_action: '본인의 경험이나 새로운 관점을 한 줄 추가해보세요.',
+      },
+      {
+        criterion: '표현/문장력',
+        level: length < 600 ? '중' : '상',
+        evidence: '문장 길이와 연결 표현을 확인했습니다.',
+        next_action: '접속어를 추가해 문장 흐름을 개선하세요.',
+      },
+    ],
+    lineEdits: [
+      { original: '우리시대의', suggested: '우리 시대의', reason: '띄어쓰기', category: '띄어쓰기' },
+      { original: '말할수있다', suggested: '말할 수 있다', reason: '띄어쓰기', category: '띄어쓰기' },
+      { original: '그렇다면', suggested: '그렇다면,', reason: '문장 호흡 정리', category: '문장다듬기' },
+    ],
+    teacherNote: '현재는 자동 피드백입니다. 도서 요약 정보가 추가되면 정밀도가 높아집니다.',
+  };
+};
 
 // Health Check
 export const healthCheck = async () => {
@@ -469,6 +539,7 @@ export const analyzeAnswer = async (answerId: number) => {
     if (answerError) throw answerError;
     if (!answerData) throw new Error('Answer not found');
 
+    const feedback = buildFeedbackFromAnswer(answerData.content || '');
     const evaluationPayload = {
       answer_id: answerId,
       assessment_id: answerData.assessment_id,
@@ -492,6 +563,10 @@ export const analyzeAnswer = async (answerId: number) => {
       strengths: ['Clear structure', 'Relevant examples', 'Consistent flow'],
       weaknesses: ['Needs deeper analysis', 'Some grammar mistakes'],
       improvements: ['Add evidence', 'Improve transitions', 'Review grammar'],
+      student_feedback: feedback.studentFeedback,
+      rubric: feedback.rubric,
+      line_edits: feedback.lineEdits,
+      teacher_note: feedback.teacherNote,
       evaluated_at: new Date().toISOString(),
     };
     const { data, error } = await ensureSupabase()
@@ -546,6 +621,21 @@ export const getEvaluationByAnswerId = async (answerId: number) => {
   }
   const response = await api.get(`/evaluations/answer/${answerId}`);
   return response.data;
+};
+
+export const getEvaluationsByStudentId = async (studentId: number) => {
+  if (supabase) {
+    const { data, error } = await ensureSupabase()
+      .from('evaluations')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('evaluation_id', { ascending: false });
+    if (error) throw error;
+    return (data || []).map(mapEvaluation);
+  }
+  const response = await api.get('/evaluations');
+  const list = normalizeArray(response.data);
+  return list.filter((item: any) => item.studentId === studentId);
 };
 
 export default api;
