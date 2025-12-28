@@ -17,8 +17,8 @@ import {
   Link,
   Divider,
   Chip,
-  SelectChangeEvent,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import {
   Visibility,
   VisibilityOff,
