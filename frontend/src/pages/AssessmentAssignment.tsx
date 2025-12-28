@@ -21,6 +21,7 @@ import {
 import { CheckCircle } from '@mui/icons-material';
 import { getAllUsers, getAllBooks, createAssessment } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { getCurrentUser } from '../utils/session';
 
 const steps = ['학생 선택', '도서 및 논제 선택', '검사 설정', '확인 및 배정'];
 
@@ -75,6 +76,11 @@ export default function AssessmentAssignment() {
 
   const handleSubmit = async () => {
     try {
+      const currentUser = getCurrentUser();
+      if (!currentUser) {
+        setError('로그인이 필요합니다.');
+        return;
+      }
       // 검사 배정 API 호출
       // Note: topicId는 실제로는 도서에서 선택해야 하지만, 
       // 현재는 간단히 하기 위해 1로 설정
@@ -85,6 +91,7 @@ export default function AssessmentAssignment() {
         timeLimitMinutes: formData.timeLimitMinutes,
         wordCountMin: formData.wordCountMin,
         wordCountMax: formData.wordCountMax,
+        teacherId: currentUser.userId,
       };
       
       await createAssessment(assessmentData);

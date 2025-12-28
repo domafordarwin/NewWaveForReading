@@ -16,7 +16,12 @@ import {
   Button,
   CircularProgress,
 } from '@mui/material';
-import { getEvaluationsByStudentId, getFeedbacksByStudentId, getAnswerById } from '../services/api';
+import {
+  getEvaluationsByStudentId,
+  getFeedbacksByStudentId,
+  getAnswerById,
+  getAnswerByAssessment,
+} from '../services/api';
 import { getCurrentUser } from '../utils/session';
 
 const rubricLabels = [
@@ -102,18 +107,15 @@ export default function StudentFeedback() {
         }
 
         const evaluations = await getEvaluationsByStudentId(currentUser.userId);
-        if (!evaluations.length) {
-          setError('피드백이 아직 생성되지 않았습니다.');
-          return;
-        }
-
         const feedbackRows = await getFeedbacksByStudentId(currentUser.userId);
-        const feedbackByEvaluation = new Map<number, any>();
-        feedbackRows.forEach((row: any) => {
-          const evaluationId = row.evaluation_id ?? row.evaluationId;
-          if (evaluationId) {
-            feedbackByEvaluation.set(evaluationId, row);
-          }
+        const evaluationById = new Map<number, any>();
+        const evaluationByAssessmentId = new Map<number, any>();
+        const evaluationByAnswerId = new Map<number, any>();
+        evaluations.forEach((evaluation: any) => {
+          const evaluationId = evaluation.evaluationId ?? evaluation.evaluation_id;
+          if (evaluationId) evaluationById.set(evaluationId, evaluation);
+          if (evaluation.assessmentId) evaluationByAssessmentId.set(evaluation.assessmentId, evaluation);
+          if (evaluation.answerId) evaluationByAnswerId.set(evaluation.answerId, evaluation);
         });
 
         const fallbackRubric = rubricLabels.map((label) => ({
@@ -123,10 +125,28 @@ export default function StudentFeedback() {
           next_action: '답안 제출 후 다시 확인해 주세요.',
         }));
 
-        const builtSessions = evaluations.map((evaluation: any) => {
-          const evaluationId = evaluation.evaluationId ?? evaluation.evaluation_id ?? 0;
-          const feedbackRow = feedbackByEvaluation.get(evaluationId);
-          const answerId = evaluation.answerId ?? evaluation.answer_id ?? null;
+        const completedFeedbackRows = feedbackRows.filter((row: any) => {
+          const status = row.feedback_status ?? row.feedbackStatus;
+          if (status && String(status).toUpperCase() === 'COMPLETED') {
+            return true;
+          }
+          const hasSummary = row.summary_intro || row.summary_body || row.summary_conclusion;
+          const hasDetail = row.topic_understanding || row.example_analysis || row.logical_flow || row.expression;
+          return Boolean(hasSummary || hasDetail);
+        });
+
+        if (!completedFeedbackRows.length) {
+          setError('교사 피드백이 아직 등록되지 않았습니다.');
+          return;
+        }
+
+        const builtSessions = completedFeedbackRows.map((feedbackRow: any) => {
+          const evaluationId = feedbackRow.evaluation_id ?? feedbackRow.evaluationId ?? 0;
+          const evaluation = evaluationById.get(evaluationId)
+            || evaluationByAssessmentId.get(feedbackRow.assessment_id ?? feedbackRow.assessmentId)
+            || evaluationByAnswerId.get(feedbackRow.answer_id ?? feedbackRow.answerId)
+            || {};
+          const answerId = feedbackRow.answer_id ?? feedbackRow.answerId ?? evaluation.answerId ?? evaluation.answer_id ?? null;
           const summaryFromRow = feedbackRow ? {
             서론: feedbackRow.summary_intro ?? feedbackRow.summaryIntro ?? '',
             본론: feedbackRow.summary_body ?? feedbackRow.summaryBody ?? '',
@@ -192,8 +212,12 @@ export default function StudentFeedback() {
           const aiLineEdits = Array.isArray(evaluation.lineEdits) ? evaluation.lineEdits : [];
 
           return {
-            sessionId: evaluationId,
-            createdAt: feedbackRow?.created_at ?? feedbackRow?.createdAt ?? evaluation.evaluatedAt,
+            sessionId: feedbackRow.assessment_id ?? feedbackRow.assessmentId ?? evaluationId,
+            createdAt: feedbackRow?.submitted_at
+              ?? feedbackRow?.submittedAt
+              ?? feedbackRow?.created_at
+              ?? feedbackRow?.createdAt
+              ?? evaluation.evaluatedAt,
             hasFeedback: Boolean(feedbackRow),
             answerId,
             teacherFeedback: {
@@ -232,20 +256,25 @@ export default function StudentFeedback() {
 
   useEffect(() => {
     const loadAnswer = async () => {
-      if (!selectedSession?.answerId) {
-        setAnswerContent('');
-        return;
-      }
       try {
-        const answer = await getAnswerById(Number(selectedSession.answerId));
-        setAnswerContent(answer?.content || '');
+        if (selectedSession?.answerId) {
+          const answer = await getAnswerById(Number(selectedSession.answerId));
+          setAnswerContent(answer?.content || '');
+          return;
+        }
+        if (selectedSession?.sessionId) {
+          const answer = await getAnswerByAssessment(Number(selectedSession.sessionId));
+          setAnswerContent(answer?.content || '');
+          return;
+        }
+        setAnswerContent('');
       } catch (err) {
         setAnswerContent('');
       }
     };
 
     loadAnswer();
-  }, [selectedSession?.answerId]);
+  }, [selectedSession?.answerId, selectedSession?.sessionId]);
 
   if (loading) {
     return (

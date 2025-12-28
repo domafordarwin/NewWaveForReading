@@ -80,7 +80,9 @@ export default function TeacherFeedback() {
           return;
         }
         const assessmentData = await getAssessmentsByStudentId(Number(studentId));
-        const evaluated = assessmentData.filter((assessment: any) => assessment.status === 'EVALUATED');
+        const evaluated = assessmentData.filter((assessment: any) =>
+          assessment.status === 'EVALUATED' || assessment.status === 'SUBMITTED'
+        );
         setStudent(studentData);
         setAssessments(evaluated);
         setSelectedAssessmentId(evaluated[0]?.assessmentId || '');

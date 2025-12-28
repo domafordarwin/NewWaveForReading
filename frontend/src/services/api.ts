@@ -366,6 +366,17 @@ export const createAssessment = async (assessmentData: any) => {
       .select('*, topic:topics(*, book:books(*))')
       .single();
     if (error) throw error;
+    if (assessmentData.teacherId) {
+      const { error: feedbackError } = await ensureSupabase()
+        .from('feedbacks')
+        .insert({
+          teacher_id: assessmentData.teacherId,
+          student_id: assessmentData.studentId,
+          assessment_id: data.assessment_id,
+          feedback_status: 'PENDING',
+        });
+      if (feedbackError) throw feedbackError;
+    }
     return mapAssessment(data);
   }
   const response = await api.post('/assessments', assessmentData);
@@ -574,7 +585,32 @@ export const createTeacherFeedback = async (feedbackData: any) => {
       weaknesses: feedbackData.weaknesses ?? null,
       improvements: feedbackData.improvements ?? null,
       teacher_note: feedbackData.teacherNote ?? null,
+      feedback_status: 'COMPLETED',
+      submitted_at: new Date().toISOString(),
     };
+    const targetAssessmentId = feedbackData.assessmentId ?? null;
+    const targetTeacherId = feedbackData.teacherId ?? null;
+    const targetStudentId = feedbackData.studentId ?? null;
+    if (targetAssessmentId && targetTeacherId && targetStudentId) {
+      const { data: existing, error: lookupError } = await ensureSupabase()
+        .from('feedbacks')
+        .select('*')
+        .eq('assessment_id', targetAssessmentId)
+        .eq('teacher_id', targetTeacherId)
+        .eq('student_id', targetStudentId)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+      if (existing) {
+        const { data, error } = await ensureSupabase()
+          .from('feedbacks')
+          .update(payload)
+          .eq('feedback_id', existing.feedback_id)
+          .select('*')
+          .single();
+        if (error) throw error;
+        return data;
+      }
+    }
     const { data, error } = await ensureSupabase()
       .from('feedbacks')
       .insert(payload)

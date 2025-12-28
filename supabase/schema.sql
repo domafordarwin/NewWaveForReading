@@ -157,12 +157,14 @@ create table if not exists public.feedbacks (
   example_analysis text,
   logical_flow text,
   expression text,
+  feedback_status text default 'PENDING',
   rubric jsonb,
   line_edits jsonb,
   strengths text[],
   weaknesses text[],
   improvements text[],
   teacher_note text,
+  submitted_at timestamptz,
   created_at timestamptz default now()
 );
 
@@ -171,7 +173,9 @@ alter table public.feedbacks
   add column if not exists topic_understanding text,
   add column if not exists example_analysis text,
   add column if not exists logical_flow text,
-  add column if not exists expression text;
+  add column if not exists expression text,
+  add column if not exists feedback_status text,
+  add column if not exists submitted_at timestamptz;
 
 alter table public.feedbacks enable row level security;
 
