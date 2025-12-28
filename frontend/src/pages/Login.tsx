@@ -199,10 +199,10 @@ const Login: React.FC = () => {
   // 테스트용 자동 입력
   const fillTestData = (type: UserType) => {
     const testAccounts = {
-      student: { email: 'student1@example.com', password: 'student123' },
-      teacher: { email: 'teacher1@example.com', password: 'teacher123' },
-      parent: { email: 'parent1@example.com', password: 'parent123' },
-      admin: { email: 'admin1@example.com', password: 'admin123' },
+      student: { email: 'student1@example.com', password: 'ehrtjtoanfruf' },
+      teacher: { email: 'teacher1@example.com', password: 'ehrtjtoanfruf' },
+      parent: { email: 'parent1@example.com', password: 'ehrtjtoanfruf' },
+      admin: { email: 'admin1@example.com', password: 'ehrtjtoanfruf' },
     };
 
     setFormData({

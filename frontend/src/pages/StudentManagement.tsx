@@ -45,7 +45,7 @@ export default function StudentManagement() {
     name: '',
     schoolName: '',
     grade: '',
-    passwordHash: 'default123', // 기본 비밀번호
+    passwordHash: 'ehrtjtoanfruf', // 기본 비밀번호
   });
   const [editStudent, setEditStudent] = useState({
     userId: 0,
@@ -104,7 +104,7 @@ export default function StudentManagement() {
         name: '',
         schoolName: '',
         grade: '',
-        passwordHash: 'default123',
+        passwordHash: 'ehrtjtoanfruf',
       });
       loadStudents(); // 목록 새로고침
     } catch (err: any) {
@@ -312,7 +312,7 @@ export default function StudentManagement() {
               inputProps={{ min: 1, max: 12 }}
             />
             <Alert severity="info">
-              초기 비밀번호는 'default123' 으로 설정됩니다.
+              초기 비밀번호는 'ehrtjtoanfruf' 으로 설정됩니다.
             </Alert>
           </Box>
         </DialogContent>
