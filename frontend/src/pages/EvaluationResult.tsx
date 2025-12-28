@@ -53,7 +53,7 @@ export default function EvaluationResult() {
         if (assessmentData.status === 'EVALUATED') {
           const answerData = await getAnswerByAssessment(Number(assessmentId));
           const evaluationResponse = await getEvaluationByAnswerId(answerData.answerId);
-          setEvaluation(evaluationResponse.evaluation || null);
+          setEvaluation(evaluationResponse?.evaluation || evaluationResponse || null);
         } else {
           setError('아직 평가가 완료되지 않았습니다.');
         }
