@@ -538,4 +538,19 @@ export const getEvaluationsByStudentId = async (studentId: number) => {
   return list.filter((item: any) => item.studentId === studentId);
 };
 
+export const getFeedbacksByStudentId = async (studentId: number) => {
+  if (supabase) {
+    const { data, error } = await ensureSupabase()
+      .from('feedbacks')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('feedback_id', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  }
+  const response = await api.get('/feedbacks');
+  const list = normalizeArray(response.data);
+  return list.filter((item: any) => item.studentId === studentId);
+};
+
 export default api;
