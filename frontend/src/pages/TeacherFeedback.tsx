@@ -57,6 +57,7 @@ export default function TeacherFeedback() {
   const [assessments, setAssessments] = useState<any[]>([]);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<number | ''>('');
   const [answerId, setAnswerId] = useState<number | null>(null);
+  const [answerContent, setAnswerContent] = useState<string>('');
   const [evaluationId, setEvaluationId] = useState<number | null>(null);
   const [form, setForm] = useState<FeedbackForm>(emptyForm);
 
@@ -106,6 +107,7 @@ export default function TeacherFeedback() {
         const answer = await getAnswerByAssessment(Number(selectedAssessmentId));
         const resolvedAnswerId = answer && typeof answer.answerId === 'number' ? answer.answerId : null;
         setAnswerId(resolvedAnswerId);
+        setAnswerContent(answer?.content || '');
         if (resolvedAnswerId) {
           const evaluationResponse = await getEvaluationByAnswerId(resolvedAnswerId);
           const evaluation = evaluationResponse?.evaluation || evaluationResponse || null;
@@ -258,6 +260,27 @@ export default function TeacherFeedback() {
         </Alert>
       )}
 
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+          학생 답안
+        </Typography>
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+          {answerContent || '답안이 아직 등록되지 않았습니다.'}
+        </Typography>
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+          메모하기
+        </Typography>
+        <TextField
+          value={form.teacherNote}
+          onChange={handleChange('teacherNote')}
+          fullWidth
+          multiline
+          minRows={4}
+          placeholder="교사용 메모를 입력하세요."
+        />
+      </Paper>
+
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
@@ -346,22 +369,6 @@ export default function TeacherFeedback() {
                 />
               </Grid>
             </Grid>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              메모하기
-            </Typography>
-            <TextField
-              value={form.teacherNote}
-              onChange={handleChange('teacherNote')}
-              fullWidth
-              multiline
-              minRows={4}
-              placeholder="교사용 메모를 입력하세요."
-            />
           </Paper>
         </Grid>
       </Grid>

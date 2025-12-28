@@ -16,7 +16,7 @@ import {
   Button,
   CircularProgress,
 } from '@mui/material';
-import { getEvaluationsByStudentId, getFeedbacksByStudentId } from '../services/api';
+import { getEvaluationsByStudentId, getFeedbacksByStudentId, getAnswerById } from '../services/api';
 import { getCurrentUser } from '../utils/session';
 
 const rubricLabels = [
@@ -48,7 +48,8 @@ export default function StudentFeedback() {
     sessionId: number;
     createdAt?: string;
     hasFeedback: boolean;
-    feedback: {
+    answerId?: number | null;
+    teacherFeedback: {
       student_feedback: {
         서론: string;
         본론: string;
@@ -66,10 +67,29 @@ export default function StudentFeedback() {
         reason: string;
         category: string;
       }>;
-      teacher_note: string;
+    };
+    aiFeedback: {
+      student_feedback: {
+        서론: string;
+        본론: string;
+        결론: string;
+      };
+      rubric: Array<{
+        criterion: string;
+        level: string;
+        evidence: string;
+        next_action: string;
+      }>;
+      line_edits: Array<{
+        original: string;
+        suggested: string;
+        reason: string;
+        category: string;
+      }>;
     };
   }>>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+  const [answerContent, setAnswerContent] = useState<string>('');
 
   useEffect(() => {
     const loadFeedback = async () => {
@@ -106,6 +126,7 @@ export default function StudentFeedback() {
         const builtSessions = evaluations.map((evaluation: any) => {
           const evaluationId = evaluation.evaluationId ?? evaluation.evaluation_id ?? 0;
           const feedbackRow = feedbackByEvaluation.get(evaluationId);
+          const answerId = evaluation.answerId ?? evaluation.answer_id ?? null;
           const summaryFromRow = feedbackRow ? {
             서론: feedbackRow.summary_intro ?? feedbackRow.summaryIntro ?? '',
             본론: feedbackRow.summary_body ?? feedbackRow.summaryBody ?? '',
@@ -113,14 +134,13 @@ export default function StudentFeedback() {
           } : null;
           const hasSummary = summaryFromRow
             && (summaryFromRow.서론 || summaryFromRow.본론 || summaryFromRow.결론);
-          const studentFeedback = (hasSummary ? summaryFromRow : null)
+          const teacherSummary = (hasSummary ? summaryFromRow : null)
             || feedbackRow?.student_feedback
             || feedbackRow?.studentFeedback
-            || evaluation.studentFeedback
             || {
-              서론: '자동 피드백이 아직 준비되지 않았습니다.',
-              본론: '답안 제출 후 잠시 기다려 주세요.',
-              결론: '추가 분석이 완료되면 표시됩니다.',
+              서론: '교사 피드백이 아직 등록되지 않았습니다.',
+              본론: '교사가 피드백을 작성하면 표시됩니다.',
+              결론: '조금만 기다려 주세요.',
             };
           const rubricFromTeacherFields = feedbackRow
             ? [
@@ -151,34 +171,40 @@ export default function StudentFeedback() {
               ].filter((item) => item.evidence)
             : [];
 
-          const rubric = Array.isArray(feedbackRow?.rubric)
+          const teacherRubric = Array.isArray(feedbackRow?.rubric)
             ? feedbackRow.rubric
             : rubricFromTeacherFields.length
               ? rubricFromTeacherFields
-              : Array.isArray(evaluation.rubric) && evaluation.rubric.length
-                ? evaluation.rubric
-                : fallbackRubric;
-          const lineEdits = Array.isArray(feedbackRow?.line_edits)
+              : [];
+          const teacherLineEdits = Array.isArray(feedbackRow?.line_edits)
             ? feedbackRow.line_edits
             : Array.isArray(feedbackRow?.lineEdits)
               ? feedbackRow.lineEdits
-              : Array.isArray(evaluation.lineEdits)
-                ? evaluation.lineEdits
-                : [];
-          const teacherNote = feedbackRow?.teacher_note
-            || feedbackRow?.teacherNote
-            || evaluation.teacherNote
-            || '현재 자동 피드백만 제공됩니다. 추가 보정은 추후 반영됩니다.';
+              : [];
+          const aiSummary = evaluation.studentFeedback || {
+            서론: '자동 피드백이 아직 준비되지 않았습니다.',
+            본론: '답안 제출 후 잠시 기다려 주세요.',
+            결론: '추가 분석이 완료되면 표시됩니다.',
+          };
+          const aiRubric = Array.isArray(evaluation.rubric) && evaluation.rubric.length
+            ? evaluation.rubric
+            : fallbackRubric;
+          const aiLineEdits = Array.isArray(evaluation.lineEdits) ? evaluation.lineEdits : [];
 
           return {
             sessionId: evaluationId,
             createdAt: feedbackRow?.created_at ?? feedbackRow?.createdAt ?? evaluation.evaluatedAt,
             hasFeedback: Boolean(feedbackRow),
-            feedback: {
-              student_feedback: studentFeedback,
-              rubric,
-              line_edits: lineEdits,
-              teacher_note: teacherNote,
+            answerId,
+            teacherFeedback: {
+              student_feedback: teacherSummary,
+              rubric: teacherRubric,
+              line_edits: teacherLineEdits,
+            },
+            aiFeedback: {
+              student_feedback: aiSummary,
+              rubric: aiRubric,
+              line_edits: aiLineEdits,
             },
           };
         });
@@ -204,16 +230,22 @@ export default function StudentFeedback() {
     return sessions.find((session) => session.sessionId === selectedSessionId) || sessions[0];
   }, [sessions, selectedSessionId]);
 
-  const rubricSummary = useMemo(() => {
-    if (!selectedSession) {
-      return {};
-    }
-    const counts = selectedSession.feedback.rubric.reduce((acc: Record<string, number>, item) => {
-      acc[item.level] = (acc[item.level] || 0) + 1;
-      return acc;
-    }, {});
-    return counts;
-  }, [selectedSession]);
+  useEffect(() => {
+    const loadAnswer = async () => {
+      if (!selectedSession?.answerId) {
+        setAnswerContent('');
+        return;
+      }
+      try {
+        const answer = await getAnswerById(Number(selectedSession.answerId));
+        setAnswerContent(answer?.content || '');
+      } catch (err) {
+        setAnswerContent('');
+      }
+    };
+
+    loadAnswer();
+  }, [selectedSession?.answerId]);
 
   if (loading) {
     return (
@@ -239,7 +271,7 @@ export default function StudentFeedback() {
   return (
     <Box>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-        서론-본론-결론 피드백
+        피드백
       </Typography>
 
       <Paper sx={{ p: 3, mb: 3 }}>
@@ -297,9 +329,18 @@ export default function StudentFeedback() {
 
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-          총평 (교사 피드백 톤)
+          학생 답안
         </Typography>
-        <Grid container spacing={2}>
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+          {answerContent || '답안이 아직 등록되지 않았습니다.'}
+        </Typography>
+      </Paper>
+
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+          교사 피드백
+        </Typography>
+        <Grid container spacing={2} sx={{ mb: 2 }}>
           {(['서론', '본론', '결론'] as const).map((section) => (
             <Grid item xs={12} md={4} key={section}>
               <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
@@ -307,26 +348,92 @@ export default function StudentFeedback() {
                   [{section}]
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  {selectedSession?.feedback.student_feedback[section]}
+                  {selectedSession?.teacherFeedback.student_feedback[section]}
                 </Typography>
               </Paper>
             </Grid>
           ))}
         </Grid>
+        {(selectedSession?.teacherFeedback.rubric.length ?? 0) > 0 && (
+          <>
+            <Divider sx={{ mb: 2 }} />
+            <Grid container spacing={2}>
+              {selectedSession?.teacherFeedback.rubric.map((item) => (
+                <Grid item xs={12} md={6} key={item.criterion}>
+                  <Paper sx={{ p: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="subtitle2">{item.criterion}</Typography>
+                      <Chip label={item.level} color={levelColor(item.level)} size="small" />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      근거: {item.evidence}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      다음 행동: {item.next_action || '-'}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          </>
+        )}
+        {(selectedSession?.teacherFeedback.line_edits.length ?? 0) > 0 && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+              표현 첨삭 리스트
+            </Typography>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>원문</TableCell>
+                    <TableCell>수정안</TableCell>
+                    <TableCell>이유</TableCell>
+                    <TableCell align="center">분류</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedSession?.teacherFeedback.line_edits.map((edit) => (
+                    <TableRow key={`${edit.original}-${edit.suggested}`}>
+                      <TableCell>{edit.original}</TableCell>
+                      <TableCell>{edit.suggested}</TableCell>
+                      <TableCell>{edit.reason}</TableCell>
+                      <TableCell align="center">
+                        <Chip label={edit.category} size="small" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </>
+        )}
       </Paper>
 
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <Typography variant="subtitle1" fontWeight="bold">
-            루브릭 평가
+            AI 피드백
           </Typography>
-          {Object.entries(rubricSummary).map(([level, count]) => (
-            <Chip key={level} label={`${level} ${count}`} color={levelColor(level)} size="small" />
-          ))}
         </Box>
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          {(['서론', '본론', '결론'] as const).map((section) => (
+            <Grid item xs={12} md={4} key={section}>
+              <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  [{section}]
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  {selectedSession?.aiFeedback.student_feedback[section]}
+                </Typography>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
         <Divider sx={{ mb: 2 }} />
         <Grid container spacing={2}>
-          {selectedSession?.feedback.rubric.map((item) => (
+          {selectedSession?.aiFeedback.rubric.map((item) => (
             <Grid item xs={12} md={6} key={item.criterion}>
               <Paper sx={{ p: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -343,10 +450,8 @@ export default function StudentFeedback() {
             </Grid>
           ))}
         </Grid>
-      </Paper>
-
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
           표현 첨삭 리스트
         </Typography>
         <TableContainer>
@@ -360,7 +465,7 @@ export default function StudentFeedback() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {selectedSession?.feedback.line_edits.map((edit) => (
+              {selectedSession?.aiFeedback.line_edits.map((edit) => (
                 <TableRow key={`${edit.original}-${edit.suggested}`}>
                   <TableCell>{edit.original}</TableCell>
                   <TableCell>{edit.suggested}</TableCell>
@@ -370,7 +475,7 @@ export default function StudentFeedback() {
                   </TableCell>
                 </TableRow>
               ))}
-              {(selectedSession?.feedback.line_edits.length ?? 0) === 0 && (
+              {(selectedSession?.aiFeedback.line_edits.length ?? 0) === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
                     첨삭 항목이 없습니다.
@@ -381,13 +486,6 @@ export default function StudentFeedback() {
           </Table>
         </TableContainer>
       </Paper>
-
-      <Alert severity="info">
-        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-          교사용 메모
-        </Typography>
-        <Typography variant="body2">{selectedSession?.feedback.teacher_note}</Typography>
-      </Alert>
 
       <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
         <Button variant="outlined">피드백 다운로드</Button>
