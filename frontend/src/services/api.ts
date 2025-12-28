@@ -101,7 +101,7 @@ export const getAssessmentById = async (assessmentId: number) => {
 
 export const getAssessmentsByStudentId = async (studentId: number) => {
   const response = await api.get(`/assessments/student/${studentId}`);
-  return response.data;
+  return normalizeArray(response.data);
 };
 
 export const createAssessment = async (assessmentData: any) => {
