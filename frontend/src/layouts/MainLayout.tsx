@@ -15,6 +15,7 @@ import {
   Avatar,
   Menu,
   MenuItem,
+  Button,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -106,6 +107,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
     navigate('/login');
   };
 
+  const handleExit = () => {
+    alert('이용해 주셔서 감사합니다. 랜딩 페이지로 이동합니다.');
+    navigate('/');
+  };
+
   const storedUser = getCurrentUser();
   const displayName = storedUser?.name || '사용자';
 
@@ -163,6 +169,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             {displayName}님, 환영합니다!
           </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleExit}
+            sx={{ mr: 2 }}
+          >
+            종료하기
+          </Button>
           <IconButton
             size="large"
             aria-label="account of current user"
