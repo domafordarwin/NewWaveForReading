@@ -14,7 +14,6 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Divider,
   CircularProgress,
   Button,
 } from '@mui/material';
@@ -42,7 +41,6 @@ export default function EvaluationResult() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [evaluation, setEvaluation] = useState<any>(null);
-  const [assessment, setAssessment] = useState<any>(null);
 
   useEffect(() => {
     const loadEvaluation = async () => {
@@ -51,7 +49,6 @@ export default function EvaluationResult() {
         
         // 검사 정보 로드
         const assessmentData = await getAssessmentById(Number(assessmentId));
-        setAssessment(assessmentData);
         
         if (assessmentData.status === 'EVALUATED') {
           const answerData = await getAnswerByAssessment(Number(assessmentId));
@@ -256,7 +253,7 @@ export default function EvaluationResult() {
                 </Typography>
               </Box>
               <List>
-                {strengths.map((strength, index) => (
+                {strengths.map((strength: string, index: number) => (
                   <ListItem key={index}>
                     <ListItemIcon>
                       <CheckCircle color="success" />
@@ -279,7 +276,7 @@ export default function EvaluationResult() {
                 </Typography>
               </Box>
               <List>
-                {weaknesses.map((weakness, index) => (
+                {weaknesses.map((weakness: string, index: number) => (
                   <ListItem key={index}>
                     <ListItemIcon>
                       <Warning color="warning" />
@@ -360,7 +357,7 @@ export default function EvaluationResult() {
           학습 가이드
         </Typography>
         <List dense>
-          {improvements.map((improvement, index) => (
+          {improvements.map((improvement: string, index: number) => (
             <ListItem key={index}>
               <ListItemText primary={`${index + 1}. ${improvement}`} />
             </ListItem>
