@@ -1,0 +1,193 @@
+const now = new Date().toISOString();
+
+const users = [
+  {
+    userId: 1,
+    email: 'student1@example.com',
+    userType: 'STUDENT',
+    name: 'Kim Student',
+    birthDate: '2010-03-15',
+    schoolName: 'Seoul Middle School',
+    grade: 2,
+  },
+  {
+    userId: 2,
+    email: 'teacher1@example.com',
+    userType: 'TEACHER',
+    name: 'Lee Teacher',
+    schoolName: 'Seoul Middle School',
+  },
+  {
+    userId: 3,
+    email: 'parent1@example.com',
+    userType: 'PARENT',
+    name: 'Park Parent',
+  },
+  {
+    userId: 4,
+    email: 'admin1@example.com',
+    userType: 'ADMIN',
+    name: 'Admin User',
+  },
+];
+
+const books = [
+  {
+    bookId: 1,
+    title: 'Animal Farm',
+    author: 'George Orwell',
+    publisher: 'Minumsa',
+    publishedYear: 2003,
+    isbn: '9788937460449',
+    category: 'Classic',
+    description: 'An allegory about power and corruption.',
+    coverImageUrl: 'https://image.yes24.com/goods/9172/XL',
+    difficultyLevel: 'MIDDLE',
+  },
+  {
+    bookId: 2,
+    title: 'The Little Prince',
+    author: 'Antoine de Saint-Exupery',
+    publisher: 'Munhakdongne',
+    publishedYear: 2015,
+    isbn: '9788954635950',
+    category: 'Classic',
+    description: 'A philosophical tale about life and relationships.',
+    coverImageUrl: 'https://image.yes24.com/goods/24906982/XL',
+    difficultyLevel: 'ELEMENTARY',
+  },
+  {
+    bookId: 3,
+    title: 'Sapiens',
+    author: 'Yuval Noah Harari',
+    publisher: 'Gimmyoung',
+    publishedYear: 2015,
+    isbn: '9788934972464',
+    category: 'Humanities',
+    description: 'A history of humankind and its future.',
+    coverImageUrl: 'https://image.yes24.com/goods/23030284/XL',
+    difficultyLevel: 'HIGH',
+  },
+];
+
+const topics = [
+  {
+    topicId: 1,
+    bookId: 1,
+    topicText: 'Analyze how power corruption unfolds in Animal Farm.',
+    topicType: 'ANALYTICAL',
+    difficultyLevel: 4,
+    keywords: ['power', 'corruption', 'allegory'],
+  },
+  {
+    topicId: 2,
+    bookId: 2,
+    topicText: 'Explain the meaning of "what is essential is invisible to the eye".',
+    topicType: 'CRITICAL',
+    difficultyLevel: 3,
+    keywords: ['values', 'relationships', 'meaning'],
+  },
+  {
+    topicId: 3,
+    bookId: 3,
+    topicText: 'Predict the future impact of a key factor in Sapiens.',
+    topicType: 'CREATIVE',
+    difficultyLevel: 5,
+    keywords: ['evolution', 'society', 'future'],
+  },
+];
+
+const assessments = [
+  {
+    assessmentId: 1,
+    studentId: 1,
+    topic: topics[0],
+    assessmentType: 'ESSAY',
+    status: 'EVALUATED',
+    startedAt: '2024-12-20T10:00:00',
+    submittedAt: '2024-12-20T11:25:00',
+    timeLimitMinutes: 90,
+    wordCountMin: 800,
+    wordCountMax: 2000,
+    createdAt: '2024-12-20T09:00:00',
+  },
+  {
+    assessmentId: 2,
+    studentId: 1,
+    topic: topics[1],
+    assessmentType: 'ESSAY',
+    status: 'IN_PROGRESS',
+    startedAt: '2024-12-27T09:30:00',
+    timeLimitMinutes: 90,
+    wordCountMin: 800,
+    wordCountMax: 2000,
+    createdAt: '2024-12-27T09:00:00',
+  },
+  {
+    assessmentId: 3,
+    studentId: 1,
+    topic: topics[2],
+    assessmentType: 'ESSAY',
+    status: 'NOT_STARTED',
+    timeLimitMinutes: 90,
+    wordCountMin: 800,
+    wordCountMax: 2000,
+    createdAt: '2024-12-25T10:00:00',
+  },
+];
+
+const answers = [
+  {
+    answerId: 1,
+    assessmentId: 1,
+    content: 'Sample answer content.',
+    wordCount: 120,
+    charCount: 650,
+    paragraphCount: 3,
+    submittedAt: '2024-12-20T11:25:00',
+    version: 1,
+  },
+];
+
+const evaluations = [
+  {
+    evaluationId: 1,
+    answerId: 1,
+    assessmentId: 1,
+    studentId: 1,
+    evaluatorType: 'ai',
+    bookAnalysisScore: 18,
+    creativeThinkingScore: 20,
+    problemSolvingScore: 16,
+    languageExpressionScore: 24,
+    expressionScore: 24,
+    totalScore: 78,
+    grade: 'B+',
+    percentile: 65,
+    spellingErrors: 3,
+    spacingErrors: 8,
+    grammarErrors: 2,
+    vocabularyLevel: 3.8,
+    overallComment: 'A solid response with clear structure and examples.',
+    strengths: [
+      'Clear understanding of the topic',
+      'Concrete examples',
+      'Logical flow',
+    ],
+    weaknesses: [
+      'Limited depth of analysis',
+      'Needs more evidence',
+      'Minor grammar mistakes',
+    ],
+    evaluatedAt: now,
+  },
+];
+
+module.exports = {
+  users,
+  books,
+  topics,
+  assessments,
+  answers,
+  evaluations,
+};
