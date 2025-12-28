@@ -20,10 +20,22 @@ public class OpenAIConfig {
     }
     
     public String getApiKey() {
-        return apiKey;
+        if (apiKey != null && !apiKey.isBlank()) {
+            return apiKey;
+        }
+
+        String envKey = System.getenv("OPENAI_API_KEY");
+        return envKey != null ? envKey : "";
     }
     
     public String getApiUrl() {
-        return apiUrl;
+        if (apiUrl != null && !apiUrl.isBlank()) {
+            return apiUrl;
+        }
+
+        String envUrl = System.getenv("OPENAI_API_URL");
+        return (envUrl != null && !envUrl.isBlank())
+                ? envUrl
+                : "https://api.openai.com/v1";
     }
 }
