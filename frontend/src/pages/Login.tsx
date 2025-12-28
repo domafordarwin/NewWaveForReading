@@ -17,6 +17,7 @@ import {
   Link,
   Divider,
   Chip,
+  SelectChangeEvent,
 } from '@mui/material';
 import {
   Visibility,
@@ -27,7 +28,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { getUserByEmail } from '../services/api';
-import { setCurrentUser, StoredUserType } from '../utils/session';
+import { setCurrentUser } from '../utils/session';
+import type { StoredUserType } from '../utils/session';
 
 type UserType = 'student' | 'teacher' | 'parent' | 'admin';
 
@@ -48,8 +50,17 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name as string]: value,
+    }));
+    setError('');
+  };
+
+  const handleSelectChange = (event: SelectChangeEvent<UserType>) => {
+    const { name, value } = event.target;
     setFormData(prev => ({
       ...prev,
       [name as string]: value,
@@ -254,7 +265,7 @@ const Login: React.FC = () => {
                     name="userType"
                     value={formData.userType}
                     label="사용자 유형"
-                    onChange={handleChange}
+                    onChange={handleSelectChange}
                   >
                     <MenuItem value="student">학생</MenuItem>
                     <MenuItem value="teacher">교사</MenuItem>

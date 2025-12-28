@@ -3,8 +3,6 @@ import {
   Paper,
   Typography,
   Box,
-  Card,
-  CardContent,
   Grid,
   CircularProgress,
   Alert,
@@ -46,7 +44,6 @@ export default function TeacherDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [students, setStudents] = useState<any[]>([]);
   const [assessments, setAssessments] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [statistics, setStatistics] = useState({
@@ -64,8 +61,6 @@ export default function TeacherDashboard() {
         // 사용자 목록 로드 (학생만 필터링)
         const allUsers = await getAllUsers();
         const studentList = allUsers.filter((u: any) => u.userType === 'STUDENT');
-        setStudents(studentList);
-        
         // 검사 목록 로드
         const assessmentData = await getAllAssessments();
         setAssessments(assessmentData);
@@ -261,7 +256,7 @@ export default function TeacherDashboard() {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {statusData.map((entry, index) => (
+                  {statusData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

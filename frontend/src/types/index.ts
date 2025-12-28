@@ -1,10 +1,12 @@
 // 사용자 타입
-export enum UserType {
-  STUDENT = 'student',
-  TEACHER = 'teacher',
-  PARENT = 'parent',
-  ADMIN = 'admin'
-}
+export const UserType = {
+  STUDENT: 'student',
+  TEACHER: 'teacher',
+  PARENT: 'parent',
+  ADMIN: 'admin',
+} as const;
+
+export type UserType = typeof UserType[keyof typeof UserType];
 
 export interface User {
   userId: number;
@@ -19,11 +21,13 @@ export interface User {
 }
 
 // 도서 타입
-export enum DifficultyLevel {
-  ELEMENTARY = 'elementary',
-  MIDDLE = 'middle',
-  HIGH = 'high'
-}
+export const DifficultyLevel = {
+  ELEMENTARY: 'elementary',
+  MIDDLE: 'middle',
+  HIGH: 'high',
+} as const;
+
+export type DifficultyLevel = typeof DifficultyLevel[keyof typeof DifficultyLevel];
 
 export interface Book {
   bookId: number;
@@ -39,11 +43,13 @@ export interface Book {
 }
 
 // 논제 타입
-export enum TopicType {
-  ANALYTICAL = 'analytical',
-  CRITICAL = 'critical',
-  CREATIVE = 'creative'
-}
+export const TopicType = {
+  ANALYTICAL: 'analytical',
+  CRITICAL: 'critical',
+  CREATIVE: 'creative',
+} as const;
+
+export type TopicType = typeof TopicType[keyof typeof TopicType];
 
 export interface Topic {
   topicId: number;
@@ -56,18 +62,22 @@ export interface Topic {
 }
 
 // 검사 타입
-export enum AssessmentStatus {
-  NOT_STARTED = 'not_started',
-  IN_PROGRESS = 'in_progress',
-  SUBMITTED = 'submitted',
-  EVALUATED = 'evaluated'
-}
+export const AssessmentStatus = {
+  NOT_STARTED: 'not_started',
+  IN_PROGRESS: 'in_progress',
+  SUBMITTED: 'submitted',
+  EVALUATED: 'evaluated',
+} as const;
 
-export enum AssessmentType {
-  ESSAY = 'essay',
-  GRAMMAR = 'grammar',
-  READING = 'reading'
-}
+export type AssessmentStatus = typeof AssessmentStatus[keyof typeof AssessmentStatus];
+
+export const AssessmentType = {
+  ESSAY: 'essay',
+  GRAMMAR: 'grammar',
+  READING: 'reading',
+} as const;
+
+export type AssessmentType = typeof AssessmentType[keyof typeof AssessmentType];
 
 export interface Assessment {
   assessmentId: number;
@@ -129,20 +139,24 @@ export interface Evaluation {
 }
 
 // 첨삭 타입
-export enum ErrorType {
-  SPELLING = 'spelling',
-  SPACING = 'spacing',
-  GRAMMAR = 'grammar',
-  EXPRESSION = 'expression',
-  LOGIC = 'logic',
-  STRUCTURE = 'structure'
-}
+export const ErrorType = {
+  SPELLING: 'spelling',
+  SPACING: 'spacing',
+  GRAMMAR: 'grammar',
+  EXPRESSION: 'expression',
+  LOGIC: 'logic',
+  STRUCTURE: 'structure',
+} as const;
 
-export enum Severity {
-  CRITICAL = 'critical',
-  MAJOR = 'major',
-  MINOR = 'minor'
-}
+export type ErrorType = typeof ErrorType[keyof typeof ErrorType];
+
+export const Severity = {
+  CRITICAL: 'critical',
+  MAJOR: 'major',
+  MINOR: 'minor',
+} as const;
+
+export type Severity = typeof Severity[keyof typeof Severity];
 
 export interface Correction {
   correctionId: number;
