@@ -146,9 +146,21 @@ export default function EvaluationResult() {
     return (score / maxScore) * 100;
   };
 
-  const strengths = evaluation.strengths ? evaluation.strengths.split(',') : [];
-  const weaknesses = evaluation.weaknesses ? evaluation.weaknesses.split(',') : [];
-  const improvements = evaluation.improvements ? evaluation.improvements.split(',') : [];
+  const strengths = Array.isArray(evaluation.strengths)
+    ? evaluation.strengths
+    : evaluation.strengths
+    ? String(evaluation.strengths).split(',')
+    : [];
+  const weaknesses = Array.isArray(evaluation.weaknesses)
+    ? evaluation.weaknesses
+    : evaluation.weaknesses
+    ? String(evaluation.weaknesses).split(',')
+    : [];
+  const improvements = Array.isArray(evaluation.improvements)
+    ? evaluation.improvements
+    : evaluation.improvements
+    ? String(evaluation.improvements).split(',')
+    : [];
 
   return (
     <Box>

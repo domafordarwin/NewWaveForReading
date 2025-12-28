@@ -307,6 +307,7 @@ const Login: React.FC = () => {
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
+                  autoComplete="current-password"
                   onChange={handleChange}
                   placeholder="비밀번호를 입력하세요"
                   InputProps={{
