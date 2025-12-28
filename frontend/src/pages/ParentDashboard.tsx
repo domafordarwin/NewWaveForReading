@@ -4,10 +4,6 @@ import {
   Typography,
   Paper,
   Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Alert,
   CircularProgress,
   Card,
@@ -53,13 +49,12 @@ export default function ParentDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [students, setStudents] = useState<any[]>([]);
-  const [selectedStudentId, setSelectedStudentId] = useState<number | ''>('');
+  const [studentId, setStudentId] = useState<number | null>(null);
   const [assessments, setAssessments] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
 
   useEffect(() => {
-    const loadStudents = async () => {
+    const loadStudent = async () => {
       try {
         setLoading(true);
         const currentUser = getCurrentUser();
@@ -69,8 +64,20 @@ export default function ParentDashboard() {
         }
         const allUsers = await getAllUsers();
         const studentList = allUsers.filter((u: any) => u.userType === 'STUDENT' && u.isActive !== false);
-        setStudents(studentList);
-        setSelectedStudentId(studentList[0]?.userId || '');
+        const emailMatch = currentUser.email?.match(/parent_student(\d+)@/);
+        const matchedByEmail = emailMatch
+          ? studentList.find((student: any) => student.email === `student${emailMatch[1]}@example.com`)
+          : null;
+        const parentName = currentUser.name?.replace(' 학부모', '');
+        const matchedByName = parentName
+          ? studentList.find((student: any) => student.name === parentName)
+          : null;
+        const resolvedStudent = matchedByEmail || matchedByName || studentList[0];
+        if (!resolvedStudent) {
+          setError('연결된 학생 정보를 찾을 수 없습니다.');
+          return;
+        }
+        setStudentId(resolvedStudent.userId);
         setError(null);
       } catch (err: any) {
         console.error('학생 목록 로드 실패:', err);
@@ -80,12 +87,12 @@ export default function ParentDashboard() {
       }
     };
 
-    loadStudents();
+    loadStudent();
   }, []);
 
   useEffect(() => {
     const loadStudentData = async () => {
-      if (!selectedStudentId) {
+      if (!studentId) {
         setAssessments([]);
         setEvaluations([]);
         return;
@@ -93,10 +100,10 @@ export default function ParentDashboard() {
       try {
         setLoading(true);
         const [assessmentData, evaluationData] = await Promise.all([
-          getAssessmentsByStudentId(Number(selectedStudentId)),
+          getAssessmentsByStudentId(studentId),
           getAllEvaluations(),
         ]);
-        const filteredEvaluations = evaluationData.filter((e: any) => e.studentId === Number(selectedStudentId));
+        const filteredEvaluations = evaluationData.filter((e: any) => e.studentId === studentId);
         setAssessments(assessmentData);
         setEvaluations(filteredEvaluations);
         setError(null);
@@ -109,7 +116,7 @@ export default function ParentDashboard() {
     };
 
     loadStudentData();
-  }, [selectedStudentId]);
+  }, [studentId]);
 
   if (loading) {
     return (
@@ -141,23 +148,6 @@ export default function ParentDashboard() {
       <Typography variant="h4" gutterBottom fontWeight="bold">
         학부모 대시보드
       </Typography>
-
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <FormControl fullWidth>
-          <InputLabel>학생 선택</InputLabel>
-          <Select
-            value={selectedStudentId}
-            label="학생 선택"
-            onChange={(e) => setSelectedStudentId(Number(e.target.value))}
-          >
-            {students.map((student) => (
-              <MenuItem key={student.userId} value={student.userId}>
-                {student.name} ({student.email})
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Paper>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>

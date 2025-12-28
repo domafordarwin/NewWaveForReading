@@ -201,7 +201,7 @@ const Login: React.FC = () => {
     const testAccounts = {
       student: { email: 'student1@example.com', password: 'ehrtjtoanfruf' },
       teacher: { email: 'teacher1@example.com', password: 'ehrtjtoanfruf' },
-      parent: { email: 'parent1@example.com', password: 'ehrtjtoanfruf' },
+      parent: { email: 'parent_student1@example.com', password: 'ehrtjtoanfruf' },
       admin: { email: 'admin1@example.com', password: 'ehrtjtoanfruf' },
     };
 
