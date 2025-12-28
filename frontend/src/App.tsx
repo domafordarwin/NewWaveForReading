@@ -112,6 +112,7 @@ function App() {
             <MainLayout>
               <Routes>
                 <Route path="dashboard" element={<ParentDashboard />} />
+                <Route path="result/:assessmentId" element={<EvaluationResult />} />
               </Routes>
             </MainLayout>
           } />

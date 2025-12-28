@@ -56,9 +56,9 @@ const teacherMenuItems = [
 
 const parentMenuItems = [
   { text: '대시보드', icon: <DashboardIcon />, path: '/parent/dashboard' },
-  { text: '자녀 검사', icon: <AssignmentIcon />, path: '/parent/dashboard' },
-  { text: '자녀 성적', icon: <AssessmentIcon />, path: '/parent/dashboard' },
-  { text: '학습 이력', icon: <TrendingUpIcon />, path: '/parent/dashboard' },
+  { text: '자녀 검사', icon: <AssignmentIcon />, path: '/parent/dashboard#assessments' },
+  { text: '자녀 성적', icon: <AssessmentIcon />, path: '/parent/dashboard#results' },
+  { text: '학습 이력', icon: <TrendingUpIcon />, path: '/parent/dashboard#progress' },
 ];
 
 const adminMenuItems = [

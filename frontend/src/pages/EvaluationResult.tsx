@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -37,6 +37,8 @@ import { getAssessmentById, getEvaluationByAnswerId, getAnswerByAssessment } fro
 export default function EvaluationResult() {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backPath = location.pathname.startsWith('/parent') ? '/parent/dashboard' : '/student/dashboard';
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +94,7 @@ export default function EvaluationResult() {
         <Alert severity="warning" sx={{ mb: 2 }}>
           {error}
         </Alert>
-        <Button variant="contained" onClick={() => navigate('/student/dashboard')}>
+        <Button variant="contained" onClick={() => navigate(backPath)}>
           대시보드로 돌아가기
         </Button>
       </Box>
@@ -105,7 +107,7 @@ export default function EvaluationResult() {
         <Alert severity="info" sx={{ mb: 2 }}>
           평가 결과를 찾을 수 없습니다.
         </Alert>
-        <Button variant="contained" onClick={() => navigate('/student/dashboard')}>
+        <Button variant="contained" onClick={() => navigate(backPath)}>
           대시보드로 돌아가기
         </Button>
       </Box>
@@ -387,7 +389,7 @@ export default function EvaluationResult() {
       <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
         <Button 
           variant="contained" 
-          onClick={() => navigate('/student/dashboard')}
+          onClick={() => navigate(backPath)}
           size="large"
         >
           대시보드로 돌아가기

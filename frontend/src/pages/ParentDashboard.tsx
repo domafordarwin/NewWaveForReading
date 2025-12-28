@@ -25,7 +25,7 @@ import {
   PolarRadiusAxis,
   Radar,
 } from 'recharts';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getAllUsers, getAssessmentsByStudentId, getAllEvaluations } from '../services/api';
 import { getCurrentUser } from '../utils/session';
 
@@ -61,6 +61,7 @@ const getStatusText = (status: string) => {
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [studentId, setStudentId] = useState<number | null>(null);
@@ -131,6 +132,17 @@ export default function ParentDashboard() {
 
     loadStudentData();
   }, [studentId]);
+
+  useEffect(() => {
+    if (!location.hash) {
+      return;
+    }
+    const targetId = location.hash.replace('#', '');
+    const target = document.getElementById(targetId);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [location.hash]);
 
   if (loading) {
     return (
@@ -230,7 +242,7 @@ export default function ParentDashboard() {
         </Grid>
       </Grid>
 
-      <Typography variant="h6" gutterBottom fontWeight="bold">
+      <Typography id="results" variant="h6" gutterBottom fontWeight="bold">
         자녀 성적
       </Typography>
       {evaluations.length === 0 ? (
@@ -259,7 +271,7 @@ export default function ParentDashboard() {
         </Paper>
       )}
 
-      <Typography variant="h6" gutterBottom fontWeight="bold">
+      <Typography id="progress" variant="h6" gutterBottom fontWeight="bold">
         자녀 학습 이력
       </Typography>
       {evaluations.length === 0 ? (
@@ -308,7 +320,7 @@ export default function ParentDashboard() {
         </Grid>
       )}
 
-      <Typography variant="h6" gutterBottom fontWeight="bold">
+      <Typography id="assessments" variant="h6" gutterBottom fontWeight="bold">
         검사 현황
       </Typography>
 
@@ -341,7 +353,7 @@ export default function ParentDashboard() {
                       sx={{ mt: 2 }}
                       size="small"
                       variant="outlined"
-                      onClick={() => navigate(`/student/result/${assessment.assessmentId}`)}
+                      onClick={() => navigate(`/parent/result/${assessment.assessmentId}`)}
                     >
                       평가 결과 보기
                     </Button>
