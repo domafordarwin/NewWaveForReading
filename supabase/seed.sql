@@ -14,8 +14,16 @@ values
   ('student10@example.com', '한지우', 'STUDENT', '2006-12-07', '서울중학교', 6, true, 'ehrtjtoanfruf'),
   ('teacher1@example.com', '김선생', 'TEACHER', null, '서울중학교', null, true, 'ehrtjtoanfruf'),
   ('teacher2@example.com', '이선생', 'TEACHER', null, '서울중학교', null, true, 'ehrtjtoanfruf'),
-  ('parent1@example.com', '박학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
-  ('parent2@example.com', '최학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
+  ('parent_student1@example.com', '김민준 학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
+  ('parent_student2@example.com', '이서연 학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
+  ('parent_student3@example.com', '박지훈 학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
+  ('parent_student4@example.com', '최유나 학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
+  ('parent_student5@example.com', '정하늘 학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
+  ('parent_student6@example.com', '오도윤 학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
+  ('parent_student7@example.com', '강서준 학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
+  ('parent_student8@example.com', '조예린 학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
+  ('parent_student9@example.com', '윤태양 학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
+  ('parent_student10@example.com', '한지우 학부모', 'PARENT', null, null, null, true, 'ehrtjtoanfruf'),
   ('admin1@example.com', '관리자', 'ADMIN', null, null, null, true, 'ehrtjtoanfruf');
 
 insert into public.books (title, author, publisher, published_year, isbn, category, description, cover_image_url, difficulty_level)
