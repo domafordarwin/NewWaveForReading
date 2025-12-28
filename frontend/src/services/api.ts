@@ -553,4 +553,38 @@ export const getFeedbacksByStudentId = async (studentId: number) => {
   return list.filter((item: any) => item.studentId === studentId);
 };
 
+export const createTeacherFeedback = async (feedbackData: any) => {
+  if (supabase) {
+    const payload = {
+      evaluation_id: feedbackData.evaluationId ?? null,
+      teacher_id: feedbackData.teacherId ?? null,
+      student_id: feedbackData.studentId,
+      assessment_id: feedbackData.assessmentId ?? null,
+      answer_id: feedbackData.answerId ?? null,
+      summary_intro: feedbackData.summaryIntro ?? null,
+      summary_body: feedbackData.summaryBody ?? null,
+      summary_conclusion: feedbackData.summaryConclusion ?? null,
+      topic_understanding: feedbackData.topicUnderstanding ?? null,
+      example_analysis: feedbackData.exampleAnalysis ?? null,
+      logical_flow: feedbackData.logicalFlow ?? null,
+      expression: feedbackData.expression ?? null,
+      rubric: feedbackData.rubric ?? null,
+      line_edits: feedbackData.lineEdits ?? null,
+      strengths: feedbackData.strengths ?? null,
+      weaknesses: feedbackData.weaknesses ?? null,
+      improvements: feedbackData.improvements ?? null,
+      teacher_note: feedbackData.teacherNote ?? null,
+    };
+    const { data, error } = await ensureSupabase()
+      .from('feedbacks')
+      .insert(payload)
+      .select('*')
+      .single();
+    if (error) throw error;
+    return data;
+  }
+  const response = await api.post('/feedbacks', feedbackData);
+  return response.data;
+};
+
 export default api;

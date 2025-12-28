@@ -17,6 +17,7 @@ import AssessmentAssignment from './pages/AssessmentAssignment';
 import ClassStatistics from './pages/ClassStatistics';
 import ParentDashboard from './pages/ParentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import TeacherFeedback from './pages/TeacherFeedback';
 
 const theme = createTheme({
   palette: {
@@ -101,6 +102,7 @@ function App() {
               <Routes>
                 <Route path="dashboard" element={<TeacherDashboard />} />
                 <Route path="students" element={<StudentManagement />} />
+                <Route path="feedback/:studentId" element={<TeacherFeedback />} />
                 <Route path="assessments" element={<AssessmentAssignment />} />
                 <Route path="statistics" element={<ClassStatistics />} />
               </Routes>

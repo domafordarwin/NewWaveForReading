@@ -122,11 +122,42 @@ export default function StudentFeedback() {
               본론: '답안 제출 후 잠시 기다려 주세요.',
               결론: '추가 분석이 완료되면 표시됩니다.',
             };
+          const rubricFromTeacherFields = feedbackRow
+            ? [
+                {
+                  criterion: '주제 이해',
+                  level: '중',
+                  evidence: feedbackRow.topic_understanding ?? feedbackRow.topicUnderstanding ?? '',
+                  next_action: '',
+                },
+                {
+                  criterion: '사례 분석',
+                  level: '중',
+                  evidence: feedbackRow.example_analysis ?? feedbackRow.exampleAnalysis ?? '',
+                  next_action: '',
+                },
+                {
+                  criterion: '논리적 전개',
+                  level: '중',
+                  evidence: feedbackRow.logical_flow ?? feedbackRow.logicalFlow ?? '',
+                  next_action: '',
+                },
+                {
+                  criterion: '표현력',
+                  level: '중',
+                  evidence: feedbackRow.expression ?? '',
+                  next_action: '',
+                },
+              ].filter((item) => item.evidence)
+            : [];
+
           const rubric = Array.isArray(feedbackRow?.rubric)
             ? feedbackRow.rubric
-            : Array.isArray(evaluation.rubric) && evaluation.rubric.length
-              ? evaluation.rubric
-              : fallbackRubric;
+            : rubricFromTeacherFields.length
+              ? rubricFromTeacherFields
+              : Array.isArray(evaluation.rubric) && evaluation.rubric.length
+                ? evaluation.rubric
+                : fallbackRubric;
           const lineEdits = Array.isArray(feedbackRow?.line_edits)
             ? feedbackRow.line_edits
             : Array.isArray(feedbackRow?.lineEdits)

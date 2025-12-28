@@ -29,8 +29,10 @@ import {
   School,
 } from '@mui/icons-material';
 import { getAllUsers, createUser, updateUser, deleteUser } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 export default function StudentManagement() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [students, setStudents] = useState<any[]>([]);
@@ -262,6 +264,14 @@ export default function StudentManagement() {
                       />
                     </TableCell>
                     <TableCell align="center">
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        sx={{ mr: 1 }}
+                        onClick={() => navigate(`/teacher/feedback/${student.userId}`)}
+                      >
+                        피드백
+                      </Button>
                       <IconButton size="small" color="primary" onClick={() => handleEditOpen(student)}>
                         <Edit />
                       </IconButton>
