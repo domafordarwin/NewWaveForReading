@@ -221,7 +221,7 @@ const Login: React.FC = () => {
         py: 4,
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth={false} sx={{ px: { xs: 2, md: 4 } }}>
         <Box
           sx={{
             display: 'grid',

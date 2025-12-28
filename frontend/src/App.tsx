@@ -50,6 +50,19 @@ const theme = createTheme({
       '"Segoe UI Symbol"',
     ].join(','),
   },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        'html, body, #root': {
+          height: '100%',
+          width: '100%',
+        },
+        body: {
+          margin: 0,
+        },
+      },
+    },
+  },
 });
 
 function App() {

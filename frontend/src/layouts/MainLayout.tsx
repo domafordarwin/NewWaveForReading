@@ -16,7 +16,9 @@ import {
   Menu,
   MenuItem,
   Button,
+  useMediaQuery,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -32,8 +34,6 @@ import {
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { clearCurrentUser, getCurrentUser } from '../utils/session';
-
-const drawerWidth = 240;
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -68,6 +68,9 @@ const adminMenuItems = [
 ];
 
 export default function MainLayout({ children }: MainLayoutProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const drawerWidth = isMobile ? 220 : 240;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
@@ -144,7 +147,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
       <CssBaseline />
       <AppBar
         position="fixed"
@@ -156,7 +159,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           boxShadow: 1,
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -166,14 +169,19 @@ export default function MainLayout({ children }: MainLayoutProps) {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant={isMobile ? 'subtitle1' : 'h6'}
+            noWrap
+            component="div"
+            sx={{ flexGrow: 1 }}
+          >
             {displayName}님, 환영합니다!
           </Typography>
           <Button
             variant="outlined"
-            size="small"
+            size={isMobile ? 'small' : 'medium'}
             onClick={handleExit}
-            sx={{ mr: 2 }}
+            sx={{ mr: 2, px: isMobile ? 1.5 : 2.5 }}
           >
             종료하기
           </Button>
@@ -248,11 +256,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 2, sm: 3, md: 4 },
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mt: 8,
+          mt: { xs: 7, sm: 8 },
           bgcolor: '#f5f5f5',
-          minHeight: '100vh',
+          minHeight: '100dvh',
         }}
       >
         {children}
