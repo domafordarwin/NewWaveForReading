@@ -91,17 +91,18 @@ const Login: React.FC = () => {
     try {
       const user = await getUserByEmail(formData.email);
       const normalizedType = String(user.userType || '').toLowerCase() as StoredUserType;
+      const resolvedType = normalizedType || formData.userType;
 
-      if (!normalizedType) {
+      if (!resolvedType) {
         setError('사용자 정보를 확인할 수 없습니다.');
         setLoading(false);
         return;
       }
 
-      if (normalizedType !== formData.userType) {
+      if (resolvedType !== formData.userType) {
         setFormData(prev => ({
           ...prev,
-          userType: normalizedType,
+          userType: resolvedType,
         }));
       }
 
@@ -115,12 +116,12 @@ const Login: React.FC = () => {
         userId: user.userId,
         name: user.name,
         email: user.email,
-        userType: normalizedType,
+        userType: resolvedType,
         isActive: user.isActive,
       });
 
       // 사용자 유형에 따라 다른 페이지로 이동
-      switch (formData.userType) {
+      switch (resolvedType) {
         case 'student':
           navigate('/student/dashboard');
           break;
