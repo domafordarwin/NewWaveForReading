@@ -11,6 +11,20 @@ import {
   Chip,
   Button,
 } from '@mui/material';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+} from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { getAllUsers, getAssessmentsByStudentId, getAllEvaluations } from '../services/api';
 import { getCurrentUser } from '../utils/session';
@@ -143,6 +157,40 @@ export default function ParentDashboard() {
     ? Math.round(evaluations.reduce((sum: number, e: any) => sum + e.totalScore, 0) / evaluations.length)
     : 0;
 
+  const progressChartData = evaluations
+    .slice(0, 10)
+    .reverse()
+    .map((evaluation: any, index: number) => ({
+      name: `${index + 1}회`,
+      점수: evaluation.totalScore,
+    }));
+
+  const recentEvaluation = evaluations[0];
+  const radarChartData = recentEvaluation
+    ? [
+        {
+          subject: '대상도서\n분석력',
+          score: recentEvaluation.bookAnalysisScore,
+          fullMark: 25,
+        },
+        {
+          subject: '창의적\n사고력',
+          score: recentEvaluation.creativeThinkingScore,
+          fullMark: 25,
+        },
+        {
+          subject: '문제\n해결력',
+          score: recentEvaluation.problemSolvingScore,
+          fullMark: 25,
+        },
+        {
+          subject: '문장력/\n표현력',
+          score: recentEvaluation.expressionScore,
+          fullMark: 25,
+        },
+      ]
+    : [];
+
   return (
     <Box>
       <Typography variant="h4" gutterBottom fontWeight="bold">
@@ -181,6 +229,84 @@ export default function ParentDashboard() {
           </Paper>
         </Grid>
       </Grid>
+
+      <Typography variant="h6" gutterBottom fontWeight="bold">
+        자녀 성적
+      </Typography>
+      {evaluations.length === 0 ? (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          아직 평가 결과가 없습니다.
+        </Alert>
+      ) : (
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Grid container spacing={2}>
+            {evaluations.slice(0, 4).map((evaluation) => (
+              <Grid item xs={12} sm={6} md={3} key={evaluation.evaluationId}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    평가 #{evaluation.evaluationId}
+                  </Typography>
+                  <Typography variant="h5" fontWeight="bold" sx={{ mt: 1 }}>
+                    {evaluation.totalScore ?? '-'}점
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    등급: {evaluation.grade || '-'}
+                  </Typography>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      )}
+
+      <Typography variant="h6" gutterBottom fontWeight="bold">
+        자녀 학습 이력
+      </Typography>
+      {evaluations.length === 0 ? (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          아직 학습 이력이 없습니다.
+        </Alert>
+      ) : (
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} md={7}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                성장 추이
+              </Typography>
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={progressChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="점수" stroke="#1976d2" strokeWidth={3} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={5}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                최근 영역별 점수
+              </Typography>
+              <ResponsiveContainer width="100%" height={280}>
+                <RadarChart data={radarChartData}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="subject" style={{ fontSize: '12px' }} />
+                  <PolarRadiusAxis domain={[0, 25]} />
+                  <Radar
+                    name="점수"
+                    dataKey="score"
+                    stroke="#1976d2"
+                    fill="#1976d2"
+                    fillOpacity={0.6}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
 
       <Typography variant="h6" gutterBottom fontWeight="bold">
         검사 현황
