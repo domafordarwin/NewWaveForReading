@@ -15,6 +15,7 @@ import {
   TableHead,
   TableRow,
   Chip,
+  Button,
 } from '@mui/material';
 import { getAllUsers, getAllAssessments, getAllEvaluations } from '../services/api';
 import { getCurrentUser } from '../utils/session';
@@ -41,6 +42,14 @@ export default function AdminDashboard() {
   const [assessments, setAssessments] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [userTab, setUserTab] = useState(0);
+  const [apiStatus, setApiStatus] = useState<null | {
+    configured: boolean;
+    ok: boolean;
+    error?: string;
+    modelCount?: number | null;
+    checkedAt?: string;
+  }>(null);
+  const [apiLoading, setApiLoading] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -70,6 +79,27 @@ export default function AdminDashboard() {
 
     loadData();
   }, []);
+
+  const checkApiStatus = async () => {
+    try {
+      setApiLoading(true);
+      const response = await fetch('/api/openai-status');
+      const payload = await response.json();
+      setApiStatus({
+        ...payload,
+        checkedAt: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      setApiStatus({
+        configured: true,
+        ok: false,
+        error: err.message || 'API 상태 확인에 실패했습니다.',
+        checkedAt: new Date().toISOString(),
+      });
+    } finally {
+      setApiLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -113,6 +143,16 @@ export default function AdminDashboard() {
     },
     {}
   );
+
+  const aiEvaluations = evaluations.filter(
+    (evaluation) => String(evaluation.evaluatorType || '').toLowerCase() === 'ai'
+  );
+  const now = Date.now();
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const aiLast7Days = aiEvaluations.filter((evaluation) => {
+    const timestamp = Date.parse(evaluation.evaluatedAt || '');
+    return Number.isFinite(timestamp) && timestamp >= sevenDaysAgo;
+  });
 
   return (
     <Box>
@@ -162,6 +202,74 @@ export default function AdminDashboard() {
           </Paper>
         </Grid>
       </Grid>
+
+      <Typography variant="h6" gutterBottom fontWeight="bold">
+        OpenAI API 상태
+      </Typography>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
+          <Chip
+            label={
+              apiStatus
+                ? apiStatus.configured
+                  ? apiStatus.ok
+                    ? '정상'
+                    : '오류'
+                  : '미설정'
+                : '미확인'
+            }
+            color={
+              apiStatus
+                ? apiStatus.configured
+                  ? apiStatus.ok
+                    ? 'success'
+                    : 'error'
+                  : 'warning'
+                : 'default'
+            }
+            variant="outlined"
+          />
+          <Typography variant="body2" color="text.secondary">
+            {apiStatus?.configured
+              ? apiStatus.ok
+                ? `모델 수: ${apiStatus.modelCount ?? '-'}`
+                : `오류: ${apiStatus.error || '확인 실패'}`
+              : 'OPENAI_API_KEY가 설정되지 않았습니다.'}
+          </Typography>
+          <Button variant="outlined" size="small" onClick={checkApiStatus} disabled={apiLoading}>
+            {apiLoading ? '확인 중...' : '상태 확인'}
+          </Button>
+          {apiStatus?.checkedAt && (
+            <Typography variant="caption" color="text.secondary">
+              마지막 확인: {new Date(apiStatus.checkedAt).toLocaleString()}
+            </Typography>
+          )}
+        </Box>
+      </Paper>
+
+      <Typography variant="h6" gutterBottom fontWeight="bold">
+        OpenAI 사용량(평가 기준)
+      </Typography>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography variant="subtitle2" color="text.secondary">
+              총 AI 평가
+            </Typography>
+            <Typography variant="h5" fontWeight="bold">
+              {aiEvaluations.length}건
+            </Typography>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography variant="subtitle2" color="text.secondary">
+              최근 7일
+            </Typography>
+            <Typography variant="h5" fontWeight="bold">
+              {aiLast7Days.length}건
+            </Typography>
+          </Grid>
+        </Grid>
+      </Paper>
 
       <Typography variant="h6" gutterBottom fontWeight="bold">
         검사 상태 요약
