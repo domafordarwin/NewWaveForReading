@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
   AppBar,
   Box,
@@ -25,10 +25,8 @@ import {
   AccountCircle,
   Logout,
   People,
-  School,
   BarChart,
   AdminPanelSettings,
-  FamilyRestroom,
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';

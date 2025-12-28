@@ -16,13 +16,9 @@ import {
   CircularProgress,
   Card,
   CardContent,
-  Chip,
   Grid,
 } from '@mui/material';
-import {
-  Assignment,
-  CheckCircle,
-} from '@mui/icons-material';
+import { CheckCircle } from '@mui/icons-material';
 import { getAllUsers, getAllBooks, createAssessment } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
