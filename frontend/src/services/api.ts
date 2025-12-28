@@ -10,6 +10,31 @@ const api = axios.create({
   },
 });
 
+const normalizeArray = (data: any) => {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  if (data && Array.isArray(data.items)) {
+    return data.items;
+  }
+  if (data && Array.isArray(data.data)) {
+    return data.data;
+  }
+  if (data && Array.isArray(data.users)) {
+    return data.users;
+  }
+  if (data && Array.isArray(data.books)) {
+    return data.books;
+  }
+  if (data && Array.isArray(data.assessments)) {
+    return data.assessments;
+  }
+  if (data && Array.isArray(data.evaluations)) {
+    return data.evaluations;
+  }
+  return [];
+};
+
 // Health Check
 export const healthCheck = async () => {
   const response = await api.get('/health');
@@ -19,7 +44,7 @@ export const healthCheck = async () => {
 // User APIs
 export const getAllUsers = async () => {
   const response = await api.get('/users');
-  return response.data;
+  return normalizeArray(response.data);
 };
 
 export const getUserById = async (userId: number) => {
@@ -50,7 +75,7 @@ export const deleteUser = async (userId: number) => {
 // Book APIs
 export const getAllBooks = async () => {
   const response = await api.get('/books');
-  return response.data;
+  return normalizeArray(response.data);
 };
 
 export const getBookById = async (bookId: number) => {
@@ -66,7 +91,7 @@ export const createBook = async (bookData: any) => {
 // Assessment APIs
 export const getAllAssessments = async () => {
   const response = await api.get('/assessments');
-  return response.data;
+  return normalizeArray(response.data);
 };
 
 export const getAssessmentById = async (assessmentId: number) => {
@@ -118,7 +143,7 @@ export const analyzeAnswer = async (answerId: number) => {
 // Evaluation APIs
 export const getAllEvaluations = async () => {
   const response = await api.get('/evaluations');
-  return response.data;
+  return normalizeArray(response.data);
 };
 
 export const getEvaluationById = async (evaluationId: number) => {
