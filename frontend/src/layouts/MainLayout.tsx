@@ -17,6 +17,8 @@ import {
   MenuItem,
   Button,
   useMediaQuery,
+  Divider,
+  Chip,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
@@ -30,15 +32,29 @@ import {
   People,
   BarChart,
   AdminPanelSettings,
+  School,
+  Class,
+  Print,
+  Quiz,
+  LibraryBooks,
+  Settings,
+  Storage,
+  FamilyRestroom,
+  EventNote,
+  Info,
+  Face,
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { clearCurrentUser, getCurrentUser } from '../utils/session';
+import type { StoredUserType } from '../utils/session';
+import { UserTypeLabels } from '../types';
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
+// 학생 회원 메뉴
 const studentMenuItems = [
   { text: '대시보드', icon: <DashboardIcon />, path: '/student/dashboard' },
   { text: '검사 목록', icon: <AssignmentIcon />, path: '/student/assessments' },
@@ -47,46 +63,93 @@ const studentMenuItems = [
   { text: '피드백', icon: <AssessmentIcon />, path: '/student/feedback' },
 ];
 
-const teacherMenuItems = [
+// 학부모 메뉴
+const parentMenuItems = [
+  { text: '대시보드', icon: <DashboardIcon />, path: '/parent/dashboard' },
+  { text: '자녀 성적 리포트', icon: <AssessmentIcon />, path: '/parent/dashboard' },
+  { text: '상담 신청', icon: <EventNote />, path: '/parent/dashboard' },
+  { text: 'Reading PRO 안내', icon: <Info />, path: '/parent/info' },
+];
+
+// 학교 관리자 메뉴
+const schoolAdminMenuItems = [
+  { text: '대시보드', icon: <DashboardIcon />, path: '/school-admin/dashboard' },
+  { text: '학생 관리', icon: <People />, path: '/school-admin/students' },
+  { text: '학급 관리', icon: <Class />, path: '/school-admin/classes' },
+  { text: '평가 현황', icon: <AssessmentIcon />, path: '/school-admin/dashboard' },
+  { text: '리포트 출력', icon: <Print />, path: '/school-admin/dashboard' },
+];
+
+// 독서 진단 담당 교사 메뉴
+const assessmentTeacherMenuItems = [
   { text: '대시보드', icon: <DashboardIcon />, path: '/teacher/dashboard' },
   { text: '학생 관리', icon: <People />, path: '/teacher/students' },
   { text: '검사 배정', icon: <AssignmentIcon />, path: '/teacher/assessments' },
+  { text: '피드백 작성', icon: <AssessmentIcon />, path: '/teacher/dashboard' },
   { text: '반별 통계', icon: <BarChart />, path: '/teacher/statistics' },
 ];
 
-const parentMenuItems = [
-  { text: '대시보드', icon: <DashboardIcon />, path: '/parent/dashboard' },
+// 문항 개발 교사 메뉴
+const questionDeveloperMenuItems = [
+  { text: '대시보드', icon: <DashboardIcon />, path: '/question-dev/dashboard' },
+  { text: '문항 개발', icon: <Quiz />, path: '/question-dev/dashboard' },
+  { text: '도서 관리', icon: <LibraryBooks />, path: '/question-dev/dashboard' },
+  { text: '문항 검토', icon: <AssessmentIcon />, path: '/question-dev/dashboard' },
 ];
 
-const adminMenuItems = [
-  { text: '대시보드', icon: <AdminPanelSettings />, path: '/admin/dashboard' },
-  { text: '사용자 현황', icon: <People />, path: '/admin/dashboard' },
-  { text: '검사 현황', icon: <AssignmentIcon />, path: '/admin/dashboard' },
+// 시스템 관리자 메뉴
+const systemAdminMenuItems = [
+  { text: '대시보드', icon: <DashboardIcon />, path: '/admin/dashboard' },
+  { text: '사용자 관리', icon: <People />, path: '/admin/dashboard' },
+  { text: '문항 DB 관리', icon: <Storage />, path: '/admin/dashboard' },
+  { text: '권한 관리', icon: <AdminPanelSettings />, path: '/admin/dashboard' },
+  { text: '시스템 설정', icon: <Settings />, path: '/admin/dashboard' },
 ];
+
+// 사용자 타입별 아이콘
+const userTypeIcons: Record<StoredUserType, React.ReactNode> = {
+  STUDENT: <Face />,
+  PARENT: <FamilyRestroom />,
+  SCHOOL_ADMIN: <School />,
+  ASSESSMENT_TEACHER: <AssignmentIcon />,
+  QUESTION_DEVELOPER: <Quiz />,
+  SYSTEM_ADMIN: <Settings />,
+};
 
 export default function MainLayout({ children }: MainLayoutProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const drawerWidth = isMobile ? 220 : 240;
+  const drawerWidth = isMobile ? 220 : 260;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 현재 경로에 따라 메뉴 결정
-  const isTeacher = location.pathname.startsWith('/teacher');
-  const isParent = location.pathname.startsWith('/parent');
-  const isAdmin = location.pathname.startsWith('/admin');
+  const storedUser = getCurrentUser();
+  const userType = storedUser?.userType || 'STUDENT';
 
-  const menuItems = isTeacher
-    ? teacherMenuItems
-    : isParent
-    ? parentMenuItems
-    : isAdmin
-    ? adminMenuItems
-    : studentMenuItems;
+  // 현재 사용자 타입에 따라 메뉴 결정
+  const getMenuItems = () => {
+    switch (userType) {
+      case 'STUDENT':
+        return studentMenuItems;
+      case 'PARENT':
+        return parentMenuItems;
+      case 'SCHOOL_ADMIN':
+        return schoolAdminMenuItems;
+      case 'ASSESSMENT_TEACHER':
+        return assessmentTeacherMenuItems;
+      case 'QUESTION_DEVELOPER':
+        return questionDeveloperMenuItems;
+      case 'SYSTEM_ADMIN':
+        return systemAdminMenuItems;
+      default:
+        return studentMenuItems;
+    }
+  };
 
-  const userRole = isTeacher ? '교사' : isParent ? '학부모' : isAdmin ? '관리자' : '학생';
+  const menuItems = getMenuItems();
+  const userRoleLabel = UserTypeLabels[userType as keyof typeof UserTypeLabels] || '사용자';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -101,38 +164,57 @@ export default function MainLayout({ children }: MainLayoutProps) {
   };
 
   const handleLogout = () => {
-    // 로그아웃 로직
     handleProfileMenuClose();
     clearCurrentUser();
     navigate('/login');
   };
 
   const handleExit = () => {
-    alert('이용해 주셔서 감사합니다. 랜딩 페이지로 이동합니다.');
+    alert('이용해 주셔서 감사합니다. 로그인 페이지로 이동합니다.');
+    clearCurrentUser();
     navigate('/');
   };
 
-  const storedUser = getCurrentUser();
   const displayName = storedUser?.name || '사용자';
 
   const drawer = (
     <div>
-      <Toolbar>
+      <Toolbar sx={{ flexDirection: 'column', alignItems: 'flex-start', py: 2 }}>
         <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
           문해력 검사
         </Typography>
+        <Typography variant="caption" color="text.secondary">
+          독서 새물결
+        </Typography>
       </Toolbar>
-      <Typography variant="caption" sx={{ px: 2, py: 1, display: 'block', color: 'text.secondary' }}>
-        {userRole} 모드
-      </Typography>
+      <Divider />
+      <Box sx={{ px: 2, py: 1.5 }}>
+        <Chip
+          icon={userTypeIcons[userType] as React.ReactElement}
+          label={userRoleLabel}
+          size="small"
+          color="primary"
+          variant="outlined"
+          sx={{ width: '100%', justifyContent: 'flex-start' }}
+        />
+      </Box>
+      <Divider />
       <List>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
-            <ListItemButton 
+            <ListItemButton
               onClick={() => navigate(item.path)}
               selected={location.pathname === item.path}
+              sx={{
+                '&.Mui-selected': {
+                  bgcolor: 'primary.light',
+                  '&:hover': { bgcolor: 'primary.light' },
+                  '& .MuiListItemIcon-root': { color: 'primary.main' },
+                  '& .MuiListItemText-primary': { fontWeight: 'bold', color: 'primary.main' },
+                },
+              }}
             >
-              <ListItemIcon sx={{ color: 'primary.main' }}>
+              <ListItemIcon sx={{ color: 'text.secondary', minWidth: 40 }}>
                 {item.icon}
               </ListItemIcon>
               <ListItemText primary={item.text} />

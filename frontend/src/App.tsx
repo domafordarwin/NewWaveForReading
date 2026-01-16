@@ -19,6 +19,8 @@ import ParentDashboard from './pages/ParentDashboard';
 import ParentInfo from './pages/ParentInfo';
 import AdminDashboard from './pages/AdminDashboard';
 import TeacherFeedback from './pages/TeacherFeedback';
+import SchoolAdminDashboard from './pages/SchoolAdminDashboard';
+import QuestionDeveloperDashboard from './pages/QuestionDeveloperDashboard';
 
 const theme = createTheme({
   palette: {
@@ -119,7 +121,27 @@ function App() {
             </MainLayout>
           } />
 
-          {/* 관리자 라우트 */}
+          {/* 학교 관리자 라우트 */}
+          <Route path="/school-admin/*" element={
+            <MainLayout>
+              <Routes>
+                <Route path="dashboard" element={<SchoolAdminDashboard />} />
+                <Route path="students" element={<StudentManagement />} />
+                <Route path="classes" element={<ClassStatistics />} />
+              </Routes>
+            </MainLayout>
+          } />
+
+          {/* 문항 개발 교사 라우트 */}
+          <Route path="/question-dev/*" element={
+            <MainLayout>
+              <Routes>
+                <Route path="dashboard" element={<QuestionDeveloperDashboard />} />
+              </Routes>
+            </MainLayout>
+          } />
+
+          {/* 시스템 관리자 라우트 */}
           <Route path="/admin/*" element={
             <MainLayout>
               <Routes>

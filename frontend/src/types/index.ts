@@ -1,13 +1,69 @@
-// 사용자 타입
+// 사용자 타입 (6가지)
 export const UserType = {
-  STUDENT: 'student',
-  TEACHER: 'teacher',
-  PARENT: 'parent',
-  ADMIN: 'admin',
+  STUDENT: 'STUDENT',                    // 학생 회원
+  PARENT: 'PARENT',                      // 학부모
+  SCHOOL_ADMIN: 'SCHOOL_ADMIN',          // 학교 관리자
+  ASSESSMENT_TEACHER: 'ASSESSMENT_TEACHER', // 독서 진단 담당 교사
+  QUESTION_DEVELOPER: 'QUESTION_DEVELOPER', // 독서 진단 문항 개발 교사
+  SYSTEM_ADMIN: 'SYSTEM_ADMIN',          // 시스템 관리자
 } as const;
 
 export type UserType = typeof UserType[keyof typeof UserType];
 
+// 학생 등급 (2단계)
+export const StudentGradeLevel = {
+  GRADE_A: 'GRADE_A',  // A 등급
+  GRADE_B: 'GRADE_B',  // B 등급
+} as const;
+
+export type StudentGradeLevel = typeof StudentGradeLevel[keyof typeof StudentGradeLevel];
+
+// 동의 상태
+export const ConsentStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+} as const;
+
+export type ConsentStatus = typeof ConsentStatus[keyof typeof ConsentStatus];
+
+// 상담 상태
+export const ConsultationStatus = {
+  REQUESTED: 'REQUESTED',
+  CONFIRMED: 'CONFIRMED',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type ConsultationStatus = typeof ConsultationStatus[keyof typeof ConsultationStatus];
+
+// 학교 인터페이스
+export interface School {
+  schoolId: number;
+  schoolName: string;
+  schoolCode?: string;
+  address?: string;
+  phone?: string;
+  region?: string;
+  schoolType?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 학급 인터페이스
+export interface Class {
+  classId: number;
+  schoolId: number;
+  className: string;
+  grade: number;
+  academicYear: number;
+  teacherId?: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// 사용자 인터페이스 (확장)
 export interface User {
   userId: number;
   email: string;
@@ -16,9 +72,107 @@ export interface User {
   birthDate?: string;
   phone?: string;
   schoolName?: string;
+  schoolId?: number;
   grade?: number;
+  studentGradeLevel?: StudentGradeLevel;
   profileImageUrl?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+// 학생-학부모 관계
+export interface StudentParentRelation {
+  relationId: number;
+  studentId: number;
+  parentId: number;
+  relationship: string;
+  isPrimaryContact: boolean;
+  createdAt: string;
+}
+
+// 동의 템플릿
+export interface ConsentTemplate {
+  templateId: number;
+  templateName: string;
+  templateContent: string;
+  isRequired: boolean;
+  validFrom: string;
+  validUntil?: string;
+  createdAt: string;
+}
+
+// 동의 기록
+export interface Consent {
+  consentId: number;
+  userId: number;
+  templateId: number;
+  consentGivenBy?: number;
+  status: ConsentStatus;
+  consentedAt?: string;
+  ipAddress?: string;
+  createdAt: string;
+}
+
+// 상담 요청
+export interface Consultation {
+  consultationId: number;
+  parentId: number;
+  teacherId?: number;
+  studentId: number;
+  requestedDate: string;
+  requestedTime?: string;
+  consultationType: string;
+  topic?: string;
+  status: ConsultationStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 권한
+export interface Permission {
+  permissionId: number;
+  permissionCode: string;
+  permissionName: string;
+  description?: string;
+  category?: string;
+}
+
+// 사용자 권한
+export interface UserPermission {
+  userId: number;
+  permissionId: number;
+  grantedBy?: number;
+  grantedAt: string;
+}
+
+// 학생 등급 이력
+export interface StudentGradeHistory {
+  historyId: number;
+  studentId: number;
+  previousGrade?: StudentGradeLevel;
+  newGrade: StudentGradeLevel;
+  changedBy?: number;
+  changeReason?: string;
+  changedAt: string;
+}
+
+// 사용자 타입별 라벨
+export const UserTypeLabels: Record<UserType, string> = {
+  [UserType.STUDENT]: '학생 회원',
+  [UserType.PARENT]: '학부모',
+  [UserType.SCHOOL_ADMIN]: '학교 관리자',
+  [UserType.ASSESSMENT_TEACHER]: '독서 진단 담당 교사',
+  [UserType.QUESTION_DEVELOPER]: '독서 진단 문항 개발 교사',
+  [UserType.SYSTEM_ADMIN]: '시스템 관리자',
+};
+
+// 학생 등급 라벨
+export const StudentGradeLevelLabels: Record<StudentGradeLevel, string> = {
+  [StudentGradeLevel.GRADE_A]: 'A 등급',
+  [StudentGradeLevel.GRADE_B]: 'B 등급',
+};
 
 // 도서 타입
 export const DifficultyLevel = {

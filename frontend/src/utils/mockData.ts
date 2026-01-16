@@ -26,13 +26,15 @@ export const mockUsers: User[] = [
     birthDate: '2010-03-15',
     schoolName: '서울중학교',
     grade: 2,
+    isActive: true,
   },
   {
     userId: 2,
     email: 'teacher1@example.com',
-    userType: UserType.TEACHER,
+    userType: UserType.ASSESSMENT_TEACHER,
     name: '이선생',
     schoolName: '서울중학교',
+    isActive: true,
   }
 ];
 

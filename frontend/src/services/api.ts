@@ -51,9 +51,13 @@ const mapUser = (row: any) => ({
   birthDate: row.birth_date ?? row.birthDate,
   phone: row.phone,
   schoolName: row.school_name ?? row.schoolName,
+  schoolId: row.school_id ?? row.schoolId,
   grade: row.grade,
+  studentGradeLevel: row.student_grade_level ?? row.studentGradeLevel,
   profileImageUrl: row.profile_image_url ?? row.profileImageUrl,
   isActive: row.is_active ?? row.isActive,
+  createdAt: row.created_at ?? row.createdAt,
+  updatedAt: row.updated_at ?? row.updatedAt,
 });
 
 const mapBook = (row: any) => ({
@@ -222,7 +226,9 @@ export const createUser = async (userData: any) => {
       birth_date: userData.birthDate ?? null,
       phone: userData.phone ?? null,
       school_name: userData.schoolName ?? null,
+      school_id: userData.schoolId ?? null,
       grade: userData.grade ?? null,
+      student_grade_level: userData.studentGradeLevel ?? null,
       profile_image_url: userData.profileImageUrl ?? null,
       is_active: userData.isActive ?? true,
       password_hash: userData.passwordHash ?? null,
@@ -248,7 +254,9 @@ export const updateUser = async (userId: number, userData: any) => {
       birth_date: userData.birthDate ?? null,
       phone: userData.phone ?? null,
       school_name: userData.schoolName ?? null,
+      school_id: userData.schoolId ?? null,
       grade: userData.grade ?? null,
+      student_grade_level: userData.studentGradeLevel ?? null,
       profile_image_url: userData.profileImageUrl ?? null,
       is_active: userData.isActive ?? null,
     };

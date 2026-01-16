@@ -14,6 +14,7 @@ import {
   InputAdornment,
   IconButton,
   Link,
+  Chip,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material";
 import {
@@ -22,26 +23,51 @@ import {
   Person,
   VpnKey,
   School,
+  Face,
+  FamilyRestroom,
+  AdminPanelSettings,
+  Assignment,
+  Quiz,
+  Settings,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { getUserByEmail } from "../services/api";
-import { setCurrentUser } from "../utils/session";
+import { setCurrentUser, getDefaultPathByUserType } from "../utils/session";
 import type { StoredUserType } from "../utils/session";
-
-type UserType = "student" | "teacher" | "parent" | "admin";
+import { UserTypeLabels } from "../types";
 
 interface LoginForm {
   email: string;
   password: string;
-  userType: UserType;
+  userType: StoredUserType;
 }
+
+// 사용자 타입별 아이콘
+const userTypeIcons: Record<StoredUserType, React.ReactNode> = {
+  STUDENT: <Face />,
+  PARENT: <FamilyRestroom />,
+  SCHOOL_ADMIN: <AdminPanelSettings />,
+  ASSESSMENT_TEACHER: <Assignment />,
+  QUESTION_DEVELOPER: <Quiz />,
+  SYSTEM_ADMIN: <Settings />,
+};
+
+// 테스트 계정 정보
+const testAccounts: Record<StoredUserType, { email: string; password: string; label: string }> = {
+  STUDENT: { email: "student1@example.com", password: "ehrtjtoanfruf", label: "학생" },
+  PARENT: { email: "parent1@example.com", password: "ehrtjtoanfruf", label: "학부모" },
+  SCHOOL_ADMIN: { email: "schooladmin1@example.com", password: "ehrtjtoanfruf", label: "학교관리자" },
+  ASSESSMENT_TEACHER: { email: "teacher1@example.com", password: "ehrtjtoanfruf", label: "진단교사" },
+  QUESTION_DEVELOPER: { email: "questiondev1@example.com", password: "ehrtjtoanfruf", label: "문항개발" },
+  SYSTEM_ADMIN: { email: "admin1@example.com", password: "ehrtjtoanfruf", label: "시스템관리자" },
+};
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<LoginForm>({
     email: "",
     password: "",
-    userType: "student",
+    userType: "STUDENT",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -56,7 +82,7 @@ const Login: React.FC = () => {
     setError("");
   };
 
-  const handleSelectChange = (event: SelectChangeEvent<UserType>) => {
+  const handleSelectChange = (event: SelectChangeEvent<StoredUserType>) => {
     const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
@@ -70,14 +96,12 @@ const Login: React.FC = () => {
     setError("");
     setLoading(true);
 
-    // 입력 검증
     if (!formData.email || !formData.password) {
       setError("이메일과 비밀번호를 입력해주세요.");
       setLoading(false);
       return;
     }
 
-    // 이메일 형식 검증
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError("올바른 이메일 형식이 아닙니다.");
@@ -87,22 +111,12 @@ const Login: React.FC = () => {
 
     try {
       const user = await getUserByEmail(formData.email);
-      const normalizedType = String(
-        user.userType || ""
-      ).toLowerCase() as StoredUserType;
-      const resolvedType = normalizedType || formData.userType;
+      const resolvedType = (user.userType || formData.userType) as StoredUserType;
 
       if (!resolvedType) {
         setError("사용자 정보를 확인할 수 없습니다.");
         setLoading(false);
         return;
-      }
-
-      if (resolvedType !== formData.userType) {
-        setFormData((prev) => ({
-          ...prev,
-          userType: resolvedType,
-        }));
       }
 
       if (user.isActive === false) {
@@ -116,26 +130,16 @@ const Login: React.FC = () => {
         name: user.name,
         email: user.email,
         userType: resolvedType,
+        schoolId: user.schoolId,
+        schoolName: user.schoolName,
+        grade: user.grade,
+        studentGradeLevel: user.studentGradeLevel,
         isActive: user.isActive,
       });
 
-      // 사용자 유형에 따라 다른 페이지로 이동
-      switch (resolvedType) {
-        case "student":
-          navigate("/student/dashboard");
-          break;
-        case "teacher":
-          navigate("/teacher/dashboard");
-          break;
-        case "parent":
-          navigate("/parent/dashboard");
-          break;
-        case "admin":
-          navigate("/admin/dashboard");
-          break;
-        default:
-          navigate("/");
-      }
+      // 사용자 타입에 따라 다른 페이지로 이동
+      const defaultPath = getDefaultPathByUserType(resolvedType);
+      navigate(defaultPath);
     } catch (err) {
       setError("로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.");
     } finally {
@@ -147,16 +151,11 @@ const Login: React.FC = () => {
     setShowPassword(!showPassword);
   };
 
-  // 테스트용 자동 입력
-  const fillTestData = (type: UserType) => {
-    const testAccounts = {
-      student: { email: "student1@example.com", password: "ehrtjtoanfruf" },
-      teacher: { email: "teacher1@example.com", password: "ehrtjtoanfruf" },
-      parent: { email: "parent_student1@example.com", password: "ehrtjtoanfruf" },
-      admin: { email: "admin1@example.com", password: "ehrtjtoanfruf" },
-    };
+  const fillTestData = (type: StoredUserType) => {
+    const account = testAccounts[type];
     setFormData({
-      ...testAccounts[type],
+      email: account.email,
+      password: account.password,
       userType: type,
     });
   };
@@ -217,11 +216,43 @@ const Login: React.FC = () => {
                   value={formData.userType}
                   label="사용자 유형"
                   onChange={handleSelectChange}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      {userTypeIcons[selected]}
+                      <span>{UserTypeLabels[selected as keyof typeof UserTypeLabels]}</span>
+                    </Box>
+                  )}
                 >
-                  <MenuItem value="student">학생</MenuItem>
-                  <MenuItem value="teacher">교사</MenuItem>
-                  <MenuItem value="parent">학부모</MenuItem>
-                  <MenuItem value="admin">관리자</MenuItem>
+                  <MenuItem value="STUDENT">
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Face /> 학생 회원
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="PARENT">
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <FamilyRestroom /> 학부모
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="SCHOOL_ADMIN">
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <AdminPanelSettings /> 학교 관리자
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="ASSESSMENT_TEACHER">
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Assignment /> 독서 진단 담당 교사
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="QUESTION_DEVELOPER">
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Quiz /> 독서 진단 문항 개발 교사
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="SYSTEM_ADMIN">
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Settings /> 시스템 관리자
+                    </Box>
+                  </MenuItem>
                 </Select>
               </FormControl>
 
@@ -347,34 +378,21 @@ const Login: React.FC = () => {
                 mt: 2,
               }}
             >
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => fillTestData("student")}
-              >
-                학생
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => fillTestData("teacher")}
-              >
-                교사
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => fillTestData("parent")}
-              >
-                학부모
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => fillTestData("admin")}
-              >
-                관리자
-              </Button>
+              {(Object.keys(testAccounts) as StoredUserType[]).map((type) => (
+                <Chip
+                  key={type}
+                  icon={userTypeIcons[type] as React.ReactElement}
+                  label={testAccounts[type].label}
+                  onClick={() => fillTestData(type)}
+                  variant="outlined"
+                  clickable
+                  size="small"
+                  sx={{
+                    fontSize: "0.75rem",
+                    '& .MuiChip-icon': { fontSize: '1rem' }
+                  }}
+                />
+              ))}
             </Box>
           </Box>
         </Paper>
