@@ -112,8 +112,8 @@ export default function TeacherFeedback() {
         setAnswerContent(answer?.content || '');
         if (resolvedAnswerId) {
           const evaluationResponse = await getEvaluationByAnswerId(resolvedAnswerId);
-          const evaluation = evaluationResponse?.evaluation || evaluationResponse || null;
-          setEvaluationId(evaluation?.evaluationId ?? null);
+          const evaluation = (evaluationResponse as any)?.evaluation || evaluationResponse || null;
+          setEvaluationId((evaluation as any)?.evaluationId ?? null);
         } else {
           setEvaluationId(null);
         }
