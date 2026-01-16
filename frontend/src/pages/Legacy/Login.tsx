@@ -22,6 +22,7 @@ import type { SelectChangeEvent } from "@mui/material";
 import {
   Visibility,
   VisibilityOff,
+  School,
   Person,
   VpnKey,
 } from "@mui/icons-material";
@@ -198,6 +199,24 @@ const Login: React.FC = () => {
     },
   ];
 
+  // 테스트용 자동 입력
+  const fillTestData = (type: UserType) => {
+    const testAccounts = {
+      student: { email: "student1@example.com", password: "ehrtjtoanfruf" },
+      teacher: { email: "teacher1@example.com", password: "ehrtjtoanfruf" },
+      parent: {
+        email: "parent_student1@example.com",
+        password: "ehrtjtoanfruf",
+      },
+      admin: { email: "admin1@example.com", password: "ehrtjtoanfruf" },
+    };
+
+    setFormData({
+      ...testAccounts[type],
+      userType: type,
+    });
+  };
+
   return (
     <Box
       sx={{
@@ -227,6 +246,23 @@ const Login: React.FC = () => {
               alignSelf: "center",
             }}
           >
+            {/* 로고 및 제목 */}
+            <Box sx={{ textAlign: "center", mb: 4 }}>
+              <School
+                sx={{
+                  fontSize: 64,
+                  color: "primary.main",
+                  mb: 2,
+                }}
+              />
+              <Typography variant="h4" fontWeight="bold" gutterBottom>
+                리딩 PRO 문해력 진단 및 클리닉 프로그램
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                독서 새물결 문해력 검사 시스템
+              </Typography>
+            </Box>
+
             {/* 에러 메시지 */}
             {error && (
               <Alert severity="error" sx={{ mb: 3 }}>
@@ -356,6 +392,55 @@ const Login: React.FC = () => {
               </Box>
             </form>
 
+            {/* 테스트 계정 빠른 입력 */}
+            <Box sx={{ mt: 4, pt: 3, borderTop: "1px solid #e0e0e0" }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                gutterBottom
+                textAlign="center"
+              >
+                테스트 계정 (개발용)
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 1,
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                  mt: 2,
+                }}
+              >
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => fillTestData("student")}
+                >
+                  학생
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => fillTestData("teacher")}
+                >
+                  교사
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => fillTestData("parent")}
+                >
+                  학부모
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => fillTestData("admin")}
+                >
+                  관리자
+                </Button>
+              </Box>
+            </Box>
           </Paper>
 
           {/* 랜딩 페이지 */}

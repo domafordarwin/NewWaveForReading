@@ -137,6 +137,31 @@ const mapEvaluation = (row: any) => ({
   evaluatedAt: row.evaluated_at ?? row.evaluatedAt,
 });
 
+const mapCorrection = (row: any) => ({
+  correctionId: row.correction_id ?? row.correctionId ?? row.id,
+  evaluationId: row.evaluation_id ?? row.evaluationId,
+  correctionType: row.correction_type ?? row.correctionType,
+  startPosition: row.start_position ?? row.startPosition,
+  endPosition: row.end_position ?? row.endPosition,
+  originalText: row.original_text ?? row.originalText,
+  correctedText: row.corrected_text ?? row.correctedText,
+  description: row.description,
+  severity: row.severity,
+});
+
+const normalizeEvaluationResponse = (data: any) => {
+  if (!data) {
+    return { evaluation: null, corrections: [] };
+  }
+  if (data.evaluation) {
+    return {
+      evaluation: data.evaluation ? mapEvaluation(data.evaluation) : null,
+      corrections: data.corrections ?? [],
+    };
+  }
+  return { evaluation: mapEvaluation(data), corrections: [] };
+};
+
 // Health Check
 export const healthCheck = async () => {
   if (supabase) {
@@ -514,10 +539,10 @@ export const getEvaluationById = async (evaluationId: number) => {
       .eq('evaluation_id', evaluationId)
       .maybeSingle();
     if (error) throw error;
-    return data ? mapEvaluation(data) : null;
+    return normalizeEvaluationResponse(data);
   }
   const response = await api.get(`/evaluations/${evaluationId}`);
-  return response.data;
+  return normalizeEvaluationResponse(response.data);
 };
 
 export const getEvaluationByAnswerId = async (answerId: number) => {
@@ -528,10 +553,10 @@ export const getEvaluationByAnswerId = async (answerId: number) => {
       .eq('answer_id', answerId)
       .maybeSingle();
     if (error) throw error;
-    return { evaluation: data ? mapEvaluation(data) : null };
+    return normalizeEvaluationResponse(data);
   }
   const response = await api.get(`/evaluations/answer/${answerId}`);
-  return response.data;
+  return normalizeEvaluationResponse(response.data);
 };
 
 export const getEvaluationsByStudentId = async (studentId: number) => {
@@ -544,9 +569,73 @@ export const getEvaluationsByStudentId = async (studentId: number) => {
     if (error) throw error;
     return (data || []).map(mapEvaluation);
   }
-  const response = await api.get('/evaluations');
-  const list = normalizeArray(response.data);
-  return list.filter((item: any) => item.studentId === studentId);
+  const response = await api.get(`/evaluations/student/${studentId}`);
+  return normalizeArray(response.data);
+};
+
+export const getCorrectionsByEvaluationId = async (evaluationId: number) => {
+  if (supabase) {
+    const { data, error } = await ensureSupabase()
+      .from('corrections')
+      .select('*')
+      .eq('evaluation_id', evaluationId)
+      .order('correction_id', { ascending: true });
+    if (error) throw error;
+    return (data || []).map(mapCorrection);
+  }
+  const response = await api.get(`/corrections/evaluation/${evaluationId}`);
+  return normalizeArray(response.data);
+};
+
+export const getCorrectionById = async (correctionId: number) => {
+  if (supabase) {
+    const { data, error } = await ensureSupabase()
+      .from('corrections')
+      .select('*')
+      .eq('correction_id', correctionId)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? mapCorrection(data) : null;
+  }
+  const response = await api.get(`/corrections/${correctionId}`);
+  return response.data;
+};
+
+export const getAllAnswers = async () => {
+  if (supabase) {
+    const { data, error } = await ensureSupabase()
+      .from('answers')
+      .select('*')
+      .order('answer_id', { ascending: true });
+    if (error) throw error;
+    return (data || []).map(mapAnswer);
+  }
+  const response = await api.get('/answers');
+  return normalizeArray(response.data);
+};
+
+export const updateAnswer = async (answerId: number, answerData: any) => {
+  if (supabase) {
+    const payload = {
+      content: answerData.content,
+      word_count: answerData.wordCount,
+      char_count: answerData.charCount,
+      paragraph_count: answerData.paragraphCount ?? null,
+      auto_saved_at: answerData.autoSavedAt ?? null,
+      submitted_at: answerData.submittedAt ?? null,
+      version: answerData.version ?? null,
+    };
+    const { data, error } = await ensureSupabase()
+      .from('answers')
+      .update(payload)
+      .eq('answer_id', answerId)
+      .select('*')
+      .single();
+    if (error) throw error;
+    return mapAnswer(data);
+  }
+  const response = await api.put(`/answers/${answerId}`, answerData);
+  return response.data;
 };
 
 export const getFeedbacksByStudentId = async (studentId: number) => {

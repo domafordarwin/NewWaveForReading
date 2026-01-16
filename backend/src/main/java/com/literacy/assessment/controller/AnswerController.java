@@ -2,19 +2,16 @@ package com.literacy.assessment.controller;
 
 import com.literacy.assessment.dto.AnswerCreateDto;
 import com.literacy.assessment.dto.AnswerDto;
-import com.literacy.assessment.entity.Answer;
-import com.literacy.assessment.entity.Assessment;
 import com.literacy.assessment.entity.Evaluation;
-import com.literacy.assessment.repository.AnswerRepository;
-import com.literacy.assessment.repository.AssessmentRepository;
-import com.literacy.assessment.repository.EvaluationRepository;
 import com.literacy.assessment.service.AIAnalysisService;
+import com.literacy.assessment.service.AnswerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,50 +21,48 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AnswerController {
     
-    private final AnswerRepository answerRepository;
-    private final AssessmentRepository assessmentRepository;
-    private final EvaluationRepository evaluationRepository;
     private final AIAnalysisService aiAnalysisService;
+    private final AnswerService answerService;
+
+    @GetMapping
+    public ResponseEntity<List<AnswerDto>> getAllAnswers() {
+        return ResponseEntity.ok(answerService.getAllAnswers());
+    }
     
     @PostMapping
     public ResponseEntity<AnswerDto> createAnswer(@RequestBody AnswerCreateDto answerDto) {
-        if (answerDto.getAssessmentId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "assessmentId is required");
+        try {
+            return ResponseEntity.ok(answerService.upsertAnswer(answerDto));
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
+    }
 
-        Assessment assessment = assessmentRepository.findById(answerDto.getAssessmentId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Assessment not found: " + answerDto.getAssessmentId()
-                ));
-
-        Answer answer = answerRepository.findByAssessmentId(answerDto.getAssessmentId())
-                .orElseGet(() -> Answer.builder().assessment(assessment).build());
-
-        answer.setContent(answerDto.getContent());
-        answer.setWordCount(answerDto.getWordCount());
-        answer.setCharCount(answerDto.getCharCount());
-        answer.setParagraphCount(answerDto.getParagraphCount());
-
-        Answer savedAnswer = answerRepository.save(answer);
-        return ResponseEntity.ok(convertToDto(savedAnswer));
+    @PutMapping("/{answerId}")
+    public ResponseEntity<AnswerDto> updateAnswer(@PathVariable Long answerId, @RequestBody AnswerCreateDto answerDto) {
+        try {
+            return ResponseEntity.ok(answerService.updateAnswer(answerId, answerDto));
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
     
     @GetMapping("/{answerId}")
     public ResponseEntity<AnswerDto> getAnswer(@PathVariable Long answerId) {
-        Answer answer = answerRepository.findById(answerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Answer not found"));
-        return ResponseEntity.ok(convertToDto(answer));
+        try {
+            return ResponseEntity.ok(answerService.getAnswerById(answerId));
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
     
     @GetMapping("/assessment/{assessmentId}")
     public ResponseEntity<AnswerDto> getAnswerByAssessment(@PathVariable Long assessmentId) {
-        Answer answer = answerRepository.findByAssessmentId(assessmentId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Answer not found for assessment"
-                ));
-        return ResponseEntity.ok(convertToDto(answer));
+        try {
+            return ResponseEntity.ok(answerService.getAnswerByAssessmentId(assessmentId));
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
     
     @PostMapping("/{answerId}/analyze")
@@ -90,19 +85,5 @@ public class AnswerController {
             
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-    }
-
-    private AnswerDto convertToDto(Answer answer) {
-        return AnswerDto.builder()
-                .answerId(answer.getId())
-                .assessmentId(answer.getAssessment() != null ? answer.getAssessment().getId() : null)
-                .content(answer.getContent())
-                .wordCount(answer.getWordCount())
-                .charCount(answer.getCharCount())
-                .paragraphCount(answer.getParagraphCount())
-                .autoSavedAt(answer.getAutoSavedAt())
-                .submittedAt(answer.getSubmittedAt())
-                .version(answer.getVersion())
-                .build();
     }
 }
