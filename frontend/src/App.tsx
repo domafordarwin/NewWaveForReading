@@ -17,6 +17,7 @@ import StudentManagement from './pages/StudentManagement';
 import AssessmentAssignment from './pages/AssessmentAssignment';
 import ClassStatistics from './pages/ClassStatistics';
 import ParentDashboard from './pages/ParentDashboard';
+import ParentInfo from './pages/ParentInfo';
 import AdminDashboard from './pages/AdminDashboard';
 import TeacherFeedback from './pages/TeacherFeedback';
 
@@ -115,6 +116,7 @@ function App() {
             <MainLayout>
               <Routes>
                 <Route path="dashboard" element={<ParentDashboard />} />
+                <Route path="info" element={<ParentInfo />} />
                 <Route path="result/:assessmentId" element={<EvaluationResult />} />
               </Routes>
             </MainLayout>
