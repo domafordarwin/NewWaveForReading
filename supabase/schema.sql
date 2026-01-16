@@ -113,6 +113,38 @@ alter table public.assessments enable row level security;
 alter table public.answers enable row level security;
 alter table public.evaluations enable row level security;
 
+-- Drop existing policies if they exist
+drop policy if exists "dev_read_users" on public.users;
+drop policy if exists "dev_write_users" on public.users;
+drop policy if exists "dev_update_users" on public.users;
+drop policy if exists "dev_delete_users" on public.users;
+
+drop policy if exists "dev_read_books" on public.books;
+drop policy if exists "dev_write_books" on public.books;
+drop policy if exists "dev_update_books" on public.books;
+drop policy if exists "dev_delete_books" on public.books;
+
+drop policy if exists "dev_read_topics" on public.topics;
+drop policy if exists "dev_write_topics" on public.topics;
+drop policy if exists "dev_update_topics" on public.topics;
+drop policy if exists "dev_delete_topics" on public.topics;
+
+drop policy if exists "dev_read_assessments" on public.assessments;
+drop policy if exists "dev_write_assessments" on public.assessments;
+drop policy if exists "dev_update_assessments" on public.assessments;
+drop policy if exists "dev_delete_assessments" on public.assessments;
+
+drop policy if exists "dev_read_answers" on public.answers;
+drop policy if exists "dev_write_answers" on public.answers;
+drop policy if exists "dev_update_answers" on public.answers;
+drop policy if exists "dev_delete_answers" on public.answers;
+
+drop policy if exists "dev_read_evaluations" on public.evaluations;
+drop policy if exists "dev_write_evaluations" on public.evaluations;
+drop policy if exists "dev_update_evaluations" on public.evaluations;
+drop policy if exists "dev_delete_evaluations" on public.evaluations;
+
+-- Create policies
 create policy "dev_read_users" on public.users for select using (true);
 create policy "dev_write_users" on public.users for insert with check (true);
 create policy "dev_update_users" on public.users for update using (true);
@@ -179,6 +211,11 @@ alter table public.feedbacks
 
 alter table public.feedbacks enable row level security;
 
+drop policy if exists "dev_read_feedbacks" on public.feedbacks;
+drop policy if exists "dev_write_feedbacks" on public.feedbacks;
+drop policy if exists "dev_update_feedbacks" on public.feedbacks;
+drop policy if exists "dev_delete_feedbacks" on public.feedbacks;
+
 create policy "dev_read_feedbacks" on public.feedbacks for select using (true);
 create policy "dev_write_feedbacks" on public.feedbacks for insert with check (true);
 create policy "dev_update_feedbacks" on public.feedbacks for update using (true);
@@ -197,6 +234,11 @@ create table if not exists public.progress_history (
 );
 
 alter table public.progress_history enable row level security;
+
+drop policy if exists "dev_read_progress_history" on public.progress_history;
+drop policy if exists "dev_write_progress_history" on public.progress_history;
+drop policy if exists "dev_update_progress_history" on public.progress_history;
+drop policy if exists "dev_delete_progress_history" on public.progress_history;
 
 create policy "dev_read_progress_history" on public.progress_history for select using (true);
 create policy "dev_write_progress_history" on public.progress_history for insert with check (true);
