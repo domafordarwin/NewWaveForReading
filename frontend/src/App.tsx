@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import MainLayout from './layouts/MainLayout';
-import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentAssessments from './pages/StudentAssessments';
@@ -74,10 +73,8 @@ function App() {
       <CssBaseline />
       <Router>
         <Routes>
-          {/* 랜딩 페이지 */}
-          <Route path="/" element={<LandingPage />} />
-          
-          {/* 로그인 페이지 */}
+          {/* 로그인 페이지 (메인) */}
+          <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           
           {/* API 테스트 페이지 */}
