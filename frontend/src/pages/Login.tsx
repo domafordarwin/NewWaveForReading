@@ -162,30 +162,31 @@ const Login = () => {
       }}
     >
       <Container maxWidth="sm">
-        {/* 왼쪽 상단 로고 */}
-        <Box
-          component="img"
-          src="/logo.png"
-          alt="리딩 PRO 로고"
-          sx={{
-            position: "absolute",
-            top: 24,
-            left: 24,
-            width: 80,
-            height: 80,
-            objectFit: "contain",
-          }}
-        />
-
         <Paper
           elevation={10}
           sx={{
             p: 4,
             borderRadius: 3,
             backgroundColor: "rgba(255, 255, 255, 0.95)",
+            position: "relative",
           }}
         >
-          <Box sx={{ textAlign: "center", mb: 4 }}>
+          {/* 카드 왼쪽 상단 로고 */}
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="리딩 PRO 로고"
+            sx={{
+              position: "absolute",
+              top: -40,
+              left: 16,
+              width: 70,
+              height: 70,
+              objectFit: "contain",
+            }}
+          />
+
+          <Box sx={{ textAlign: "center", mb: 4, mt: 2 }}>
             <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.3 }}>
               리딩 PRO
             </Typography>
