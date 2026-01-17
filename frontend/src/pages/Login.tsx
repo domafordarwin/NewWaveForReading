@@ -162,6 +162,21 @@ const Login = () => {
       }}
     >
       <Container maxWidth="sm">
+        {/* 왼쪽 상단 로고 */}
+        <Box
+          component="img"
+          src="/logo.png"
+          alt="리딩 PRO 로고"
+          sx={{
+            position: "absolute",
+            top: 24,
+            left: 24,
+            width: 80,
+            height: 80,
+            objectFit: "contain",
+          }}
+        />
+
         <Paper
           elevation={10}
           sx={{
@@ -171,18 +186,7 @@ const Login = () => {
           }}
         >
           <Box sx={{ textAlign: "center", mb: 4 }}>
-            <Box
-              component="img"
-              src="/logo.png"
-              alt="리딩 PRO 로고"
-              sx={{
-                width: 180,
-                height: 180,
-                objectFit: "contain",
-                mb: 3,
-              }}
-            />
-            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.3, mt: 1 }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.3 }}>
               리딩 PRO
             </Typography>
             <Typography variant="body1" color="text.secondary" fontWeight="medium" sx={{ mt: 0.5 }}>
