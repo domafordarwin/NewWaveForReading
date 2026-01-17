@@ -119,10 +119,15 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
   const drawer = (
     <Box>
-      <Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
-        <School sx={{ fontSize: 32, color: "primary.main" }} />
-        <Typography variant="h6" fontWeight="bold" noWrap>
-          NewWave
+      <Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box
+          component="img"
+          src="/logo.png"
+          alt="리딩 PRO"
+          sx={{ width: 36, height: 36, objectFit: "contain" }}
+        />
+        <Typography variant="h6" fontWeight="bold" noWrap sx={{ color: "primary.main" }}>
+          리딩 PRO
         </Typography>
       </Box>
       <Divider />
