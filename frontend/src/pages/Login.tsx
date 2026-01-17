@@ -205,8 +205,8 @@ const Login = () => {
               src="/logo.png"
               alt="리딩 PRO 로고"
               sx={{
-                width: 60,
-                height: 40,
+                width: 200,
+                height: 100,
                 objectFit: "contain",
               }}
             />
