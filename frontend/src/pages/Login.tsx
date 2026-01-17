@@ -52,13 +52,40 @@ const userTypeIcons: Record<UserType, React.ReactNode> = {
 };
 
 // 테스트 계정 정보
-const testAccounts: Record<UserType, { email: string; password: string; label: string }> = {
-  STUDENT: { email: "student1@example.com", password: "test1234", label: "학생" },
-  PARENT: { email: "parent1@example.com", password: "test1234", label: "학부모" },
-  SCHOOL_ADMIN: { email: "schooladmin1@example.com", password: "test1234", label: "학교관리자" },
-  ASSESSMENT_TEACHER: { email: "teacher1@example.com", password: "test1234", label: "진단교사" },
-  QUESTION_DEVELOPER: { email: "questiondev1@example.com", password: "test1234", label: "문항개발" },
-  SYSTEM_ADMIN: { email: "admin1@example.com", password: "test1234", label: "시스템관리자" },
+const testAccounts: Record<
+  UserType,
+  { email: string; password: string; label: string }
+> = {
+  STUDENT: {
+    email: "student1@example.com",
+    password: "test1234",
+    label: "학생",
+  },
+  PARENT: {
+    email: "parent1@example.com",
+    password: "test1234",
+    label: "학부모",
+  },
+  SCHOOL_ADMIN: {
+    email: "schooladmin1@example.com",
+    password: "test1234",
+    label: "학교관리자",
+  },
+  ASSESSMENT_TEACHER: {
+    email: "teacher1@example.com",
+    password: "test1234",
+    label: "진단교사",
+  },
+  QUESTION_DEVELOPER: {
+    email: "questiondev1@example.com",
+    password: "test1234",
+    label: "문항개발",
+  },
+  SYSTEM_ADMIN: {
+    email: "admin1@example.com",
+    password: "test1234",
+    label: "시스템관리자",
+  },
 };
 
 const Login = () => {
@@ -133,7 +160,7 @@ const Login = () => {
       const defaultPath = getDefaultPathByUserType(userType);
       navigate(defaultPath);
     } catch (err) {
-      console.error('Login error:', err);
+      console.error("Login error:", err);
       setError("로그인에 실패했습니다. 이메일을 확인해주세요.");
     } finally {
       setLoading(false);
@@ -178,21 +205,28 @@ const Login = () => {
               src="/logo.png"
               alt="리딩 PRO 로고"
               sx={{
-                width: 28,
-                height: 28,
+                width: 60,
+                height: 40,
                 objectFit: "contain",
               }}
             />
-            <Typography variant="body2" color="text.secondary" fontWeight="medium">
-              (사)전국독서새물결모임
-            </Typography>
           </Box>
 
           <Box sx={{ textAlign: "center", mb: 4 }}>
-            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.3, color: "#667eea" }}>
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              gutterBottom
+              sx={{ lineHeight: 1.3, color: "#667eea" }}
+            >
               리딩 PRO
             </Typography>
-            <Typography variant="body1" color="text.secondary" fontWeight="medium" sx={{ mt: 0.5 }}>
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              fontWeight="medium"
+              sx={{ mt: 0.5 }}
+            >
               문해력 진단 및 클리닉 프로그램
             </Typography>
           </Box>
@@ -286,7 +320,10 @@ const Login = () => {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
@@ -304,20 +341,34 @@ const Login = () => {
                   py: 1.5,
                   fontSize: "1.1rem",
                   fontWeight: "bold",
-                  background: "linear-gradient(45deg, #667eea 30%, #764ba2 90%)",
+                  background:
+                    "linear-gradient(45deg, #667eea 30%, #764ba2 90%)",
                   "&:hover": {
-                    background: "linear-gradient(45deg, #5568d3 30%, #63408b 90%)",
+                    background:
+                      "linear-gradient(45deg, #5568d3 30%, #63408b 90%)",
                   },
                 }}
               >
                 {loading ? "로그인 중..." : "로그인"}
               </Button>
 
-              <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
-                <Link href="#" variant="body2" underline="hover" onClick={(e) => e.preventDefault()}>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}
+              >
+                <Link
+                  href="#"
+                  variant="body2"
+                  underline="hover"
+                  onClick={(e) => e.preventDefault()}
+                >
                   비밀번호를 잊으셨나요?
                 </Link>
-                <Link href="#" variant="body2" underline="hover" onClick={(e) => e.preventDefault()}>
+                <Link
+                  href="#"
+                  variant="body2"
+                  underline="hover"
+                  onClick={(e) => e.preventDefault()}
+                >
                   회원가입
                 </Link>
               </Box>
@@ -325,10 +376,23 @@ const Login = () => {
           </form>
 
           <Box sx={{ mt: 4, pt: 3, borderTop: "1px solid #e0e0e0" }}>
-            <Typography variant="body2" color="text.secondary" gutterBottom textAlign="center">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              gutterBottom
+              textAlign="center"
+            >
               테스트 계정 (개발용)
             </Typography>
-            <Box sx={{ display: "flex", gap: 1, justifyContent: "center", flexWrap: "wrap", mt: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                justifyContent: "center",
+                flexWrap: "wrap",
+                mt: 2,
+              }}
+            >
               {(Object.keys(testAccounts) as UserType[]).map((type) => (
                 <Chip
                   key={type}
@@ -338,7 +402,10 @@ const Login = () => {
                   variant="outlined"
                   clickable
                   size="small"
-                  sx={{ fontSize: "0.75rem", "& .MuiChip-icon": { fontSize: "1rem" } }}
+                  sx={{
+                    fontSize: "0.75rem",
+                    "& .MuiChip-icon": { fontSize: "1rem" },
+                  }}
                 />
               ))}
             </Box>

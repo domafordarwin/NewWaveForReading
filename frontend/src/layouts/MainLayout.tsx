@@ -50,8 +50,8 @@ const menusByUserType: Record<UserType, { label: string; icon: React.ReactNode; 
   ],
   PARENT: [
     { label: "대시보드", icon: <Dashboard />, path: "/parent/dashboard" },
-    { label: "리딩 PRO 소개", icon: <Info />, path: "/parent/info" },
     { label: "자녀 정보", icon: <FamilyRestroom />, path: "/parent/children" },
+    { label: "리딩 PRO 소개", icon: <Info />, path: "/parent/info" },
   ],
   SCHOOL_ADMIN: [
     { label: "대시보드", icon: <Dashboard />, path: "/school-admin/dashboard" },
