@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리딩 PRO 소개 - 문해력 진단 및 독자성향검사</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.8;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: white;
+            padding: 48px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .section {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .section-number {
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+
+        .capability-card {
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            color: white;
+        }
+
+        .capability-card.blue {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        }
+
+        .capability-card.red {
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+        }
+
+        .capability-card.yellow {
+            background: linear-gradient(135deg, #f6e05e 0%, #ecc94b 100%);
+            color: #2d3748;
+        }
+
+        .capability-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .grid-card {
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .grid-card.yellow-gradient {
+            background: linear-gradient(135deg, #f6e05e 0%, #ecc94b 100%);
+        }
+
+        .grid-card.orange-gradient {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .grid-card.red-gradient {
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            color: white;
+        }
+
+        .grid-card .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .grid-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .sub-item {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .sub-item.orange {
+            background: #fef5e7;
+            border-left: 5px solid #f39c12;
+        }
+
+        .sub-item.yellow {
+            background: #fef9e7;
+            border-left: 5px solid #f1c40f;
+        }
+
+        .sub-item.teal {
+            background: #e8f8f5;
+            border-left: 5px solid #1abc9c;
+        }
+
+        .sub-item.cream {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+        }
+
+        .sub-item.pink {
+            background: linear-gradient(135deg, #ffb3ba 0%, #ff9aa2 100%);
+        }
+
+        .sub-item.light-blue {
+            background: linear-gradient(135deg, #d4e4f7 0%, #b8d4f1 100%);
+        }
+
+        .sub-item .icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .sub-item h4 {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .sub-item p {
+            color: #4a5568;
+        }
+
+        .info-box {
+            padding: 32px;
+            background: linear-gradient(135deg, #e3e8f0 0%, #d4dbe8 100%);
+            border-radius: 16px;
+        }
+
+        .info-box p {
+            font-size: 1.05rem;
+            line-height: 2;
+            color: #2d3748;
+            margin-bottom: 16px;
+            text-align: justify;
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .type-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .type-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .type-badge {
+            padding: 8px 20px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .type-badge.purple {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .type-badge.teal {
+            background: linear-gradient(135deg, #38b2ac 0%, #2c7a7b 100%);
+        }
+
+        .type-badge.blue {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        }
+
+        .type-badge.violet {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+        }
+
+        .type-description {
+            background: #f7fafc;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .type-description p {
+            font-weight: 600;
+        }
+
+        .type-label {
+            font-weight: bold;
+            color: #e53e3e;
+            margin-bottom: 8px;
+        }
+
+        .type-list {
+            padding-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        .type-list li {
+            margin-bottom: 4px;
+        }
+
+        .type-example {
+            background: #fef5e7;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .type-example .label {
+            font-weight: bold;
+            color: #c27803;
+            margin-bottom: 8px;
+        }
+
+        .type-example p {
+            color: #744210;
+            margin-bottom: 4px;
+        }
+
+        .type-conclusion {
+            background: #e6fffa;
+            border-left: 4px solid #38b2ac;
+            padding: 12px 16px;
+            border-radius: 4px;
+        }
+
+        .type-conclusion p {
+            font-weight: 600;
+        }
+
+        .mb-4 {
+            margin-bottom: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <h1>개요</h1>
+            <p>문해력 진단 및 독자성향검사</p>
+        </div>
+
+        <!-- 섹션 1: 문해력 진단 -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <div class="section-title">문해력 진단</div>
+            </div>
+
+            <h3>리딩 PRO 문해력 진단은 무엇을 평가하는가?</h3>
+
+            <div class="mb-4">
+                <div class="capability-card blue">
+                    <h4>의사소통 능력</h4>
+                    <p>글을 통해 생각을 표현하고 다른 사람과 상호 작용하는 능력</p>
+                </div>
+                <div class="capability-card red">
+                    <h4>심미적 감수성</h4>
+                    <p>문학 작품 등을 감상하며 아름다움이나 의미를 느끼고 공감하는 능력</p>
+                </div>
+                <div class="capability-card yellow">
+                    <h4>이해력</h4>
+                    <p>글의 내용을 정확히 파악하고 추론하는 능력</p>
+                </div>
+            </div>
+
+            <h3>심미적 감수성 하위 영역</h3>
+            <div class="grid mb-4">
+                <div class="grid-card yellow-gradient">
+                    <div class="icon">📖</div>
+                    <h4>문학적 표현</h4>
+                    <p>작가의 표현 기법과 언어의 아름다움에 대한 이해</p>
+                </div>
+                <div class="grid-card orange-gradient">
+                    <div class="icon">❤️</div>
+                    <h4>정서적 공감</h4>
+                    <p>등장인물의 감정이나 상황에 공감하는 능력</p>
+                </div>
+                <div class="grid-card red-gradient">
+                    <div class="icon">⚖️</div>
+                    <h4>문학적 가치</h4>
+                    <p>작품이 담고 있는 주제·의식이나 교훈을 파악하는 능력</p>
+                </div>
+            </div>
+
+            <h3>의사소통 능력의 하위 영역</h3>
+            <div class="mb-4">
+                <div class="sub-item orange">
+                    <div class="icon">💡</div>
+                    <div>
+                        <h4>창의적 문제 해결</h4>
+                        <p>텍스트 내용을 응용하여 새로운 해결책을 찾는 능력</p>
+                    </div>
+                </div>
+                <div class="sub-item yellow">
+                    <div class="icon">🗣️</div>
+                    <div>
+                        <h4>표현과 전달 능력</h4>
+                        <p>이해 내용을 정확히 표현하고 전달하는 능력</p>
+                    </div>
+                </div>
+                <div class="sub-item teal">
+                    <div class="icon">👥</div>
+                    <div>
+                        <h4>사회적 상호작용</h4>
+                        <p>읽은 내용을 바탕으로 타인과 소통하고 협력하는 능력</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>이해력의 하위 영역</h3>
+            <div>
+                <div class="sub-item cream">
+                    <div class="icon">📚</div>
+                    <div>
+                        <h4>사실적 이해</h4>
+                        <p>글에 명시된 정보를 이해</p>
+                    </div>
+                </div>
+                <div class="sub-item pink">
+                    <div class="icon">🧩</div>
+                    <div>
+                        <h4>추론적 이해</h4>
+                        <p>글에 나타나지 않은 내용을 추론</p>
+                    </div>
+                </div>
+                <div class="sub-item light-blue">
+                    <div class="icon">🔍</div>
+                    <div>
+                        <h4>비판적 이해</h4>
+                        <p>글의 내용과 논리를 평가</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 섹션 2: 독자성향검사 -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <div class="section-title">독자성향검사</div>
+            </div>
+
+            <div class="info-box">
+                <p>독자성향검사는 학생들의 읽기 태도와 습관, 동기 등을 종합적으로 진단하여 개인별 읽기 성향을 파악하는 평가도구입니다. 이 검사는 기존의 읽기 능력(독해력) 측정에 더해 학생의 정서적·심리적 태도, 행동 양상, 사회적 환경 요인까지 포함한 통합적 문해력을 평가하도록 설계되었습니다.</p>
+                <p>다시 말해, 단순한 독해 능력뿐만 아니라 책을 대하는 마음가짐, 선호하는 책의 종류, 읽기 동기와 목적, 독서 습관 및 환경 등 비인지적 특성을 함께 살펴봅니다. 이를 통해 학생 개개인의 강점과 약점을 진단하고, 그 결과를 바탕으로 맞춤형 독서 지도를 제공하는 것이 목적입니다.</p>
+                <p>독자성향검사는 효과적인 독서 교육 전략 수립에 활용됩니다. 예를 들어, 검사를 통해 어떤 학생이 새로운 지식을 얻기 위해 독서하는 경향이 강하다거나, 반대로 주변의 권유에 의해 독서 습관이 형성되는 유형임을 알 수 있습니다. 이러한 정보를 바탕으로 교사와 학부모는 학생의 성향에 맞는 독서 프로그램이나 지도 방안을 마련할 수 있습니다.</p>
+            </div>
+        </div>
+
+        <!-- 섹션 3: 독자성향유형 -->
+        <div class="section">
+            <h2 style="font-size: 1.8rem; margin-bottom: 8px;">독자성향유형</h2>
+            <p style="color: #666; margin-bottom: 24px;">A~D 유형 설명</p>
+
+            <!-- A 유형 -->
+            <div class="type-card">
+                <div class="type-header">
+                    <div class="type-badge purple">A 유형</div>
+                    <span style="color: #666;">감성관계 중심 요인 우세</span>
+                </div>
+                <div class="type-description">
+                    <p>A 유형은 정서적 반응 요인과 사회적 동기 요인이 상대적으로 높게 나타난 학생군입니다.</p>
+                </div>
+                <div class="type-label">분류 근거</div>
+                <ol class="type-list">
+                    <li>독서를 재미, 감동, 공감의 활동으로 인식</li>
+                    <li>타인의 반응(칭찬, 권유, 함께 읽기)이 독서 동기에 크게 작용</li>
+                    <li>독서 후 느낀 나누기, 이야기 공유에 대한 긍정적 태도</li>
+                </ol>
+                <div class="type-example">
+                    <div class="label">측정 지표 예)</div>
+                    <p>"책을 읽으면 기분이 좋아진다"</p>
+                    <p>"가족이나 친구와 책 이야기를 나누는 것이 좋다"</p>
+                    <p>"누군가 권해 주면 책을 더 잘 읽는다"</p>
+                </div>
+                <div class="type-conclusion">
+                    <p>→ 정서·관계 기반 독서 동기가 우세할 경우 A 유형으로 분류됩니다.</p>
+                </div>
+            </div>
+
+            <!-- B 유형 -->
+            <div class="type-card">
+                <div class="type-header">
+                    <div class="type-badge teal">B 유형</div>
+                    <span style="color: #666;">인지·분석 요인 우세</span>
+                </div>
+                <div class="type-description">
+                    <p>B 유형은 정보 처리 요인과 인지적 독서 동기가 두드러진 학생군입니다.</p>
+                </div>
+                <div class="type-label">분류 근거</div>
+                <ol class="type-list">
+                    <li>독서를 지식 습득과 이해의 수단으로 인식</li>
+                    <li>내용의 사실성, 논리성, 활용 가능성을 중시</li>
+                    <li>구체적 설명, 실제 사례가 있는 책을 선호</li>
+                </ol>
+                <div class="type-example">
+                    <div class="label">측정 지표 예)</div>
+                    <p>"책을 읽으며 새로운 정보를 얻고 싶다"</p>
+                    <p>"읽은 내용을 이해하고 설명할 수 있다"</p>
+                    <p>"실생활에 도움이 되는 책이 좋다"</p>
+                </div>
+                <div class="type-conclusion">
+                    <p>→ 분석적·목적 지향적 독서 성향이 강할 경우 B 유형으로 분류됩니다.</p>
+                </div>
+            </div>
+
+            <!-- C 유형 -->
+            <div class="type-card">
+                <div class="type-header">
+                    <div class="type-badge blue">C 유형</div>
+                    <span style="color: #666;">행동·습관 요인 우세</span>
+                </div>
+                <div class="type-description">
+                    <p>C 유형은 독서 실천 행동과 자기조절 요인이 가장 안정적으로 나타난 학생군입니다.</p>
+                </div>
+                <div class="type-label">분류 근거</div>
+                <ol class="type-list">
+                    <li>독서가 생활 습관으로 내면화됨</li>
+                    <li>외적 통제 없이도 꾸준히 독서를 실천</li>
+                    <li>독서 시간과 분량에 대한 자기 관리 능력 보유</li>
+                </ol>
+                <div class="type-example">
+                    <div class="label">측정 지표 예)</div>
+                    <p>"정해진 시간에 책을 읽는 편이다"</p>
+                    <p>"누가 시키지 않아도 스스로 책을 읽는다"</p>
+                    <p>"독서를 자주, 꾸준히 한다"</p>
+                </div>
+                <div class="type-conclusion">
+                    <p>→ 지속성·자율성·실천력이 높을 경우 C 유형으로 분류됩니다.</p>
+                </div>
+            </div>
+
+            <!-- D 유형 -->
+            <div class="type-card">
+                <div class="type-header">
+                    <div class="type-badge violet">D 유형</div>
+                    <span style="color: #666;">자율·탐색 요인 우세</span>
+                </div>
+                <div class="type-description">
+                    <p>D 유형은 호기심 기반 동기와 탐색적 독서 요인이 상대적으로 높은 학생군입니다.</p>
+                </div>
+                <div class="type-label">분류 근거</div>
+                <ol class="type-list">
+                    <li>독서 방식이 유연하고 비정형적</li>
+                    <li>장르와 주제 선택의 폭이 넓음</li>
+                    <li>필요와 흥미에 따라 독서 강도가 변동</li>
+                </ol>
+                <div class="type-example">
+                    <div class="label">측정 지표 예)</div>
+                    <p>"관심 있는 주제라면 어떤 책이든 읽어 보고 싶다"</p>
+                    <p>"여러 종류의 책을 자유롭게 읽는다"</p>
+                    <p>"읽다가 흥미가 없으면 다른 책을 선택한다"</p>
+                </div>
+                <div class="type-conclusion">
+                    <p>→ 자율성·창의성·탐색성이 두드러질 경우 D 유형으로 분류됩니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -124,7 +124,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           component="img"
           src="/logo.png"
           alt="리딩 PRO"
-          sx={{ width: 80, height: 50, objectFit: "contain" }}
+          sx={{ width: 160, height: 100, objectFit: "contain" }}
         />
         <Typography variant="h6" fontWeight="bold" noWrap sx={{ color: "primary.main" }}>
           리딩 PRO
