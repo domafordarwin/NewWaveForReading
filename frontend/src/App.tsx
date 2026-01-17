@@ -10,6 +10,7 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import SchoolAdminDashboard from './pages/SchoolAdminDashboard';
 import QuestionDeveloperDashboard from './pages/QuestionDeveloperDashboard';
 import SystemAdminDashboard from './pages/SystemAdminDashboard';
+import ReadingProInfo from './pages/ReadingProInfo';
 
 const theme = createTheme({
   palette: {
@@ -70,6 +71,7 @@ function App() {
             <MainLayout>
               <Routes>
                 <Route path="dashboard" element={<ParentDashboard />} />
+                <Route path="info" element={<ReadingProInfo />} />
               </Routes>
             </MainLayout>
           } />

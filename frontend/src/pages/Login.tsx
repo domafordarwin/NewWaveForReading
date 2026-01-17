@@ -171,23 +171,25 @@ const Login = () => {
             position: "relative",
           }}
         >
-          {/* 카드 왼쪽 상단 로고 */}
-          <Box
-            component="img"
-            src="/logo.png"
-            alt="리딩 PRO 로고"
-            sx={{
-              position: "absolute",
-              top: -40,
-              left: 16,
-              width: 70,
-              height: 70,
-              objectFit: "contain",
-            }}
-          />
+          {/* 카드 상단 로고 및 단체명 */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
+            <Box
+              component="img"
+              src="/logo.png"
+              alt="리딩 PRO 로고"
+              sx={{
+                width: 28,
+                height: 28,
+                objectFit: "contain",
+              }}
+            />
+            <Typography variant="body2" color="text.secondary" fontWeight="medium">
+              (사)전국독서새물결모임
+            </Typography>
+          </Box>
 
-          <Box sx={{ textAlign: "center", mb: 4, mt: 2 }}>
-            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.3 }}>
+          <Box sx={{ textAlign: "center", mb: 4 }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.3, color: "#667eea" }}>
               리딩 PRO
             </Typography>
             <Typography variant="body1" color="text.secondary" fontWeight="medium" sx={{ mt: 0.5 }}>
