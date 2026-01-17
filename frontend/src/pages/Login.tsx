@@ -176,16 +176,16 @@ const Login = () => {
               src="/logo.png"
               alt="리딩 PRO 로고"
               sx={{
-                width: 120,
-                height: 120,
+                width: 180,
+                height: 180,
                 objectFit: "contain",
-                mb: 2,
+                mb: 3,
               }}
             />
-            <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.4 }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.3, mt: 1 }}>
               리딩 PRO
             </Typography>
-            <Typography variant="body1" color="text.secondary" fontWeight="medium">
+            <Typography variant="body1" color="text.secondary" fontWeight="medium" sx={{ mt: 0.5 }}>
               문해력 진단 및 클리닉 프로그램
             </Typography>
           </Box>
