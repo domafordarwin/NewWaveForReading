@@ -199,25 +199,24 @@ const Login = () => {
           }}
         >
           {/* 카드 상단 로고 및 단체명 */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
             <Box
               component="img"
               src="/logo.png"
               alt="리딩 PRO 로고"
               sx={{
                 width: 200,
-                height: 100,
+                height: 60,
                 objectFit: "contain",
               }}
             />
           </Box>
 
-          <Box sx={{ textAlign: "center", mb: 4 }}>
+          <Box sx={{ textAlign: "center", mb: 3 }}>
             <Typography
               variant="h4"
               fontWeight="bold"
-              gutterBottom
-              sx={{ lineHeight: 1.3, color: "#667eea" }}
+              sx={{ lineHeight: 1.2, color: "#667eea", mb: 0.5 }}
             >
               리딩 PRO
             </Typography>
@@ -225,7 +224,6 @@ const Login = () => {
               variant="body1"
               color="text.secondary"
               fontWeight="medium"
-              sx={{ mt: 0.5 }}
             >
               문해력 진단 및 클리닉 프로그램
             </Typography>
