@@ -11,6 +11,7 @@ import SchoolAdminDashboard from './pages/SchoolAdminDashboard';
 import QuestionDeveloperDashboard from './pages/QuestionDeveloperDashboard';
 import SystemAdminDashboard from './pages/SystemAdminDashboard';
 import ReadingProInfo from './pages/ReadingProInfo';
+import ReportSample from './pages/ReportSample';
 
 const theme = createTheme({
   palette: {
@@ -62,6 +63,7 @@ function App() {
             <MainLayout>
               <Routes>
                 <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="report-sample" element={<ReportSample type="student" />} />
               </Routes>
             </MainLayout>
           } />
@@ -71,6 +73,7 @@ function App() {
             <MainLayout>
               <Routes>
                 <Route path="dashboard" element={<ParentDashboard />} />
+                <Route path="report-sample" element={<ReportSample type="parent" />} />
                 <Route path="info" element={<ReadingProInfo />} />
               </Routes>
             </MainLayout>
@@ -81,6 +84,7 @@ function App() {
             <MainLayout>
               <Routes>
                 <Route path="dashboard" element={<TeacherDashboard />} />
+                <Route path="report-sample" element={<ReportSample type="teacher" />} />
               </Routes>
             </MainLayout>
           } />
@@ -90,6 +94,7 @@ function App() {
             <MainLayout>
               <Routes>
                 <Route path="dashboard" element={<SchoolAdminDashboard />} />
+                <Route path="report-sample" element={<ReportSample type="school" />} />
               </Routes>
             </MainLayout>
           } />

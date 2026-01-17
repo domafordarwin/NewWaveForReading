@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자녀 문해력 진단 결과 안내 - 최충현</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@400;600;700&display=swap');
+        
+        :root {
+            --primary: #2D5A47;
+            --primary-light: #3D7A5F;
+            --primary-dark: #1D3A2F;
+            --accent: #C8956C;
+            --accent-light: #E8C5A8;
+            --warm-cream: #FBF8F3;
+            --warm-beige: #F5EDE3;
+            --warm-sand: #E8DDD0;
+            --text-dark: #2C3E35;
+            --text-medium: #5A6B62;
+            --text-light: #8A9A92;
+            --border: #DDD5CA;
+            --success: #4A7C59;
+            --warning: #C49A3C;
+            --info: #5B7B8C;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--warm-cream);
+            color: var(--text-dark);
+            line-height: 1.8;
+            font-size: 15px;
+        }
+        
+        /* ========== 네비게이션 ========== */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 0 20px;
+        }
+        
+        .nav-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+        
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--primary);
+        }
+        
+        .nav-brand .logo {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .nav-brand .text {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .nav-brand .text small {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: var(--text-light);
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 8px;
+            list-style: none;
+        }
+        
+        .nav-menu a {
+            display: block;
+            padding: 10px 18px;
+            color: var(--text-medium);
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            background: var(--warm-beige);
+            color: var(--primary);
+        }
+        
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .nav-student {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: var(--warm-beige);
+            border-radius: 25px;
+        }
+        
+        .nav-student .avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        
+        .nav-student .name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .btn-print {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-print:hover {
+            background: var(--primary-dark);
+        }
+        
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: 1px solid var(--border);
+            font-size: 1.3rem;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+        
+        @media (max-width: 900px) {
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                padding: 20px;
+                border-bottom: 1px solid var(--border);
+            }
+            
+            .nav-menu.active {
+                display: flex;
+            }
+            
+            .nav-toggle {
+                display: block;
+            }
+            
+            .btn-print {
+                display: none;
+            }
+        }
+        
+        /* ========== 메인 ========== */
+        .main {
+            padding-top: 70px;
+        }
+        
+        /* ========== 헤더 섹션 ========== */
+        .header-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 60px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 50%;
+            height: 200%;
+            background: rgba(255,255,255,0.05);
+            transform: rotate(-15deg);
+        }
+        
+        .header-section::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -5%;
+            width: 30%;
+            height: 150%;
+            background: rgba(255,255,255,0.03);
+            transform: rotate(20deg);
+        }
+        
+        .header-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .header-org {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-org .icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .header-org .text {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .header-org .text strong {
+            display: block;
+            font-size: 1.1rem;
+            opacity: 1;
+        }
+        
+        .header-date {
+            text-align: right;
+            opacity: 0.9;
+        }
+        
+        .header-date small {
+            display: block;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        .header-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header-title h1 {
+            font-family: 'Noto Serif KR', serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header-title p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .header-student-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+        
+        .student-info-item {
+            text-align: center;
+        }
+        
+        .student-info-item label {
+            display: block;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .student-info-item .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .student-info-item .value.highlight {
+            color: var(--accent-light);
+        }
+        
+        /* ========== 섹션 공통 ========== */
+        .section {
+            padding: 70px 20px;
+        }
+        
+        .section-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            margin-bottom: 40px;
+        }
+        
+        .section-header .label {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .section-header h2 {
+            font-family: 'Noto Serif KR', serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+        
+        .section-header p {
+            color: var(--text-medium);
+            font-size: 0.95rem;
+        }
+        
+        /* ========== 종합 결과 요약 ========== */
+        #summary {
+            background: white;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 700px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .summary-card {
+            background: var(--warm-cream);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        
+        .summary-card .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.5rem;
+        }
+        
+        .summary-card.purple .icon { background: linear-gradient(135deg, #E8D5F0, #D5C0E8); }
+        .summary-card.blue .icon { background: linear-gradient(135deg, #D5E5F0, #C0D5E8); }
+        .summary-card.green .icon { background: linear-gradient(135deg, #D5F0E0, #C0E8D0); }
+        
+        .summary-card .score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        
+        .summary-card .score small {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-light);
+        }
+        
+        .summary-card .label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-medium);
+        }
+        
+        .summary-message {
+            background: linear-gradient(135deg, var(--warm-beige) 0%, var(--warm-sand) 100%);
+            border-radius: 16px;
+            padding: 30px;
+            border-left: 5px solid var(--accent);
+        }
+        
+        .summary-message h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .summary-message p {
+            color: var(--text-medium);
+            font-size: 0.95rem;
+        }
+        
+        .summary-message p strong {
+            color: var(--primary);
+        }
+        
+        /* ========== 독자 유형 분석 ========== */
+        #reader-type {
+            background: var(--warm-beige);
+        }
+        
+        .type-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.06);
+        }
+        
+        .type-card-header {
+            background: linear-gradient(135deg, var(--accent) 0%, #D4A574 100%);
+            color: white;
+            padding: 35px;
+            text-align: center;
+        }
+        
+        .type-card-header .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .type-card-header h3 {
+            font-family: 'Noto Serif KR', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .type-card-header p {
+            font-size: 1rem;
+            opacity: 0.95;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .type-card-body {
+            padding: 35px;
+        }
+        
+        .type-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .type-feature {
+            padding: 20px;
+            background: var(--warm-cream);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .type-feature h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .type-feature p {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+        }
+        
+        /* ========== 상세 분석 결과 ========== */
+        #detailed-analysis {
+            background: white;
+        }
+        
+        .analysis-table-container {
+            background: var(--warm-cream);
+            border-radius: 16px;
+            padding: 25px;
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        
+        .analysis-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        
+        .analysis-table th {
+            background: var(--primary);
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .analysis-table th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+        
+        .analysis-table th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+        
+        .analysis-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+        
+        .analysis-table tbody tr:hover {
+            background: white;
+        }
+        
+        .analysis-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-badge.excellent { background: #E8F5E9; color: #2E7D32; }
+        .status-badge.good { background: #E3F2FD; color: #1565C0; }
+        .status-badge.needs-improvement { background: #FFF8E1; color: #F57F17; }
+        
+        .progress-bar-mini {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .progress-bar-mini .bar {
+            flex: 1;
+            height: 8px;
+            background: #E0E0E0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-mini .bar .fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+        
+        .progress-bar-mini .bar .fill.high { background: var(--success); }
+        .progress-bar-mini .bar .fill.medium { background: var(--warning); }
+        .progress-bar-mini .bar .fill.low { background: #E57373; }
+        
+        .progress-bar-mini .value {
+            font-weight: 700;
+            color: var(--text-dark);
+            min-width: 45px;
+            text-align: right;
+        }
+        
+        /* ========== 가정 지도 안내 ========== */
+        #home-guidance {
+            background: var(--warm-beige);
+        }
+        
+        .guidance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .guidance-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary);
+        }
+        
+        .guidance-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .guidance-card h3 .icon {
+            width: 40px;
+            height: 40px;
+            background: var(--warm-beige);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .guidance-card p {
+            color: var(--text-medium);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .guidance-card ul {
+            list-style: none;
+        }
+        
+        .guidance-card ul li {
+            padding: 10px 0;
+            padding-left: 25px;
+            position: relative;
+            color: var(--text-medium);
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .guidance-card ul li:last-child {
+            border-bottom: none;
+        }
+        
+        .guidance-card ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: 700;
+        }
+        
+        /* ========== 추천 활동 ========== */
+        .recommended-activities {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 2px solid var(--primary);
+        }
+        
+        .recommended-activities h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .activity-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: var(--warm-cream);
+            border-radius: 10px;
+        }
+        
+        .activity-item .num {
+            width: 30px;
+            height: 30px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        
+        .activity-item span {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+        }
+        
+        /* ========== 교사 의견 ========== */
+        #teacher-comment {
+            background: white;
+        }
+        
+        .comment-box {
+            background: linear-gradient(135deg, var(--warm-cream) 0%, var(--warm-beige) 100%);
+            border-radius: 16px;
+            padding: 35px;
+            border-left: 5px solid var(--primary);
+        }
+        
+        .comment-box .teacher-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .comment-box .teacher-avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        
+        .comment-box .teacher-name {
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .comment-box .teacher-role {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        .comment-box .comment-content {
+            color: var(--text-medium);
+            font-size: 1rem;
+            line-height: 1.9;
+        }
+        
+        .comment-box .comment-content p {
+            margin-bottom: 15px;
+        }
+        
+        .comment-box .comment-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* ========== 푸터 ========== */
+        .footer {
+            background: var(--primary-dark);
+            color: white;
+            padding: 50px 20px;
+        }
+        
+        .footer-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+        }
+        
+        .footer-section h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--accent-light);
+        }
+        
+        .footer-section p,
+        .footer-section a {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.8;
+        }
+        
+        .footer-section a {
+            text-decoration: none;
+            display: block;
+        }
+        
+        .footer-section a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            max-width: 1000px;
+            margin: 40px auto 0;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        /* ========== 인쇄 스타일 ========== */
+        @media print {
+            .nav, .btn-print {
+                display: none !important;
+            }
+            
+            .main {
+                padding-top: 0;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+            
+            body {
+                background: white;
+            }
+        }
+        
+        /* ========== 애니메이션 ========== */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(25px);
+            transition: all 0.6s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <div class="logo">📚</div>
+                <div class="text">
+                    <strong>문해력 진단</strong>
+                    <small>학부모 안내</small>
+                </div>
+            </a>
+            
+            <button class="nav-toggle" onclick="toggleMenu()">☰</button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#summary">종합 결과</a></li>
+                <li><a href="#reader-type">독자 유형</a></li>
+                <li><a href="#detailed-analysis">상세 분석</a></li>
+                <li><a href="#home-guidance">가정 지도</a></li>
+                <li><a href="#teacher-comment">교사 의견</a></li>
+            </ul>
+            
+            <div class="nav-actions">
+                <div class="nav-student">
+                    <div class="avatar">충</div>
+                    <span class="name">최충현 학생</span>
+                </div>
+                <button class="btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 메인 -->
+    <main class="main">
+        <!-- 헤더 섹션 -->
+        <section class="header-section">
+            <div class="header-container">
+                <div class="header-top">
+                    <div class="header-org">
+                        <div class="icon">📖</div>
+                        <div class="text">
+                            <strong>(사)전국독서새물결모임</strong>
+                            문해력 진단 및 독자성향검사
+                        </div>
+                    </div>
+                    <div class="header-date">
+                        <strong>검사일: 2025년 01월 15일</strong>
+                        <small>결과 유효기간: 6개월</small>
+                    </div>
+                </div>
+                
+                <div class="header-title">
+                    <h1>자녀 문해력 진단 결과 안내</h1>
+                    <p>학부모님께 드리는 자녀의 독서 능력 분석 보고서입니다</p>
+                </div>
+                
+                <div class="header-student-card">
+                    <div class="student-info-item">
+                        <label>학생명</label>
+                        <div class="value">최충현</div>
+                    </div>
+                    <div class="student-info-item">
+                        <label>검사 유형</label>
+                        <div class="value">심층 분석</div>
+                    </div>
+                    <div class="student-info-item">
+                        <label>독자 유형</label>
+                        <div class="value highlight">A유형 (감성-관계)</div>
+                    </div>
+                    <div class="student-info-item">
+                        <label>종합 평가</label>
+                        <div class="value highlight">양호</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 종합 결과 요약 -->
+        <section class="section" id="summary">
+            <div class="section-container">
+                <div class="section-header fade-in">
+                    <span class="label">Overview</span>
+                    <h2>종합 결과 요약</h2>
+                    <p>자녀분의 문해력 진단 결과를 세 가지 핵심 영역으로 안내해 드립니다.</p>
+                </div>
+                
+                <div class="summary-grid">
+                    <div class="summary-card purple fade-in">
+                        <div class="icon">🎨</div>
+                        <div class="score">92<small>점</small></div>
+                        <div class="label">심미적 감수성</div>
+                    </div>
+                    
+                    <div class="summary-card blue fade-in">
+                        <div class="icon">💡</div>
+                        <div class="score">78<small>점</small></div>
+                        <div class="label">이해력</div>
+                    </div>
+                    
+                    <div class="summary-card green fade-in">
+                        <div class="icon">💬</div>
+                        <div class="score">85<small>점</small></div>
+                        <div class="label">의사소통 능력</div>
+                    </div>
+                </div>
+                
+                <div class="summary-message fade-in">
+                    <h3>📋 종합 분석 결과</h3>
+                    <p>
+                        자녀분은 <strong>A유형(감성-관계 중심)</strong> 독자로 진단되었습니다. 
+                        이 유형의 학생은 책을 읽을 때 <strong>감정이입과 공감 능력</strong>이 뛰어나며, 
+                        등장인물의 감정 변화에 민감하게 반응하는 특징이 있습니다.
+                        특히 <strong>심미적 감수성</strong> 영역에서 우수한 성취를 보이고 있으며,
+                        <strong>추론적 이해</strong> 영역에서 추가적인 발전 가능성이 있습니다.
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 독자 유형 분석 -->
+        <section class="section" id="reader-type">
+            <div class="section-container">
+                <div class="section-header fade-in">
+                    <span class="label">Reader Type</span>
+                    <h2>자녀의 독자 유형</h2>
+                    <p>독서 성향 검사를 통해 파악된 자녀분의 독자 유형입니다.</p>
+                </div>
+                
+                <div class="type-card fade-in">
+                    <div class="type-card-header">
+                        <span class="badge">💝 A유형</span>
+                        <h3>감성-관계 중심형 독자</h3>
+                        <p>
+                            정서적 만족과 타인과의 감정적 교류를 중요시하며,
+                            책 속 인물에게 깊이 공감하고 몰입하는 유형입니다.
+                        </p>
+                    </div>
+                    <div class="type-card-body">
+                        <div class="type-features-grid">
+                            <div class="type-feature">
+                                <h4>📌 주요 특징</h4>
+                                <p>감정이입과 공감 능력이 뛰어나며, 등장인물의 내면 심리에 깊이 몰입합니다. 감정적으로 풍부한 서사를 선호합니다.</p>
+                            </div>
+                            <div class="type-feature">
+                                <h4>📖 독서 동기</h4>
+                                <p>정서적 만족과 카타르시스를 추구하며, 다양한 인물의 삶을 경험하고 감정적 교류를 통해 독서의 즐거움을 느낍니다.</p>
+                            </div>
+                            <div class="type-feature">
+                                <h4>✅ 강점 영역</h4>
+                                <p>문학적 표현 이해, 정서적 공감, 창의적 표현에서 뛰어난 능력을 보이며, 독서 후 감상을 풍부하게 표현합니다.</p>
+                            </div>
+                            <div class="type-feature">
+                                <h4>🎯 발전 가능 영역</h4>
+                                <p>논리적 분석, 비판적 사고, 추론 능력을 함께 기르면 더욱 균형 잡힌 독서가 가능합니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 상세 분석 결과 -->
+        <section class="section" id="detailed-analysis">
+            <div class="section-container">
+                <div class="section-header fade-in">
+                    <span class="label">Detailed Analysis</span>
+                    <h2>영역별 상세 분석</h2>
+                    <p>각 평가 영역의 하위 요소별 결과입니다.</p>
+                </div>
+                
+                <div class="analysis-table-container fade-in">
+                    <table class="analysis-table">
+                        <thead>
+                            <tr>
+                                <th>평가 영역</th>
+                                <th>하위 영역</th>
+                                <th style="width: 180px;">점수</th>
+                                <th>결과</th>
+                                <th>의미</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td rowspan="3"><strong>심미적 감수성</strong></td>
+                                <td>문학적 표현</td>
+                                <td>
+                                    <div class="progress-bar-mini">
+                                        <div class="bar"><div class="fill high" style="width: 95%"></div></div>
+                                        <span class="value">95%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge excellent">우수</span></td>
+                                <td>비유, 상징 등 문학적 표현 이해력</td>
+                            </tr>
+                            <tr>
+                                <td>정서적 공감</td>
+                                <td>
+                                    <div class="progress-bar-mini">
+                                        <div class="bar"><div class="fill high" style="width: 92%"></div></div>
+                                        <span class="value">92%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge excellent">우수</span></td>
+                                <td>등장인물 감정 이해 및 공감 능력</td>
+                            </tr>
+                            <tr>
+                                <td>문학적 가치</td>
+                                <td>
+                                    <div class="progress-bar-mini">
+                                        <div class="bar"><div class="fill high" style="width: 88%"></div></div>
+                                        <span class="value">88%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge good">양호</span></td>
+                                <td>작품의 주제와 메시지 파악 능력</td>
+                            </tr>
+                            <tr>
+                                <td rowspan="3"><strong>이해력</strong></td>
+                                <td>사실적 이해</td>
+                                <td>
+                                    <div class="progress-bar-mini">
+                                        <div class="bar"><div class="fill high" style="width: 82%"></div></div>
+                                        <span class="value">82%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge good">양호</span></td>
+                                <td>텍스트에 명시된 정보 파악 능력</td>
+                            </tr>
+                            <tr>
+                                <td>추론적 이해</td>
+                                <td>
+                                    <div class="progress-bar-mini">
+                                        <div class="bar"><div class="fill medium" style="width: 68%"></div></div>
+                                        <span class="value">68%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge needs-improvement">보완 필요</span></td>
+                                <td>문맥을 통한 숨겨진 의미 추론 능력</td>
+                            </tr>
+                            <tr>
+                                <td>비판적 이해</td>
+                                <td>
+                                    <div class="progress-bar-mini">
+                                        <div class="bar"><div class="fill high" style="width: 78%"></div></div>
+                                        <span class="value">78%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge good">양호</span></td>
+                                <td>텍스트의 관점과 논리 평가 능력</td>
+                            </tr>
+                            <tr>
+                                <td rowspan="3"><strong>의사소통 능력</strong></td>
+                                <td>창의적 문제해결</td>
+                                <td>
+                                    <div class="progress-bar-mini">
+                                        <div class="bar"><div class="fill high" style="width: 90%"></div></div>
+                                        <span class="value">90%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge excellent">우수</span></td>
+                                <td>새로운 아이디어 도출 능력</td>
+                            </tr>
+                            <tr>
+                                <td>표현 및 전달</td>
+                                <td>
+                                    <div class="progress-bar-mini">
+                                        <div class="bar"><div class="fill high" style="width: 85%"></div></div>
+                                        <span class="value">85%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge good">양호</span></td>
+                                <td>생각을 글과 말로 표현하는 능력</td>
+                            </tr>
+                            <tr>
+                                <td>사회적 상호작용</td>
+                                <td>
+                                    <div class="progress-bar-mini">
+                                        <div class="bar"><div class="fill high" style="width: 88%"></div></div>
+                                        <span class="value">88%</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge good">양호</span></td>
+                                <td>독서를 통한 소통 및 토론 능력</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 가정 지도 안내 -->
+        <section class="section" id="home-guidance">
+            <div class="section-container">
+                <div class="section-header fade-in">
+                    <span class="label">Home Guidance</span>
+                    <h2>가정에서의 지도 방향</h2>
+                    <p>자녀의 문해력 발달을 위해 가정에서 실천할 수 있는 활동입니다.</p>
+                </div>
+                
+                <div class="guidance-grid">
+                    <div class="guidance-card fade-in">
+                        <h3>
+                            <span class="icon">📚</span>
+                            독서 환경 조성
+                        </h3>
+                        <p>자녀가 자연스럽게 책과 친해질 수 있는 환경을 만들어 주세요.</p>
+                        <ul>
+                            <li>감정 변화가 풍부한 문학 작품 함께 선택하기</li>
+                            <li>자녀가 직접 도서를 선택할 수 있는 기회 제공</li>
+                            <li>정해진 시간에 함께 독서하는 습관 형성</li>
+                            <li>다양한 장르의 책을 접할 수 있도록 안내</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="guidance-card fade-in">
+                        <h3>
+                            <span class="icon">💬</span>
+                            독서 후 대화
+                        </h3>
+                        <p>독서 후 대화를 통해 이해력과 표현력을 함께 키워주세요.</p>
+                        <ul>
+                            <li>등장인물의 감정에 대해 이야기 나누기</li>
+                            <li>"왜 그랬을까?" 등 추론 질문하기</li>
+                            <li>자녀의 생각과 느낌을 경청하고 공감하기</li>
+                            <li>다양한 관점에서 이야기 해석해보기</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="guidance-card fade-in">
+                        <h3>
+                            <span class="icon">✏️</span>
+                            표현 활동 지원
+                        </h3>
+                        <p>다양한 방식으로 독서 경험을 표현할 수 있도록 격려해 주세요.</p>
+                        <ul>
+                            <li>독서 감상문 또는 독서 일기 쓰기</li>
+                            <li>인상 깊은 장면 그림으로 표현하기</li>
+                            <li>가족 독서 토론 시간 가지기</li>
+                            <li>책 내용을 바탕으로 역할극 해보기</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="guidance-card fade-in">
+                        <h3>
+                            <span class="icon">🎯</span>
+                            추론 능력 강화
+                        </h3>
+                        <p>보완이 필요한 추론적 이해 영역을 위한 활동입니다.</p>
+                        <ul>
+                            <li>이야기의 다음 내용 예측해보기</li>
+                            <li>등장인물의 행동 이유 추측하기</li>
+                            <li>숨겨진 단서 찾기 게임하기</li>
+                            <li>원인과 결과 관계 파악하기</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="recommended-activities fade-in">
+                    <h3>✨ 추천 활동 체크리스트</h3>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <span class="num">1</span>
+                            <span>하루 20분 이상 독서 시간 확보</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="num">2</span>
+                            <span>주 1회 가족 독서 토론</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="num">3</span>
+                            <span>월 1권 독서 감상문 작성</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="num">4</span>
+                            <span>도서관 정기 방문</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="num">5</span>
+                            <span>다양한 장르 도서 탐색</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="num">6</span>
+                            <span>책 내용 관련 체험 활동</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 교사 의견 -->
+        <section class="section" id="teacher-comment">
+            <div class="section-container">
+                <div class="section-header fade-in">
+                    <span class="label">Teacher's Comment</span>
+                    <h2>담당 교사 의견</h2>
+                    <p>자녀분의 검사 결과에 대한 전문가 의견입니다.</p>
+                </div>
+                
+                <div class="comment-box fade-in">
+                    <div class="teacher-info">
+                        <div class="teacher-avatar">👩‍🏫</div>
+                        <div>
+                            <div class="teacher-name">문해력 진단 전문 교사</div>
+                            <div class="teacher-role">(사)전국독서새물결모임</div>
+                        </div>
+                    </div>
+                    <div class="comment-content">
+                        <p>
+                            <strong>학부모님께,</strong>
+                        </p>
+                        <p>
+                            충현 학생은 <strong>감성적 독서 능력</strong>이 매우 뛰어난 학생입니다. 
+                            특히 등장인물의 감정을 섬세하게 파악하고 공감하는 능력이 탁월하며, 
+                            이는 문학 작품을 깊이 있게 이해하는 데 큰 강점이 됩니다.
+                        </p>
+                        <p>
+                            <strong>추론적 이해</strong> 영역은 현재 발전 가능성이 있는 부분으로, 
+                            독서 시 "왜 그랬을까?", "다음에는 어떻게 될까?" 등의 질문을 통해 
+                            텍스트 너머의 의미를 파악하는 연습을 권장드립니다. 
+                            비문학 텍스트(설명문, 기사 등)를 함께 읽으며 
+                            원인-결과 관계를 파악하는 활동도 도움이 됩니다.
+                        </p>
+                        <p>
+                            가정에서 <strong>가족 독서 토론</strong>이나 <strong>독서 감상 나누기</strong> 
+                            활동을 꾸준히 실천해 주시면, 충현 학생의 문해력이 더욱 균형 있게 
+                            발달할 것으로 기대됩니다. 앞으로의 독서 여정을 응원합니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4>📚 (사)전국독서새물결모임</h4>
+                <p>
+                    독서 교육을 통해 미래 세대의 문해력 향상에<br>
+                    기여하고 있는 비영리 교육 기관입니다.
+                </p>
+            </div>
+            <div class="footer-section">
+                <h4>📞 문의 안내</h4>
+                <p>
+                    전화: 070-4226-0244<br>
+                    이메일: literacy@reading.or.kr<br>
+                    운영시간: 평일 09:00 - 18:00
+                </p>
+            </div>
+            <div class="footer-section">
+                <h4>🔗 관련 링크</h4>
+                <a href="#">공식 홈페이지</a>
+                <a href="#">독서 프로그램 안내</a>
+                <a href="#">학부모 커뮤니티</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2025 (사)전국독서새물결모임. All rights reserved.<br>
+            본 결과는 문해력 진단 도구를 통해 산출되었으며, 학생의 전반적인 학습 능력을 대표하지 않습니다.
+        </div>
+    </footer>
+    
+    <!-- JavaScript -->
+    <script>
+        // 모바일 메뉴 토글
+        function toggleMenu() {
+            document.getElementById('navMenu').classList.toggle('active');
+        }
+        
+        // 스크롤 애니메이션
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+        
+        // 스크롤 시 네비게이션 효과
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('.nav');
+            if (window.scrollY > 50) {
+                nav.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
+            } else {
+                nav.style.boxShadow = 'none';
+            }
+        });
+        
+        // 현재 섹션 하이라이트
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-menu a');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
