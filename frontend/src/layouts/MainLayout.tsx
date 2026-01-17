@@ -119,12 +119,12 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
   const drawer = (
     <Box>
-      <Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
+      <Box sx={{ p: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
         <Box
           component="img"
           src="/logo.png"
           alt="리딩 PRO"
-          sx={{ width: 36, height: 36, objectFit: "contain" }}
+          sx={{ width: 80, height: 50, objectFit: "contain" }}
         />
         <Typography variant="h6" fontWeight="bold" noWrap sx={{ color: "primary.main" }}>
           리딩 PRO
