@@ -1,321 +1,211 @@
-import type { ReactNode } from 'react';
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
-  AppBar,
   Box,
-  CssBaseline,
   Drawer,
-  IconButton,
+  AppBar,
+  Toolbar,
+  Typography,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Toolbar,
-  Typography,
+  IconButton,
   Avatar,
   Menu,
   MenuItem,
-  Button,
-  useMediaQuery,
   Divider,
-  Chip,
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+} from "@mui/material";
 import {
   Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  Assignment as AssignmentIcon,
-  Assessment as AssessmentIcon,
-  TrendingUp as TrendingUpIcon,
-  AccountCircle,
+  Dashboard,
+  Assessment,
+  Person,
   Logout,
-  People,
-  BarChart,
-  AdminPanelSettings,
   School,
-  Class,
-  Print,
-  Quiz,
-  LibraryBooks,
-  Settings,
-  Storage,
-  FamilyRestroom,
-  EventNote,
-  Info,
   Face,
-} from '@mui/icons-material';
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { clearCurrentUser, getCurrentUser } from '../utils/session';
-import type { StoredUserType } from '../utils/session';
-import { UserTypeLabels } from '../types';
+  FamilyRestroom,
+  AdminPanelSettings,
+  Assignment,
+  Quiz,
+  Settings,
+} from "@mui/icons-material";
+import { getCurrentUser, clearCurrentUser } from "../utils/session";
+import type { UserType } from "../types";
+
+const drawerWidth = 260;
 
 interface MainLayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-// 학생 회원 메뉴
-const studentMenuItems = [
-  { text: '대시보드', icon: <DashboardIcon />, path: '/student/dashboard' },
-  { text: '검사 목록', icon: <AssignmentIcon />, path: '/student/assessments' },
-  { text: '나의 성적', icon: <AssessmentIcon />, path: '/student/results' },
-  { text: '학습 이력', icon: <TrendingUpIcon />, path: '/student/progress' },
-  { text: '피드백', icon: <AssessmentIcon />, path: '/student/feedback' },
-];
-
-// 학부모 메뉴
-const parentMenuItems = [
-  { text: '대시보드', icon: <DashboardIcon />, path: '/parent/dashboard' },
-  { text: '자녀 성적 리포트', icon: <AssessmentIcon />, path: '/parent/dashboard' },
-  { text: '상담 신청', icon: <EventNote />, path: '/parent/dashboard' },
-  { text: 'Reading PRO 안내', icon: <Info />, path: '/parent/info' },
-];
-
-// 학교 관리자 메뉴
-const schoolAdminMenuItems = [
-  { text: '대시보드', icon: <DashboardIcon />, path: '/school-admin/dashboard' },
-  { text: '학생 관리', icon: <People />, path: '/school-admin/students' },
-  { text: '학급 관리', icon: <Class />, path: '/school-admin/classes' },
-  { text: '평가 현황', icon: <AssessmentIcon />, path: '/school-admin/dashboard' },
-  { text: '리포트 출력', icon: <Print />, path: '/school-admin/dashboard' },
-];
-
-// 독서 진단 담당 교사 메뉴
-const assessmentTeacherMenuItems = [
-  { text: '대시보드', icon: <DashboardIcon />, path: '/teacher/dashboard' },
-  { text: '학생 관리', icon: <People />, path: '/teacher/students' },
-  { text: '검사 배정', icon: <AssignmentIcon />, path: '/teacher/assessments' },
-  { text: '피드백 작성', icon: <AssessmentIcon />, path: '/teacher/dashboard' },
-  { text: '반별 통계', icon: <BarChart />, path: '/teacher/statistics' },
-];
-
-// 문항 개발 교사 메뉴
-const questionDeveloperMenuItems = [
-  { text: '대시보드', icon: <DashboardIcon />, path: '/question-dev/dashboard' },
-  { text: '문항 개발', icon: <Quiz />, path: '/question-dev/dashboard' },
-  { text: '도서 관리', icon: <LibraryBooks />, path: '/question-dev/dashboard' },
-  { text: '문항 검토', icon: <AssessmentIcon />, path: '/question-dev/dashboard' },
-];
-
-// 시스템 관리자 메뉴
-const systemAdminMenuItems = [
-  { text: '대시보드', icon: <DashboardIcon />, path: '/admin/dashboard' },
-  { text: '사용자 관리', icon: <People />, path: '/admin/dashboard' },
-  { text: '문항 DB 관리', icon: <Storage />, path: '/admin/dashboard' },
-  { text: '권한 관리', icon: <AdminPanelSettings />, path: '/admin/dashboard' },
-  { text: '시스템 설정', icon: <Settings />, path: '/admin/dashboard' },
-];
+// 사용자 타입별 메뉴 구성
+const menusByUserType: Record<UserType, { label: string; icon: React.ReactNode; path: string }[]> = {
+  STUDENT: [
+    { label: "대시보드", icon: <Dashboard />, path: "/student/dashboard" },
+    { label: "진단 목록", icon: <Assessment />, path: "/student/assessments" },
+    { label: "내 결과", icon: <Person />, path: "/student/results" },
+  ],
+  PARENT: [
+    { label: "대시보드", icon: <Dashboard />, path: "/parent/dashboard" },
+    { label: "자녀 정보", icon: <FamilyRestroom />, path: "/parent/children" },
+  ],
+  SCHOOL_ADMIN: [
+    { label: "대시보드", icon: <Dashboard />, path: "/school-admin/dashboard" },
+    { label: "학생 관리", icon: <Person />, path: "/school-admin/students" },
+    { label: "반 관리", icon: <School />, path: "/school-admin/classes" },
+  ],
+  ASSESSMENT_TEACHER: [
+    { label: "대시보드", icon: <Dashboard />, path: "/teacher/dashboard" },
+    { label: "학생 관리", icon: <Person />, path: "/teacher/students" },
+    { label: "진단 배정", icon: <Assignment />, path: "/teacher/assessments" },
+  ],
+  QUESTION_DEVELOPER: [
+    { label: "대시보드", icon: <Dashboard />, path: "/question-dev/dashboard" },
+    { label: "도서 관리", icon: <School />, path: "/question-dev/books" },
+    { label: "문항 관리", icon: <Quiz />, path: "/question-dev/questions" },
+  ],
+  SYSTEM_ADMIN: [
+    { label: "대시보드", icon: <Dashboard />, path: "/admin/dashboard" },
+    { label: "사용자 관리", icon: <Person />, path: "/admin/users" },
+    { label: "시스템 설정", icon: <Settings />, path: "/admin/settings" },
+  ],
+};
 
 // 사용자 타입별 아이콘
-const userTypeIcons: Record<StoredUserType, React.ReactNode> = {
+const userTypeIcons: Record<UserType, React.ReactNode> = {
   STUDENT: <Face />,
   PARENT: <FamilyRestroom />,
-  SCHOOL_ADMIN: <School />,
-  ASSESSMENT_TEACHER: <AssignmentIcon />,
+  SCHOOL_ADMIN: <AdminPanelSettings />,
+  ASSESSMENT_TEACHER: <Assignment />,
   QUESTION_DEVELOPER: <Quiz />,
   SYSTEM_ADMIN: <Settings />,
 };
 
-export default function MainLayout({ children }: MainLayoutProps) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const drawerWidth = isMobile ? 220 : 260;
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+const MainLayout = ({ children }: MainLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const storedUser = getCurrentUser();
-  const userType = storedUser?.userType || 'STUDENT';
-
-  // 현재 사용자 타입에 따라 메뉴 결정
-  const getMenuItems = () => {
-    switch (userType) {
-      case 'STUDENT':
-        return studentMenuItems;
-      case 'PARENT':
-        return parentMenuItems;
-      case 'SCHOOL_ADMIN':
-        return schoolAdminMenuItems;
-      case 'ASSESSMENT_TEACHER':
-        return assessmentTeacherMenuItems;
-      case 'QUESTION_DEVELOPER':
-        return questionDeveloperMenuItems;
-      case 'SYSTEM_ADMIN':
-        return systemAdminMenuItems;
-      default:
-        return studentMenuItems;
-    }
-  };
-
-  const menuItems = getMenuItems();
-  const userRoleLabel = UserTypeLabels[userType as keyof typeof UserTypeLabels] || '사용자';
+  const user = getCurrentUser();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleProfileMenuClose = () => {
+  const handleMenuClose = () => {
     setAnchorEl(null);
   };
 
   const handleLogout = () => {
-    handleProfileMenuClose();
     clearCurrentUser();
-    navigate('/login');
+    navigate("/");
   };
 
-  const handleExit = () => {
-    alert('이용해 주셔서 감사합니다. 로그인 페이지로 이동합니다.');
-    clearCurrentUser();
-    navigate('/');
-  };
-
-  const displayName = storedUser?.name || '사용자';
+  const userType = user?.userType || "STUDENT";
+  const menus = menusByUserType[userType];
 
   const drawer = (
-    <div>
-      <Toolbar sx={{ flexDirection: 'column', alignItems: 'flex-start', py: 2 }}>
-        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-          문해력 검사
+    <Box>
+      <Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
+        <School sx={{ fontSize: 32, color: "primary.main" }} />
+        <Typography variant="h6" fontWeight="bold" noWrap>
+          NewWave
         </Typography>
-        <Typography variant="caption" color="text.secondary">
-          독서 새물결
-        </Typography>
-      </Toolbar>
-      <Divider />
-      <Box sx={{ px: 2, py: 1.5 }}>
-        <Chip
-          icon={userTypeIcons[userType] as React.ReactElement}
-          label={userRoleLabel}
-          size="small"
-          color="primary"
-          variant="outlined"
-          sx={{ width: '100%', justifyContent: 'flex-start' }}
-        />
       </Box>
       <Divider />
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
+      <List sx={{ px: 1 }}>
+        {menus.map((menu) => (
+          <ListItem key={menu.path} disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton
-              onClick={() => navigate(item.path)}
-              selected={location.pathname === item.path}
+              selected={location.pathname === menu.path}
+              onClick={() => {
+                navigate(menu.path);
+                setMobileOpen(false);
+              }}
               sx={{
-                '&.Mui-selected': {
-                  bgcolor: 'primary.light',
-                  '&:hover': { bgcolor: 'primary.light' },
-                  '& .MuiListItemIcon-root': { color: 'primary.main' },
-                  '& .MuiListItemText-primary': { fontWeight: 'bold', color: 'primary.main' },
+                borderRadius: 2,
+                "&.Mui-selected": {
+                  backgroundColor: "primary.main",
+                  color: "white",
+                  "&:hover": { backgroundColor: "primary.dark" },
+                  "& .MuiListItemIcon-root": { color: "white" },
                 },
               }}
             >
-              <ListItemIcon sx={{ color: 'text.secondary', minWidth: 40 }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemIcon sx={{ minWidth: 40 }}>{menu.icon}</ListItemIcon>
+              <ListItemText primary={menu.label} />
             </ListItemButton>
           </ListItem>
         ))}
       </List>
-    </div>
+    </Box>
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
-      <CssBaseline />
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f5f5f5" }}>
       <AppBar
         position="fixed"
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          bgcolor: 'white',
-          color: 'text.primary',
-          boxShadow: 1,
+          bgcolor: "white",
+          color: "text.primary",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
         }}
       >
-        <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }}>
+        <Toolbar>
           <IconButton
-            color="inherit"
-            aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2, display: { sm: "none" } }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography
-            variant={isMobile ? 'subtitle1' : 'h6'}
-            noWrap
-            component="div"
-            sx={{ flexGrow: 1 }}
-          >
-            {displayName}님, 환영합니다!
-          </Typography>
-          <Button
-            variant="outlined"
-            size={isMobile ? 'small' : 'medium'}
-            onClick={handleExit}
-            sx={{ mr: 2, px: isMobile ? 1.5 : 2.5 }}
-          >
-            종료하기
-          </Button>
-          <IconButton
-            size="large"
-            aria-label="account of current user"
-            aria-controls="menu-appbar"
-            aria-haspopup="true"
-            onClick={handleProfileMenuOpen}
-            color="inherit"
-          >
-            <Avatar sx={{ bgcolor: 'primary.main' }}>
-              {displayName[0] || '?'}
-            </Avatar>
-          </IconButton>
+          <Box sx={{ flexGrow: 1 }} />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              {user?.name}
+            </Typography>
+            <IconButton onClick={handleMenuOpen}>
+              <Avatar sx={{ width: 36, height: 36, bgcolor: "primary.main" }}>
+                {userTypeIcons[userType]}
+              </Avatar>
+            </IconButton>
+          </Box>
           <Menu
-            id="menu-appbar"
             anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            keepMounted
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
             open={Boolean(anchorEl)}
-            onClose={handleProfileMenuClose}
+            onClose={handleMenuClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
           >
-            <MenuItem onClick={handleProfileMenuClose}>
-              <AccountCircle sx={{ mr: 1 }} />
-              내 정보
+            <MenuItem disabled>
+              <Typography variant="body2">{user?.email}</Typography>
             </MenuItem>
+            <Divider />
             <MenuItem onClick={handleLogout}>
-              <Logout sx={{ mr: 1 }} />
+              <ListItemIcon><Logout fontSize="small" /></ListItemIcon>
               로그아웃
             </MenuItem>
           </Menu>
         </Toolbar>
       </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
+
+      <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
         <Drawer
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
+          ModalProps={{ keepMounted: true }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
           }}
         >
           {drawer}
@@ -323,27 +213,28 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
           }}
           open
         >
           {drawer}
         </Drawer>
       </Box>
+
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: { xs: 2, sm: 3, md: 4 },
+          p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mt: { xs: 7, sm: 8 },
-          bgcolor: '#f5f5f5',
-          minHeight: '100dvh',
+          mt: 8,
         }}
       >
         {children}
       </Box>
     </Box>
   );
-}
+};
+
+export default MainLayout;

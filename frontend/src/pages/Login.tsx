@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Container,
   Box,
@@ -22,7 +22,6 @@ import {
   VisibilityOff,
   Person,
   VpnKey,
-  School,
   Face,
   FamilyRestroom,
   AdminPanelSettings,
@@ -31,19 +30,19 @@ import {
   Settings,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { getUserByEmail } from "../services/api";
+import { getUserByEmail } from "../services/userService";
 import { setCurrentUser, getDefaultPathByUserType } from "../utils/session";
-import type { StoredUserType } from "../utils/session";
+import type { UserType } from "../types";
 import { UserTypeLabels } from "../types";
 
 interface LoginForm {
   email: string;
   password: string;
-  userType: StoredUserType;
+  userType: UserType;
 }
 
 // 사용자 타입별 아이콘
-const userTypeIcons: Record<StoredUserType, React.ReactNode> = {
+const userTypeIcons: Record<UserType, React.ReactNode> = {
   STUDENT: <Face />,
   PARENT: <FamilyRestroom />,
   SCHOOL_ADMIN: <AdminPanelSettings />,
@@ -53,16 +52,16 @@ const userTypeIcons: Record<StoredUserType, React.ReactNode> = {
 };
 
 // 테스트 계정 정보
-const testAccounts: Record<StoredUserType, { email: string; password: string; label: string }> = {
-  STUDENT: { email: "student1@example.com", password: "ehrtjtoanfruf", label: "학생" },
-  PARENT: { email: "parent1@example.com", password: "ehrtjtoanfruf", label: "학부모" },
-  SCHOOL_ADMIN: { email: "schooladmin1@example.com", password: "ehrtjtoanfruf", label: "학교관리자" },
-  ASSESSMENT_TEACHER: { email: "teacher1@example.com", password: "ehrtjtoanfruf", label: "진단교사" },
-  QUESTION_DEVELOPER: { email: "questiondev1@example.com", password: "ehrtjtoanfruf", label: "문항개발" },
-  SYSTEM_ADMIN: { email: "admin1@example.com", password: "ehrtjtoanfruf", label: "시스템관리자" },
+const testAccounts: Record<UserType, { email: string; password: string; label: string }> = {
+  STUDENT: { email: "student1@example.com", password: "test1234", label: "학생" },
+  PARENT: { email: "parent1@example.com", password: "test1234", label: "학부모" },
+  SCHOOL_ADMIN: { email: "schooladmin1@example.com", password: "test1234", label: "학교관리자" },
+  ASSESSMENT_TEACHER: { email: "teacher1@example.com", password: "test1234", label: "진단교사" },
+  QUESTION_DEVELOPER: { email: "questiondev1@example.com", password: "test1234", label: "문항개발" },
+  SYSTEM_ADMIN: { email: "admin1@example.com", password: "test1234", label: "시스템관리자" },
 };
 
-const Login: React.FC = () => {
+const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<LoginForm>({
     email: "",
@@ -77,16 +76,16 @@ const Login: React.FC = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name as string]: value,
+      [name]: value,
     }));
     setError("");
   };
 
-  const handleSelectChange = (event: SelectChangeEvent<StoredUserType>) => {
+  const handleSelectChange = (event: SelectChangeEvent<UserType>) => {
     const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name as string]: value,
+      [name]: value,
     }));
     setError("");
   };
@@ -102,56 +101,46 @@ const Login: React.FC = () => {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError("올바른 이메일 형식이 아닙니다.");
-      setLoading(false);
-      return;
-    }
-
     try {
       const user = await getUserByEmail(formData.email);
-      const resolvedType = (user.userType || formData.userType) as StoredUserType;
 
-      if (!resolvedType) {
-        setError("사용자 정보를 확인할 수 없습니다.");
+      if (!user) {
+        setError("사용자를 찾을 수 없습니다.");
         setLoading(false);
         return;
       }
 
-      if (user.isActive === false) {
+      const userType = user.user_type as UserType;
+
+      if (user.is_active === false) {
         setError("비활성화된 계정입니다.");
         setLoading(false);
         return;
       }
 
       setCurrentUser({
-        userId: user.userId,
+        userId: user.user_id,
         name: user.name,
         email: user.email,
-        userType: resolvedType,
-        schoolId: user.schoolId,
-        schoolName: user.schoolName,
+        userType: userType,
+        schoolId: user.school_id,
+        schoolName: user.school_name,
         grade: user.grade,
-        studentGradeLevel: user.studentGradeLevel,
-        isActive: user.isActive,
+        studentGradeLevel: user.student_grade_level,
+        isActive: user.is_active,
       });
 
-      // 사용자 타입에 따라 다른 페이지로 이동
-      const defaultPath = getDefaultPathByUserType(resolvedType);
+      const defaultPath = getDefaultPathByUserType(userType);
       navigate(defaultPath);
     } catch (err) {
-      setError("로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.");
+      console.error('Login error:', err);
+      setError("로그인에 실패했습니다. 이메일을 확인해주세요.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const fillTestData = (type: StoredUserType) => {
+  const fillTestData = (type: UserType) => {
     const account = testAccounts[type];
     setFormData({
       email: account.email,
@@ -181,34 +170,34 @@ const Login: React.FC = () => {
             backgroundColor: "rgba(255, 255, 255, 0.95)",
           }}
         >
-          {/* 로고 및 제목 */}
           <Box sx={{ textAlign: "center", mb: 4 }}>
-            <School
+            <Box
+              component="img"
+              src="/logo.png"
+              alt="리딩 PRO 로고"
               sx={{
-                fontSize: 64,
-                color: "primary.main",
+                width: 120,
+                height: 120,
+                objectFit: "contain",
                 mb: 2,
               }}
             />
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
-              문해력 검사 플랫폼
+            <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.4 }}>
+              리딩 PRO
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              독서 새물결 문해력 검사 시스템
+            <Typography variant="body1" color="text.secondary" fontWeight="medium">
+              문해력 진단 및 클리닉 프로그램
             </Typography>
           </Box>
 
-          {/* 에러 메시지 */}
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
 
-          {/* 로그인 폼 */}
           <form onSubmit={handleSubmit}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              {/* 사용자 유형 선택 */}
               <FormControl fullWidth>
                 <InputLabel>사용자 유형</InputLabel>
                 <Select
@@ -219,7 +208,7 @@ const Login: React.FC = () => {
                   renderValue={(selected) => (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       {userTypeIcons[selected]}
-                      <span>{UserTypeLabels[selected as keyof typeof UserTypeLabels]}</span>
+                      <span>{UserTypeLabels[selected]}</span>
                     </Box>
                   )}
                 >
@@ -256,7 +245,6 @@ const Login: React.FC = () => {
                 </Select>
               </FormControl>
 
-              {/* 이메일 입력 */}
               <TextField
                 fullWidth
                 label="이메일"
@@ -274,7 +262,6 @@ const Login: React.FC = () => {
                 }}
               />
 
-              {/* 비밀번호 입력 */}
               <TextField
                 fullWidth
                 label="비밀번호"
@@ -292,10 +279,7 @@ const Login: React.FC = () => {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowPassword}
-                        edge="end"
-                      >
+                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
@@ -303,7 +287,6 @@ const Login: React.FC = () => {
                 }}
               />
 
-              {/* 로그인 버튼 */}
               <Button
                 type="submit"
                 fullWidth
@@ -314,71 +297,32 @@ const Login: React.FC = () => {
                   py: 1.5,
                   fontSize: "1.1rem",
                   fontWeight: "bold",
-                  background:
-                    "linear-gradient(45deg, #667eea 30%, #764ba2 90%)",
+                  background: "linear-gradient(45deg, #667eea 30%, #764ba2 90%)",
                   "&:hover": {
-                    background:
-                      "linear-gradient(45deg, #5568d3 30%, #63408b 90%)",
+                    background: "linear-gradient(45deg, #5568d3 30%, #63408b 90%)",
                   },
                 }}
               >
                 {loading ? "로그인 중..." : "로그인"}
               </Button>
 
-              {/* 추가 링크 */}
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  mt: 1,
-                }}
-              >
-                <Link
-                  href="#"
-                  variant="body2"
-                  underline="hover"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert("비밀번호 찾기 기능은 준비 중입니다.");
-                  }}
-                >
+              <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
+                <Link href="#" variant="body2" underline="hover" onClick={(e) => e.preventDefault()}>
                   비밀번호를 잊으셨나요?
                 </Link>
-                <Link
-                  href="#"
-                  variant="body2"
-                  underline="hover"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert("회원가입 기능은 준비 중입니다.");
-                  }}
-                >
+                <Link href="#" variant="body2" underline="hover" onClick={(e) => e.preventDefault()}>
                   회원가입
                 </Link>
               </Box>
             </Box>
           </form>
 
-          {/* 테스트 계정 빠른 입력 */}
           <Box sx={{ mt: 4, pt: 3, borderTop: "1px solid #e0e0e0" }}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              gutterBottom
-              textAlign="center"
-            >
+            <Typography variant="body2" color="text.secondary" gutterBottom textAlign="center">
               테스트 계정 (개발용)
             </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                gap: 1,
-                justifyContent: "center",
-                flexWrap: "wrap",
-                mt: 2,
-              }}
-            >
-              {(Object.keys(testAccounts) as StoredUserType[]).map((type) => (
+            <Box sx={{ display: "flex", gap: 1, justifyContent: "center", flexWrap: "wrap", mt: 2 }}>
+              {(Object.keys(testAccounts) as UserType[]).map((type) => (
                 <Chip
                   key={type}
                   icon={userTypeIcons[type] as React.ReactElement}
@@ -387,10 +331,7 @@ const Login: React.FC = () => {
                   variant="outlined"
                   clickable
                   size="small"
-                  sx={{
-                    fontSize: "0.75rem",
-                    '& .MuiChip-icon': { fontSize: '1rem' }
-                  }}
+                  sx={{ fontSize: "0.75rem", "& .MuiChip-icon": { fontSize: "1rem" } }}
                 />
               ))}
             </Box>

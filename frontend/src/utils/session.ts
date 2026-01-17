@@ -1,12 +1,10 @@
-import type { StudentGradeLevel } from '../types';
-
-export type StoredUserType = 'STUDENT' | 'PARENT' | 'SCHOOL_ADMIN' | 'ASSESSMENT_TEACHER' | 'QUESTION_DEVELOPER' | 'SYSTEM_ADMIN';
+import type { UserType, StudentGradeLevel } from '../types';
 
 export interface StoredUser {
   userId: number;
   name: string;
   email: string;
-  userType: StoredUserType;
+  userType: UserType;
   schoolId?: number;
   schoolName?: string;
   grade?: number;
@@ -15,7 +13,7 @@ export interface StoredUser {
 }
 
 // 사용자 타입별 기본 경로
-export const getDefaultPathByUserType = (userType: StoredUserType): string => {
+export const getDefaultPathByUserType = (userType: UserType): string => {
   switch (userType) {
     case 'STUDENT':
       return '/student/dashboard';
@@ -32,11 +30,6 @@ export const getDefaultPathByUserType = (userType: StoredUserType): string => {
     default:
       return '/';
   }
-};
-
-// 사용자 타입 검증
-export const isValidUserType = (type: string): type is StoredUserType => {
-  return ['STUDENT', 'PARENT', 'SCHOOL_ADMIN', 'ASSESSMENT_TEACHER', 'QUESTION_DEVELOPER', 'SYSTEM_ADMIN'].includes(type);
 };
 
 const STORAGE_KEY = 'currentUser';
