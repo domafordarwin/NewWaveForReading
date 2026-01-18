@@ -237,6 +237,9 @@ const ReadingProInfo = () => {
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
             심미적 감수성
           </Typography>
+          <Typography sx={{ color: "#4B5563", mb: 2, lineHeight: 1.7 }}>
+            문학 작품 등을 감상하며 아름다움이나 의미를 느끼고 공감하는 능력
+          </Typography>
           <Grid container spacing={3}>
             {aestheticCompetencies.map((item) => {
               const colors = colorStyles[item.color];
@@ -275,6 +278,9 @@ const ReadingProInfo = () => {
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
             의사소통 능력
           </Typography>
+          <Typography sx={{ color: "#4B5563", mb: 2, lineHeight: 1.7 }}>
+            글을 통해 생각을 표현하고 다른 사람과 상호 작용하는 능력
+          </Typography>
           <Grid container spacing={3}>
             {communicationCompetencies.map((item) => {
               const colors = colorStyles[item.color];
@@ -312,6 +318,9 @@ const ReadingProInfo = () => {
         <Box>
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
             이해력
+          </Typography>
+          <Typography sx={{ color: "#4B5563", mb: 2, lineHeight: 1.7 }}>
+            글의 내용을 정확히 파악하고 추론하는 능력
           </Typography>
           <Grid container spacing={3}>
             {comprehensionCompetencies.map((item) => {
