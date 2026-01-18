@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="refresh" content="0; url=/parent/info" />
     <title>리딩 PRO 소개</title>
     <style>
       body {
@@ -45,5 +44,10 @@
         <a href="/parent/info">여기를 클릭</a>해 주세요.
       </p>
     </div>
+    <script>
+      if (window.top === window.self) {
+        window.location.replace("/parent/info");
+      }
+    </script>
   </body>
 </html>
