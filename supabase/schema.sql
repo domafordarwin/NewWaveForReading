@@ -34,3 +34,7 @@ create policy "dev_read_users" on public.users for select using (true);
 create policy "dev_write_users" on public.users for insert with check (true);
 create policy "dev_update_users" on public.users for update using (true);
 create policy "dev_delete_users" on public.users for delete using (true);
+
+-- anon 역할 권한 (개발용)
+grant usage on schema public to anon;
+grant select on public.users to anon;
