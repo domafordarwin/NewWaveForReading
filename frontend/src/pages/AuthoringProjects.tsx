@@ -14,11 +14,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  IconButton,
-  Tooltip,
   CircularProgress,
   Alert,
-  LinearProgress,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -27,7 +24,6 @@ import {
 import {
   Add,
   Edit,
-  Visibility,
   Search,
   PlayArrow,
   CheckCircle,
@@ -36,7 +32,7 @@ import {
   SmartToy,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../services/supabaseClient";
 
 interface AuthoringProject {
   project_id: number;
@@ -85,6 +81,10 @@ const AuthoringProjects = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
+      if (!supabase) {
+        setProjects([]);
+        return;
+      }
       const { data, error } = await supabase
         .from("authoring_projects")
         .select("*")
@@ -101,6 +101,10 @@ const AuthoringProjects = () => {
 
   const handleCreateProject = async () => {
     try {
+      if (!supabase) {
+        setError("데이터베이스 연결이 필요합니다.");
+        return;
+      }
       const { data, error } = await supabase
         .from("authoring_projects")
         .insert([newProject])

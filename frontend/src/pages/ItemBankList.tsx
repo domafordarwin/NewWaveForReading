@@ -26,10 +26,9 @@ import {
   Edit,
   Visibility,
   Search,
-  FilterList,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../services/supabaseClient";
 
 interface ItemBank {
   item_id: number;
@@ -76,6 +75,10 @@ const ItemBankList = () => {
   const fetchItems = async () => {
     try {
       setLoading(true);
+      if (!supabase) {
+        setItems([]);
+        return;
+      }
       const { data, error } = await supabase
         .from("item_bank")
         .select("*")

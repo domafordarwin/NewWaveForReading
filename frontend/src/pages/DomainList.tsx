@@ -22,12 +22,9 @@ import {
 } from "@mui/material";
 import {
   ExpandMore,
-  Psychology,
-  Favorite,
-  Forum,
   Category,
 } from "@mui/icons-material";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../services/supabaseClient";
 
 interface Domain {
   domain_id: number;
@@ -38,13 +35,6 @@ interface Domain {
   description: string | null;
   display_order: number;
 }
-
-const domainTypeConfig: Record<string, { label: string; color: "primary" | "secondary" | "success" | "warning" | "info"; icon: React.ReactNode }> = {
-  literacy_main: { label: "문해력 대분류", color: "primary", icon: <Psychology /> },
-  literacy_sub: { label: "문해력 소분류", color: "info", icon: <Category /> },
-  disposition_type: { label: "독자성향 유형", color: "secondary", icon: <Favorite /> },
-  disposition_factor: { label: "독자성향 요인", color: "warning", icon: <Forum /> },
-};
 
 const DomainList = () => {
   const [domains, setDomains] = useState<Domain[]>([]);
@@ -58,6 +48,10 @@ const DomainList = () => {
   const fetchDomains = async () => {
     try {
       setLoading(true);
+      if (!supabase) {
+        setDomains([]);
+        return;
+      }
       const { data, error } = await supabase
         .from("domains")
         .select("*")

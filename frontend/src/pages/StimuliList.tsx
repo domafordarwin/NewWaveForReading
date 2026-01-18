@@ -20,9 +20,6 @@ import {
   Tooltip,
   CircularProgress,
   Alert,
-  Card,
-  CardContent,
-  Grid,
 } from "@mui/material";
 import {
   Add,
@@ -34,7 +31,7 @@ import {
   PictureAsPdf,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../services/supabaseClient";
 
 interface Stimulus {
   stimulus_id: number;
@@ -80,7 +77,6 @@ const StimuliList = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterGrade, setFilterGrade] = useState<string>("");
-  const [viewMode, setViewMode] = useState<"table" | "card">("table");
 
   useEffect(() => {
     fetchStimuli();
@@ -89,6 +85,10 @@ const StimuliList = () => {
   const fetchStimuli = async () => {
     try {
       setLoading(true);
+      if (!supabase) {
+        setStimuli([]);
+        return;
+      }
       const { data, error } = await supabase
         .from("stimuli")
         .select("*")
