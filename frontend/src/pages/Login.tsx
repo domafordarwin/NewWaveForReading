@@ -202,7 +202,7 @@ const Login = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
             <Box
               component="img"
-              src="/reading_pro_logo.jpg"
+              src="/reading_pro_logo.png"
               alt="리딩 PRO 로고"
               sx={{
                 width: 220,

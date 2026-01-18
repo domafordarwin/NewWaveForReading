@@ -130,7 +130,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       <Box sx={{ p: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
         <Box
           component="img"
-          src="/reading_pro_logo.jpg"
+          src="/reading_pro_logo.png"
           alt="리딩 PRO 로고"
           sx={{ width: 360, height: 180, objectFit: "contain" }}
         />
