@@ -12,6 +12,10 @@ import QuestionDeveloperDashboard from './pages/QuestionDeveloperDashboard';
 import SystemAdminDashboard from './pages/SystemAdminDashboard';
 import ReadingProInfo from './pages/ReadingProInfo';
 import ReportSample from './pages/ReportSample';
+import ItemBankList from './pages/ItemBankList';
+import StimuliList from './pages/StimuliList';
+import AuthoringProjects from './pages/AuthoringProjects';
+import DomainList from './pages/DomainList';
 
 const theme = createTheme({
   palette: {
@@ -104,6 +108,10 @@ function App() {
             <MainLayout>
               <Routes>
                 <Route path="dashboard" element={<QuestionDeveloperDashboard />} />
+                <Route path="items" element={<ItemBankList />} />
+                <Route path="stimuli" element={<StimuliList />} />
+                <Route path="authoring" element={<AuthoringProjects />} />
+                <Route path="domains" element={<DomainList />} />
               </Routes>
             </MainLayout>
           } />

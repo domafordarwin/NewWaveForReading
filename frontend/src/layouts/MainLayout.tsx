@@ -32,6 +32,10 @@ import {
   Settings,
   Info,
   Description,
+  LibraryBooks,
+  Article,
+  SmartToy,
+  Category,
 } from "@mui/icons-material";
 import { getCurrentUser, clearCurrentUser } from "../utils/session";
 import type { UserType } from "../types";
@@ -70,8 +74,10 @@ const menusByUserType: Record<UserType, { label: string; icon: React.ReactNode; 
   ],
   QUESTION_DEVELOPER: [
     { label: "대시보드", icon: <Dashboard />, path: "/question-dev/dashboard" },
-    { label: "도서 관리", icon: <School />, path: "/question-dev/books" },
-    { label: "문항 관리", icon: <Quiz />, path: "/question-dev/questions" },
+    { label: "문항 은행", icon: <LibraryBooks />, path: "/question-dev/items" },
+    { label: "지문 관리", icon: <Article />, path: "/question-dev/stimuli" },
+    { label: "문항 제작", icon: <SmartToy />, path: "/question-dev/authoring" },
+    { label: "평가 영역", icon: <Category />, path: "/question-dev/domains" },
   ],
   SYSTEM_ADMIN: [
     { label: "대시보드", icon: <Dashboard />, path: "/admin/dashboard" },
