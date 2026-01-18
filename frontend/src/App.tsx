@@ -16,6 +16,8 @@ import ItemBankList from './pages/ItemBankList';
 import ItemDetail from './pages/ItemDetail';
 import ItemEdit from './pages/ItemEdit';
 import StimuliList from './pages/StimuliList';
+import StimuliDetail from './pages/StimuliDetail';
+import StimuliEdit from './pages/StimuliEdit';
 import AuthoringProjects from './pages/AuthoringProjects';
 import DomainList from './pages/DomainList';
 import ReadingQuestionGuide from './pages/ReadingQuestionGuide';
@@ -116,6 +118,8 @@ function App() {
                 <Route path="items/:id" element={<ItemDetail />} />
                 <Route path="items/:id/edit" element={<ItemEdit />} />
                 <Route path="stimuli" element={<StimuliList />} />
+                <Route path="stimuli/:id" element={<StimuliDetail />} />
+                <Route path="stimuli/:id/edit" element={<StimuliEdit />} />
                 <Route path="authoring" element={<AuthoringProjects />} />
                 <Route path="domains" element={<DomainList />} />
               </Routes>
