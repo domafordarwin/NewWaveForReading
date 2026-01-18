@@ -13,6 +13,8 @@ import SystemAdminDashboard from './pages/SystemAdminDashboard';
 import ReadingProInfo from './pages/ReadingProInfo';
 import ReportSample from './pages/ReportSample';
 import ItemBankList from './pages/ItemBankList';
+import ItemDetail from './pages/ItemDetail';
+import ItemEdit from './pages/ItemEdit';
 import StimuliList from './pages/StimuliList';
 import AuthoringProjects from './pages/AuthoringProjects';
 import DomainList from './pages/DomainList';
@@ -109,6 +111,8 @@ function App() {
               <Routes>
                 <Route path="dashboard" element={<QuestionDeveloperDashboard />} />
                 <Route path="items" element={<ItemBankList />} />
+                <Route path="items/:id" element={<ItemDetail />} />
+                <Route path="items/:id/edit" element={<ItemEdit />} />
                 <Route path="stimuli" element={<StimuliList />} />
                 <Route path="authoring" element={<AuthoringProjects />} />
                 <Route path="domains" element={<DomainList />} />
