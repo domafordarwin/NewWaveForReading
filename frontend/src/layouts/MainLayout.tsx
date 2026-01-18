@@ -130,13 +130,10 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       <Box sx={{ p: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
         <Box
           component="img"
-          src="/logo.png"
-          alt="리딩 PRO"
-          sx={{ width: 160, height: 100, objectFit: "contain" }}
+          src="/reading_pro_logo.jpg"
+          alt="리딩 PRO 로고"
+          sx={{ width: 180, height: 90, objectFit: "contain" }}
         />
-        <Typography variant="h6" fontWeight="bold" noWrap sx={{ color: "primary.main" }}>
-          리딩 PRO
-        </Typography>
       </Box>
       <Divider />
       <List sx={{ px: 1 }}>

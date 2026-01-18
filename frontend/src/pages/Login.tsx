@@ -202,24 +202,17 @@ const Login = () => {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
             <Box
               component="img"
-              src="/logo.png"
+              src="/reading_pro_logo.jpg"
               alt="리딩 PRO 로고"
               sx={{
-                width: 200,
-                height: 60,
+                width: 220,
+                height: 80,
                 objectFit: "contain",
               }}
             />
           </Box>
 
           <Box sx={{ textAlign: "center", mb: 3 }}>
-            <Typography
-              variant="h4"
-              fontWeight="bold"
-              sx={{ lineHeight: 1.2, color: "#667eea", mb: 0.5 }}
-            >
-              리딩 PRO
-            </Typography>
             <Typography
               variant="body1"
               color="text.secondary"
