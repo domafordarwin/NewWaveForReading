@@ -19,8 +19,10 @@ import StimuliList from './pages/StimuliList';
 import StimuliDetail from './pages/StimuliDetail';
 import StimuliEdit from './pages/StimuliEdit';
 import AuthoringProjects from './pages/AuthoringProjects';
+import AuthoringProjectDetail from './pages/AuthoringProjectDetail';
 import DomainList from './pages/DomainList';
 import ReadingQuestionGuide from './pages/ReadingQuestionGuide';
+import StimuliNew from './pages/StimuliNew';
 
 const theme = createTheme({
   palette: {
@@ -118,9 +120,11 @@ function App() {
                 <Route path="items/:id" element={<ItemDetail />} />
                 <Route path="items/:id/edit" element={<ItemEdit />} />
                 <Route path="stimuli" element={<StimuliList />} />
+                <Route path="stimuli/new" element={<StimuliNew />} />
                 <Route path="stimuli/:id" element={<StimuliDetail />} />
                 <Route path="stimuli/:id/edit" element={<StimuliEdit />} />
                 <Route path="authoring" element={<AuthoringProjects />} />
+                <Route path="authoring/:id" element={<AuthoringProjectDetail />} />
                 <Route path="domains" element={<DomainList />} />
               </Routes>
             </MainLayout>
