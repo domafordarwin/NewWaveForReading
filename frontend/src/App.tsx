@@ -18,6 +18,7 @@ import ItemEdit from './pages/ItemEdit';
 import StimuliList from './pages/StimuliList';
 import AuthoringProjects from './pages/AuthoringProjects';
 import DomainList from './pages/DomainList';
+import ReadingQuestionGuide from './pages/ReadingQuestionGuide';
 
 const theme = createTheme({
   palette: {
@@ -91,6 +92,7 @@ function App() {
               <Routes>
                 <Route path="dashboard" element={<TeacherDashboard />} />
                 <Route path="report-sample" element={<ReportSample type="teacher" />} />
+                <Route path="reading-question-guide" element={<ReadingQuestionGuide />} />
               </Routes>
             </MainLayout>
           } />

@@ -36,6 +36,7 @@ import {
   Article,
   SmartToy,
   Category,
+  MenuBook,
 } from "@mui/icons-material";
 import { getCurrentUser, clearCurrentUser } from "../utils/session";
 import type { UserType } from "../types";
@@ -71,6 +72,7 @@ const menusByUserType: Record<UserType, { label: string; icon: React.ReactNode; 
     { label: "학생 관리", icon: <Person />, path: "/teacher/students" },
     { label: "진단 배정", icon: <Assignment />, path: "/teacher/assessments" },
     { label: "보고서 샘플", icon: <Description />, path: "/teacher/report-sample" },
+    { label: "독서 발문 가이드", icon: <MenuBook />, path: "/teacher/reading-question-guide" },
   ],
   QUESTION_DEVELOPER: [
     { label: "대시보드", icon: <Dashboard />, path: "/question-dev/dashboard" },
