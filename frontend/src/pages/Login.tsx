@@ -199,7 +199,15 @@ const Login = () => {
           }}
         >
           {/* 카드 상단 로고 및 단체명 */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              mb: 1,
+            }}
+          >
             <Box
               component="img"
               src="/reading_pro_logo.png"
