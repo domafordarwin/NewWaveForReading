@@ -42,6 +42,7 @@ interface Stimulus {
   genre: string | null;
   word_count: number | null;
   created_at: string;
+  updated_at: string;
 }
 
 const contentTypeIcons: Record<string, React.ReactNode> = {
@@ -182,13 +183,14 @@ const StimuliList = () => {
                 <TableCell>장르</TableCell>
                 <TableCell align="center">글자수</TableCell>
                 <TableCell>등록일</TableCell>
+                <TableCell>최종 수정일</TableCell>
                 <TableCell align="center">관리</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredStimuli.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                     <Typography color="text.secondary">
                       {stimuli.length === 0
                         ? "등록된 지문이 없습니다."
@@ -245,6 +247,9 @@ const StimuliList = () => {
                     </TableCell>
                     <TableCell>
                       {new Date(stimulus.created_at).toLocaleDateString("ko-KR")}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(stimulus.updated_at).toLocaleDateString("ko-KR")}
                     </TableCell>
                     <TableCell align="center">
                       <Tooltip title="상세보기">
