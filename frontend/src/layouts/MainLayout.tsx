@@ -132,7 +132,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           component="img"
           src="/reading_pro_logo.jpg"
           alt="리딩 PRO 로고"
-          sx={{ width: 180, height: 90, objectFit: "contain" }}
+          sx={{ width: 360, height: 180, objectFit: "contain" }}
         />
       </Box>
       <Divider />
