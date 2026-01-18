@@ -91,17 +91,20 @@ interface Stimulus {
   word_count: number | null;
 }
 
+// 실제 DB 스키마에 맞춘 인터페이스
 interface AuthoringItem {
-  authoring_item_id: number;
+  draft_item_id: number;
   project_id: number;
-  stimulus_id: number | null;
-  item_type: string;
-  stem: string;
+  item_kind: string;
   status: string;
-  ai_generated: boolean;
+  current_version_id: number | null;
   created_at: string;
-  updated_at: string;
-  current_version: number;
+  // 조인된 버전 정보
+  current_version?: {
+    version_id: number;
+    content_json: any;
+    created_at: string;
+  };
 }
 
 interface AIGenerationJob {
@@ -114,22 +117,21 @@ interface AIGenerationJob {
   created_at: string;
 }
 
-// 문항 유형 옵션
+// 문항 유형 옵션 (DB 스키마의 item_kind에 맞춤)
 const itemTypeOptions = [
-  { value: "mcq_single", label: "객관식 (단일 선택)" },
-  { value: "mcq_multi", label: "객관식 (복수 선택)" },
-  { value: "short_text", label: "단답형" },
+  { value: "mcq", label: "객관식" },
   { value: "essay", label: "서술형" },
-  { value: "fill_blank", label: "빈칸 채우기" },
   { value: "composite", label: "복합문항" },
+  { value: "survey", label: "설문" },
 ];
 
-// 상태 설정
-const statusConfig: Record<string, { label: string; color: "default" | "primary" | "success" | "warning" }> = {
-  draft: { label: "초안", color: "default" },
-  in_review: { label: "검토 중", color: "warning" },
+// 상태 설정 (DB 스키마의 status에 맞춤)
+const statusConfig: Record<string, { label: string; color: "default" | "primary" | "success" | "warning" | "error" }> = {
+  ai_draft: { label: "AI 초안", color: "default" },
+  editing: { label: "편집 중", color: "warning" },
+  in_review: { label: "검토 중", color: "primary" },
   approved: { label: "승인됨", color: "success" },
-  published: { label: "발행됨", color: "primary" },
+  rejected: { label: "반려됨", color: "error" },
 };
 
 const gradeBandLabels: Record<string, string> = {
@@ -282,15 +284,32 @@ const AuthoringProjectDetail = () => {
         setStimuli(stimuliData);
       }
 
-      // 프로젝트의 문항 조회
+      // 프로젝트의 문항 조회 (버전 정보 포함)
       const { data: itemsData } = await supabase
         .from("authoring_items")
-        .select("*")
+        .select(`
+          draft_item_id,
+          project_id,
+          item_kind,
+          status,
+          current_version_id,
+          created_at,
+          authoring_item_versions!authoring_items_current_version_id_fkey (
+            version_id,
+            content_json,
+            created_at
+          )
+        `)
         .eq("project_id", parseInt(id))
         .order("created_at", { ascending: false });
 
       if (itemsData) {
-        setItems(itemsData);
+        // 조인된 데이터 구조 정리
+        const formattedItems = itemsData.map((item: any) => ({
+          ...item,
+          current_version: item.authoring_item_versions?.[0] || null,
+        }));
+        setItems(formattedItems);
       }
     } catch (err: any) {
       setError(err.message || "데이터를 불러오는데 실패했습니다.");
@@ -367,26 +386,51 @@ const AuthoringProjectDetail = () => {
     }
   };
 
-  // AI 생성 문항 저장
+  // AI 생성 문항 저장 (실제 DB 스키마에 맞춤)
   const handleSaveGeneratedItem = async (item: any, index: number) => {
     if (!supabase || !project || !selectedStimulus) return;
 
     try {
-      const { data, error } = await supabase
+      // 1. 먼저 authoring_items에 문항 생성
+      const { data: itemData, error: itemError } = await supabase
         .from("authoring_items")
         .insert([{
           project_id: project.project_id,
-          stimulus_id: selectedStimulus.stimulus_id,
-          item_type: item.item_type,
-          stem: item.stem,
-          status: "draft",
-          ai_generated: true,
-          current_version: 1,
+          item_kind: item.item_type === "mcq_single" || item.item_type === "mcq_multi" ? "mcq" : item.item_type,
+          status: "ai_draft",
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (itemError) throw itemError;
+
+      // 2. 버전 정보 생성 (content_json에 실제 문항 내용 저장)
+      const contentJson = {
+        stem: item.stem,
+        stimulus_id: selectedStimulus.stimulus_id,
+        options: item.options || [],
+        explanation: item.explanation || "",
+        rubric: item.rubric || null,
+        keywords: item.keywords || [],
+      };
+
+      const { data: versionData, error: versionError } = await supabase
+        .from("authoring_item_versions")
+        .insert([{
+          draft_item_id: itemData.draft_item_id,
+          content_json: contentJson,
+          change_summary: "AI 초안 생성",
+        }])
+        .select()
+        .single();
+
+      if (versionError) throw versionError;
+
+      // 3. authoring_items의 current_version_id 업데이트
+      await supabase
+        .from("authoring_items")
+        .update({ current_version_id: versionData.version_id })
+        .eq("draft_item_id", itemData.draft_item_id);
 
       // 목록 새로고침
       await fetchProjectData();
@@ -402,11 +446,12 @@ const AuthoringProjectDetail = () => {
   // 문항 편집
   const handleEditItem = (item: AuthoringItem) => {
     setEditingItem(item);
+    const content = item.current_version?.content_json || {};
     setEditingItemData({
-      stem: item.stem,
-      item_type: item.item_type,
-      options: [{ text: "", is_correct: false }],
-      rubric: null,
+      stem: content.stem || "",
+      item_type: item.item_kind,
+      options: content.options || [{ text: "", is_correct: false }],
+      rubric: content.rubric || null,
     });
     setItemEditDialogOpen(true);
   };
@@ -415,15 +460,34 @@ const AuthoringProjectDetail = () => {
     if (!supabase || !editingItem) return;
 
     try {
+      // 새 버전 생성
+      const contentJson = {
+        stem: editingItemData.stem,
+        options: editingItemData.options,
+        rubric: editingItemData.rubric,
+      };
+
+      const { data: versionData, error: versionError } = await supabase
+        .from("authoring_item_versions")
+        .insert([{
+          draft_item_id: editingItem.draft_item_id,
+          based_on_version_id: editingItem.current_version_id,
+          content_json: contentJson,
+          change_summary: "수동 편집",
+        }])
+        .select()
+        .single();
+
+      if (versionError) throw versionError;
+
+      // current_version_id 및 status 업데이트
       const { error } = await supabase
         .from("authoring_items")
         .update({
-          stem: editingItemData.stem,
-          item_type: editingItemData.item_type,
-          current_version: editingItem.current_version + 1,
-          updated_at: new Date().toISOString(),
+          current_version_id: versionData.version_id,
+          status: "editing",
         })
-        .eq("authoring_item_id", editingItem.authoring_item_id);
+        .eq("draft_item_id", editingItem.draft_item_id);
 
       if (error) throw error;
 
@@ -444,7 +508,7 @@ const AuthoringProjectDetail = () => {
       const { error } = await supabase
         .from("authoring_items")
         .delete()
-        .eq("authoring_item_id", itemId);
+        .eq("draft_item_id", itemId);
 
       if (error) throw error;
 
@@ -775,56 +839,60 @@ const AuthoringProjectDetail = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {items.map((item, idx) => (
-                      <TableRow key={item.authoring_item_id} hover>
-                        <TableCell>{idx + 1}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={itemTypeOptions.find(o => o.value === item.item_type)?.label || item.item_type}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              maxWidth: 250,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {item.stem}
-                          </Typography>
-                          {item.ai_generated && (
-                            <Chip label="AI" size="small" sx={{ ml: 1 }} icon={<SmartToy />} />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={statusConfig[item.status]?.label || item.status}
-                            color={statusConfig[item.status]?.color || "default"}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>v{item.current_version}</TableCell>
-                        <TableCell align="center">
-                          <Tooltip title="수정">
-                            <IconButton size="small" onClick={() => handleEditItem(item)}>
-                              <Edit fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="삭제">
-                            <IconButton
+                    {items.map((item, idx) => {
+                      const content = item.current_version?.content_json || {};
+                      const versionCount = item.current_version_id ? 1 : 0;
+                      return (
+                        <TableRow key={item.draft_item_id} hover>
+                          <TableCell>{idx + 1}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={itemTypeOptions.find(o => o.value === item.item_kind)?.label || item.item_kind}
                               size="small"
-                              onClick={() => handleDeleteItem(item.authoring_item_id)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                maxWidth: 250,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
                             >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              {content.stem || "(내용 없음)"}
+                            </Typography>
+                            {item.status === "ai_draft" && (
+                              <Chip label="AI" size="small" sx={{ ml: 1 }} icon={<SmartToy />} />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={statusConfig[item.status]?.label || item.status}
+                              color={statusConfig[item.status]?.color || "default"}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>v{versionCount}</TableCell>
+                          <TableCell align="center">
+                            <Tooltip title="수정">
+                              <IconButton size="small" onClick={() => handleEditItem(item)}>
+                                <Edit fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="삭제">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDeleteItem(item.draft_item_id)}
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -841,9 +909,9 @@ const AuthoringProjectDetail = () => {
               <Grid item xs={6} sm={3}>
                 <Paper sx={{ p: 2, textAlign: "center", bgcolor: "grey.50" }}>
                   <Typography variant="h4" fontWeight="bold">
-                    {items.filter(i => i.status === "draft").length}
+                    {items.filter(i => i.status === "ai_draft" || i.status === "editing").length}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">초안</Typography>
+                  <Typography variant="body2" color="text.secondary">초안/편집</Typography>
                 </Paper>
               </Grid>
               <Grid item xs={6} sm={3}>
@@ -863,11 +931,11 @@ const AuthoringProjectDetail = () => {
                 </Paper>
               </Grid>
               <Grid item xs={6} sm={3}>
-                <Paper sx={{ p: 2, textAlign: "center", bgcolor: "primary.50" }}>
-                  <Typography variant="h4" fontWeight="bold" color="primary.main">
-                    {items.filter(i => i.status === "published").length}
+                <Paper sx={{ p: 2, textAlign: "center", bgcolor: "error.50" }}>
+                  <Typography variant="h4" fontWeight="bold" color="error.main">
+                    {items.filter(i => i.status === "rejected").length}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">발행됨</Typography>
+                  <Typography variant="body2" color="text.secondary">반려됨</Typography>
                 </Paper>
               </Grid>
             </Grid>
@@ -1271,37 +1339,31 @@ const AuthoringProjectDetail = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             문항의 수정 이력을 확인하고 이전 버전으로 복원할 수 있습니다.
           </Typography>
-          {items.map((item) => (
-            <Accordion key={item.authoring_item_id}>
-              <AccordionSummary expandIcon={<ExpandMore />}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
-                  <Typography fontWeight="bold" sx={{ flex: 1 }}>
-                    {item.stem.substring(0, 50)}...
-                  </Typography>
-                  <Chip label={`v${item.current_version}`} size="small" />
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails>
-                <List dense>
-                  {Array.from({ length: item.current_version }, (_, i) => (
-                    <ListItem key={i}>
+          {items.map((item) => {
+            const content = item.current_version?.content_json || {};
+            return (
+              <Accordion key={item.draft_item_id}>
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
+                    <Typography fontWeight="bold" sx={{ flex: 1 }}>
+                      {(content.stem || "(내용 없음)").substring(0, 50)}...
+                    </Typography>
+                    <Chip label={item.current_version_id ? "v1" : "v0"} size="small" />
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <List dense>
+                    <ListItem>
                       <ListItemText
-                        primary={`버전 ${item.current_version - i}`}
-                        secondary={i === 0 ? "현재 버전" : `수정일: ${new Date(item.updated_at).toLocaleString("ko-KR")}`}
+                        primary="현재 버전"
+                        secondary={`생성일: ${new Date(item.created_at).toLocaleString("ko-KR")}`}
                       />
-                      <ListItemSecondaryAction>
-                        {i > 0 && (
-                          <Button size="small" startIcon={<Refresh />}>
-                            복원
-                          </Button>
-                        )}
-                      </ListItemSecondaryAction>
                     </ListItem>
-                  ))}
-                </List>
-              </AccordionDetails>
-            </Accordion>
-          ))}
+                  </List>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setVersionHistoryOpen(false)}>닫기</Button>
