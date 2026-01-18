@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
@@ -58,6 +58,12 @@ const theme = createTheme({
     },
   },
 });
+
+const AuthoringEditRedirect = () => {
+  const { id } = useParams();
+  const targetId = id ?? '';
+  return <Navigate to={`/question-dev/authoring/${targetId}`} replace />;
+};
 
 function App() {
   return (
@@ -125,6 +131,7 @@ function App() {
                 <Route path="stimuli/:id/edit" element={<StimuliEdit />} />
                 <Route path="authoring" element={<AuthoringProjects />} />
                 <Route path="authoring/:id" element={<AuthoringProjectDetail />} />
+                <Route path="authoring/:id/edit" element={<AuthoringEditRedirect />} />
                 <Route path="domains" element={<DomainList />} />
               </Routes>
             </MainLayout>

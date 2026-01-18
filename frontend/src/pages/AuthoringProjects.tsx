@@ -354,7 +354,7 @@ const AuthoringProjects = () => {
                     <Button
                       size="small"
                       variant="contained"
-                      onClick={() => navigate(`/question-dev/authoring/${project.project_id}/edit`)}
+                      onClick={() => navigate(`/question-dev/authoring/${project.project_id}`)}
                     >
                       작업하기
                     </Button>
