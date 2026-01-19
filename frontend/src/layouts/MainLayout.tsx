@@ -40,6 +40,7 @@ import {
 } from "@mui/icons-material";
 import { getCurrentUser, clearCurrentUser } from "../utils/session";
 import type { UserType } from "../types";
+import logoImage from "/reading_pro_logo.png";
 
 const drawerWidth = 260;
 
@@ -130,9 +131,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       <Box sx={{ p: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
         <Box
           component="img"
-          src="/reading_pro_logo.png"
+          src={logoImage}
           alt="리딩 PRO 로고"
-          sx={{ width: 360, height: 180, objectFit: "contain" }}
+          sx={{ width: 220, height: 110, objectFit: "contain" }}
         />
       </Box>
       <Divider />
