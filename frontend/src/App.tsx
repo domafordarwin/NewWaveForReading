@@ -24,6 +24,7 @@ import DomainList from './pages/DomainList';
 import ReadingQuestionGuide from './pages/ReadingQuestionGuide';
 import StimuliNew from './pages/StimuliNew';
 import TestPage from './pages/TestPage';
+import DiagnosticsPage from './pages/DiagnosticsPage';
 
 const theme = createTheme({
   palette: {
@@ -123,7 +124,11 @@ function App() {
           {/* 시스템 관리자 라우트 */}
           <Route path="/admin" element={<MainLayout />}>
             <Route path="dashboard" element={<SystemAdminDashboard />} />
+            <Route path="diagnostics" element={<DiagnosticsPage />} />
           </Route>
+
+          {/* 진단 페이지 (모든 사용자 접근 가능) */}
+          <Route path="/diagnostics" element={<DiagnosticsPage />} />
         </Routes>
       </Router>
     </ThemeProvider>
