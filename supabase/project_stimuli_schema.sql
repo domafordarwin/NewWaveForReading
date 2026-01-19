@@ -53,6 +53,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- 기존 트리거가 있다면 삭제
+DROP TRIGGER IF EXISTS trigger_update_project_stimuli_updated_at ON public.project_stimuli;
+
 CREATE TRIGGER trigger_update_project_stimuli_updated_at
   BEFORE UPDATE ON public.project_stimuli
   FOR EACH ROW
