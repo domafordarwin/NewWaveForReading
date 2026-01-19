@@ -11,8 +11,12 @@ import CssBaseline from "@mui/material/CssBaseline";
 import MainLayout from "./layouts/MainLayout";
 import Login from "./pages/Login";
 import StudentDashboard from "./pages/StudentDashboard";
+import StudentDashboardNew from "./pages/StudentDashboardNew";
+import StudentFeedback from "./pages/StudentFeedback";
 import ParentDashboard from "./pages/ParentDashboard";
+import ParentDashboardNew from "./pages/ParentDashboardNew";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import TeacherDashboardNew from "./pages/TeacherDashboardNew";
 import SchoolAdminDashboard from "./pages/SchoolAdminDashboard";
 import QuestionDeveloperDashboard from "./pages/QuestionDeveloperDashboard";
 import SystemAdminDashboard from "./pages/SystemAdminDashboard";
@@ -86,6 +90,9 @@ function App() {
           {/* 학생 라우트 */}
           <Route path="/student" element={<MainLayout />}>
             <Route path="dashboard" element={<StudentDashboard />} />
+            <Route path="dashboard-new" element={<StudentDashboardNew />} />
+            <Route path="feedback" element={<StudentFeedback />} />
+            <Route path="feedback/:sessionId" element={<StudentFeedback />} />
             <Route
               path="report-sample"
               element={<ReportSample type="student" />}
@@ -95,6 +102,7 @@ function App() {
           {/* 학부모 라우트 */}
           <Route path="/parent" element={<MainLayout />}>
             <Route path="dashboard" element={<ParentDashboard />} />
+            <Route path="dashboard-new" element={<ParentDashboardNew />} />
             <Route
               path="report-sample"
               element={<ReportSample type="parent" />}
@@ -105,6 +113,7 @@ function App() {
           {/* 진단 담당 교사 라우트 */}
           <Route path="/teacher" element={<MainLayout />}>
             <Route path="dashboard" element={<TeacherDashboard />} />
+            <Route path="dashboard-new" element={<TeacherDashboardNew />} />
             <Route
               path="report-sample"
               element={<ReportSample type="teacher" />}

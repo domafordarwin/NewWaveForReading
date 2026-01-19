@@ -1,0 +1,620 @@
+/**
+ * 학부모 대시보드 - 자녀 학습 현황 조회
+ *
+ * 기능:
+ * - 자녀 정보 및 연결
+ * - 자녀의 진단 결과 조회
+ * - 성장 추이 차트
+ * - AI 생성 학부모 리포트
+ */
+import { useState, useEffect } from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  Chip,
+  CircularProgress,
+  Alert,
+  Divider,
+  Avatar,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  ListItemSecondaryAction,
+} from "@mui/material";
+import {
+  TrendingUp,
+  School,
+  EmojiEvents,
+  Person,
+  Assignment,
+  Lightbulb,
+  Home,
+  Psychology,
+} from "@mui/icons-material";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  Legend,
+} from "recharts";
+import { getCurrentUser } from "../utils/session";
+import { useSupabase } from "../services/supabaseClient";
+import {
+  generateParentReport,
+  type AIEvaluationResult,
+} from "../services/aiFeedbackService";
+
+interface ChildInfo {
+  user_id: number;
+  name: string;
+  grade: number;
+  school_name: string;
+  student_grade_level: string;
+}
+
+interface EvaluationData {
+  evaluation_id: number;
+  session_id: number;
+  comprehension_score: number;
+  inference_score: number;
+  critical_score: number;
+  expression_score: number;
+  total_score: number;
+  grade_level: string;
+  percentile: number;
+  strengths: string[];
+  weaknesses: string[];
+  evaluated_at: string;
+}
+
+interface RelationData {
+  student_id: number;
+  student: ChildInfo[] | ChildInfo;
+}
+
+interface SessionData {
+  session_id: number;
+}
+
+const ParentDashboardNew = () => {
+  const user = getCurrentUser();
+  const supabase = useSupabase();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [children, setChildren] = useState<ChildInfo[]>([]);
+  const [selectedChild, setSelectedChild] = useState<ChildInfo | null>(null);
+  const [evaluations, setEvaluations] = useState<EvaluationData[]>([]);
+  const [aiReport, setAiReport] = useState<{
+    summary: string;
+    progressAnalysis: string;
+    recommendations: string[];
+    homeSupport: string[];
+  } | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+
+  // 자녀 목록 로드
+  useEffect(() => {
+    const loadChildren = async () => {
+      if (!supabase || !user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // 학부모-학생 관계에서 자녀 찾기
+        const { data: relationsData, error: relationsError } = await supabase
+          .from("student_parent_relations")
+          .select(
+            `
+            student_id,
+            student:users!student_parent_relations_student_id_fkey(
+              user_id,
+              name,
+              grade,
+              school_name,
+              student_grade_level
+            )
+          `,
+          )
+          .eq("parent_id", user.userId);
+
+        if (relationsError) {
+          console.warn("자녀 관계 로드 에러:", relationsError);
+
+          // 관계 테이블이 없으면 이메일 패턴으로 찾기 (레거시 호환)
+          const emailMatch = user.email?.match(/parent_student(\d+)@/);
+          if (emailMatch) {
+            const { data: studentData } = await supabase
+              .from("users")
+              .select("*")
+              .eq("user_type", "STUDENT")
+              .eq("email", `student${emailMatch[1]}@example.com`)
+              .single();
+
+            if (studentData) {
+              setChildren([studentData]);
+              setSelectedChild(studentData);
+            }
+          }
+        } else if (relationsData && relationsData.length > 0) {
+          const childList = relationsData
+            .map((r: RelationData) => {
+              // student가 배열인 경우 첫 번째 요소 사용
+              return Array.isArray(r.student) ? r.student[0] : r.student;
+            })
+            .filter(Boolean);
+          setChildren(childList);
+          if (childList.length > 0) {
+            setSelectedChild(childList[0]);
+          }
+        } else {
+          setError("연결된 자녀 정보를 찾을 수 없습니다.");
+        }
+      } catch (err: unknown) {
+        console.error("자녀 로드 실패:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "데이터를 불러오는데 실패했습니다.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChildren();
+  }, [supabase, user]);
+
+  // 선택된 자녀의 평가 결과 로드
+  useEffect(() => {
+    const loadEvaluations = async () => {
+      if (!supabase || !selectedChild) return;
+
+      try {
+        // 자녀의 세션 ID 조회
+        const { data: sessions } = await supabase
+          .from("assessment_sessions")
+          .select("session_id")
+          .eq("student_id", selectedChild.user_id);
+
+        if (!sessions || sessions.length === 0) {
+          setEvaluations([]);
+          return;
+        }
+
+        const sessionIds = sessions.map((s: SessionData) => s.session_id);
+
+        // 평가 결과 조회
+        const { data: evalData, error: evalError } = await supabase
+          .from("ai_evaluations")
+          .select("*")
+          .in("session_id", sessionIds)
+          .order("evaluated_at", { ascending: false });
+
+        if (evalError) {
+          console.warn("평가 결과 로드 에러:", evalError);
+        } else {
+          setEvaluations(evalData || []);
+        }
+      } catch (err) {
+        console.error("평가 결과 로드 실패:", err);
+      }
+    };
+
+    loadEvaluations();
+  }, [supabase, selectedChild]);
+
+  // AI 리포트 생성
+  const handleGenerateReport = async () => {
+    if (!selectedChild || evaluations.length === 0) return;
+
+    setReportLoading(true);
+    try {
+      // AIEvaluationResult 형식으로 변환
+      const evalResults: AIEvaluationResult[] = evaluations.map((e) => ({
+        comprehensionScore: e.comprehension_score,
+        inferenceScore: e.inference_score,
+        criticalScore: e.critical_score,
+        expressionScore: e.expression_score,
+        totalScore: e.total_score,
+        gradeLevel: e.grade_level as "A" | "B" | "C" | "D",
+        rubricScores: [],
+        strengths: e.strengths || [],
+        weaknesses: e.weaknesses || [],
+        studentFeedback: { intro: "", body: "", conclusion: "", overall: "" },
+        lineEdits: [],
+        spellingErrors: 0,
+        grammarErrors: 0,
+      }));
+
+      const report = await generateParentReport({
+        studentName: selectedChild.name,
+        evaluations: evalResults,
+        gradeBand: selectedChild.student_grade_level || "초고",
+      });
+
+      setAiReport(report);
+    } catch (err) {
+      console.error("AI 리포트 생성 실패:", err);
+      setError("리포트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  // 통계 계산
+  const stats = {
+    totalAssessments: evaluations.length,
+    averageScore:
+      evaluations.length > 0
+        ? Math.round(
+            evaluations.reduce((sum, e) => sum + e.total_score, 0) /
+              evaluations.length,
+          )
+        : 0,
+    latestGrade: evaluations[0]?.grade_level || "N/A",
+    percentile: evaluations[0]?.percentile || 0,
+  };
+
+  // 성장 추이 차트 데이터
+  const progressChartData = evaluations
+    .slice(0, 6)
+    .reverse()
+    .map((e, index) => ({
+      name: `${index + 1}회`,
+      점수: e.total_score,
+    }));
+
+  // 영역별 레이더 차트 데이터
+  const radarChartData =
+    evaluations.length > 0
+      ? [
+          {
+            subject: "이해력",
+            score: evaluations[0].comprehension_score,
+            fullMark: 25,
+          },
+          {
+            subject: "추론력",
+            score: evaluations[0].inference_score,
+            fullMark: 25,
+          },
+          {
+            subject: "비판적\n사고",
+            score: evaluations[0].critical_score,
+            fullMark: 25,
+          },
+          {
+            subject: "표현력",
+            score: evaluations[0].expression_score,
+            fullMark: 25,
+          },
+        ]
+      : [];
+
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Box>
+      <Typography variant="h4" fontWeight="bold" gutterBottom>
+        학부모 대시보드
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+        자녀의 독서 진단 현황을 확인하세요 📊
+      </Typography>
+
+      {error && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Grid container spacing={3}>
+        {/* 자녀 정보 */}
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 3, height: "100%" }}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              <Person sx={{ mr: 1, verticalAlign: "middle" }} />
+              자녀 정보
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+
+            {children.length === 0 ? (
+              <Typography color="text.secondary">
+                연결된 자녀가 없습니다.
+              </Typography>
+            ) : (
+              <List>
+                {children.map((child) => (
+                  <ListItem
+                    key={child.user_id}
+                    button
+                    selected={selectedChild?.user_id === child.user_id}
+                    onClick={() => setSelectedChild(child)}
+                    sx={{ borderRadius: 2, mb: 1 }}
+                  >
+                    <ListItemAvatar>
+                      <Avatar sx={{ bgcolor: "primary.main" }}>
+                        {child.name?.charAt(0)}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={child.name}
+                      secondary={`${child.school_name || "학교"} ${child.grade || ""}학년`}
+                    />
+                    {selectedChild?.user_id === child.user_id && (
+                      <ListItemSecondaryAction>
+                        <Chip label="선택됨" size="small" color="primary" />
+                      </ListItemSecondaryAction>
+                    )}
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </Paper>
+        </Grid>
+
+        {/* 요약 통계 */}
+        <Grid item xs={12} md={8}>
+          <Grid container spacing={2}>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ bgcolor: "primary.main", color: "white" }}>
+                <CardContent sx={{ textAlign: "center" }}>
+                  <Assignment sx={{ fontSize: 32 }} />
+                  <Typography variant="h4" fontWeight="bold">
+                    {stats.totalAssessments}
+                  </Typography>
+                  <Typography variant="body2">완료 진단</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ bgcolor: "secondary.main", color: "white" }}>
+                <CardContent sx={{ textAlign: "center" }}>
+                  <TrendingUp sx={{ fontSize: 32 }} />
+                  <Typography variant="h4" fontWeight="bold">
+                    {stats.averageScore}
+                  </Typography>
+                  <Typography variant="body2">평균 점수</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ bgcolor: "success.main", color: "white" }}>
+                <CardContent sx={{ textAlign: "center" }}>
+                  <EmojiEvents sx={{ fontSize: 32 }} />
+                  <Typography variant="h4" fontWeight="bold">
+                    {stats.latestGrade}
+                  </Typography>
+                  <Typography variant="body2">현재 등급</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ bgcolor: "info.main", color: "white" }}>
+                <CardContent sx={{ textAlign: "center" }}>
+                  <School sx={{ fontSize: 32 }} />
+                  <Typography variant="h4" fontWeight="bold">
+                    {stats.percentile}%
+                  </Typography>
+                  <Typography variant="body2">백분위</Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        {/* 성장 추이 차트 */}
+        {progressChartData.length > 1 && (
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                <TrendingUp sx={{ mr: 1, verticalAlign: "middle" }} />
+                성장 추이
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={progressChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 100]} />
+                  <RechartsTooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="점수"
+                    stroke="#667eea"
+                    strokeWidth={2}
+                    dot={{ fill: "#667eea" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+        )}
+
+        {/* 영역별 분석 */}
+        {radarChartData.length > 0 && (
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                영역별 분석 (최근)
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <ResponsiveContainer width="100%" height={250}>
+                <RadarChart data={radarChartData}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="subject" />
+                  <PolarRadiusAxis domain={[0, 25]} />
+                  <Radar
+                    name="점수"
+                    dataKey="score"
+                    stroke="#764ba2"
+                    fill="#764ba2"
+                    fillOpacity={0.6}
+                  />
+                  <Legend />
+                </RadarChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+        )}
+
+        {/* AI 리포트 */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="h6" fontWeight="bold">
+                <Psychology sx={{ mr: 1, verticalAlign: "middle" }} />
+                AI 학습 리포트
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={handleGenerateReport}
+                disabled={reportLoading || evaluations.length === 0}
+                startIcon={
+                  reportLoading ? <CircularProgress size={16} /> : <Lightbulb />
+                }
+              >
+                {reportLoading ? "생성 중..." : "리포트 생성"}
+              </Button>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+
+            {aiReport ? (
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                    >
+                      📋 학습 현황 요약
+                    </Typography>
+                    <Typography variant="body2">{aiReport.summary}</Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12}>
+                  <Box sx={{ p: 2, bgcolor: "primary.50", borderRadius: 2 }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                    >
+                      📈 성장 분석
+                    </Typography>
+                    <Typography variant="body2">
+                      {aiReport.progressAnalysis}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      bgcolor: "success.50",
+                      borderRadius: 2,
+                      height: "100%",
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                    >
+                      <Lightbulb sx={{ mr: 1, verticalAlign: "middle" }} />
+                      권장 사항
+                    </Typography>
+                    <List dense>
+                      {aiReport.recommendations.map((rec, i) => (
+                        <ListItem key={i}>
+                          <ListItemText primary={`${i + 1}. ${rec}`} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      bgcolor: "warning.50",
+                      borderRadius: 2,
+                      height: "100%",
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      gutterBottom
+                    >
+                      <Home sx={{ mr: 1, verticalAlign: "middle" }} />
+                      가정에서 도울 수 있는 방법
+                    </Typography>
+                    <List dense>
+                      {aiReport.homeSupport.map((support, i) => (
+                        <ListItem key={i}>
+                          <ListItemText primary={`${i + 1}. ${support}`} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                </Grid>
+              </Grid>
+            ) : (
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <Psychology
+                  sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                />
+                <Typography color="text.secondary">
+                  {evaluations.length === 0
+                    ? "아직 완료된 평가가 없습니다."
+                    : "'리포트 생성' 버튼을 클릭하면 AI가 자녀의 학습 현황을 분석해드립니다."}
+                </Typography>
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
+
+export default ParentDashboardNew;

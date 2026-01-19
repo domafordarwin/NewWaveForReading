@@ -1,67 +1,511 @@
-<!DOCTYPE html>
-<html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>리딩 PRO 소개</title>
-    <style>
-      body {
-        font-family: "Segoe UI", Arial, sans-serif;
-        background: #f5f7fb;
-        color: #1f2937;
-        margin: 0;
-        padding: 40px;
-      }
-      .card {
-        max-width: 640px;
-        margin: 0 auto;
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 32px;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-      }
-      h1 {
-        margin: 0 0 12px;
-        font-size: 24px;
-      }
-      p {
-        margin: 0 0 16px;
-        line-height: 1.7;
-      }
-      a {
-        color: #2563eb;
-        text-decoration: none;
-        font-weight: 600;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="card">
-      <h1>리딩 PRO 소개</h1>
-      <p>
-        독자성향검사는 학생들의 읽기 태도와 습관, 동기 등을 종합적으로 진단하여 개인별 읽기 성향을 파악하는 평가도구입니다.
-        이 검사는 기존의 읽기 능력(독해력) 측정에 더해 학생의 정서적·심리적 태도, 행동 양상, 사회적 환경 요인까지 포함한
-        통합적 문해력을 평가하도록 설계되었습니다.
-      </p>
-      <p>
-        다시 말해, 단순한 독해 능력뿐만 아니라 책을 대하는 마음가짐, 선호하는 책의 종류, 읽기 동기와 목적,
-        독서 습관 및 환경 등 비인지적 특성을 함께 살펴봅니다. 이를 통해 학생 개개인의 강점과 약점을 진단하고,
-        그 결과를 바탕으로 맞춤형 독서 지도를 제공하는 것이 목적입니다.
-      </p>
-      <p>
-        또한 독자성향검사는 효과적인 독서 교육 전략 수립에 활용됩니다. 예를 들어, 새로운 지식을 얻기 위해 독서하는 경향이 강한지,
-        주변의 격려에 의해 독서 습관이 형성되는 유형인지 등을 파악할 수 있습니다. 이러한 정보는 교사와 학부모가 학생 성향에 맞는
-        독서 프로그램이나 지도 방안을 마련하는 데 도움이 되며, 학생 스스로도 자신의 독서 성향을 이해해 동기를 높이고 부족한 부분을 개선할 수 있습니다.
-      </p>
-      <p>
-        자동 이동되지 않으면
-        <a href="/parent/info">여기를 클릭</a>해 주세요.
-      </p>
+import { useEffect, useState } from "react";
+
+/**
+ * 리딩 PRO 소개 페이지
+ * 
+ * 디자인 철학: 현대적 교육 미니멀리즘
+ * - 제한된 색상 팔레트 (청색, 주황색, 초록색)
+ * - 명확한 정보 계층 구조
+ * - 카드 기반 레이아웃
+ * - 부드러운 애니메이션
+ */
+
+interface CompetencyItem {
+  icon: string;
+  title: string;
+  description: string;
+  color: "blue" | "orange" | "green";
+}
+
+interface ReaderTypeItem {
+  type: string;
+  subtitle: string;
+  description: string;
+  characteristics: string[];
+  examples: string[];
+  color: "blue" | "orange" | "green";
+}
+
+export default function Home() {
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisibleSections((prev) => new Set(prev).add(entry.target.id));
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    document.querySelectorAll("[data-animate]").forEach((el) => {
+      observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const aestheticCompetencies: CompetencyItem[] = [
+    {
+      icon: "📖",
+      title: "문학적 표현",
+      description: "작가의 표현 기법과 언어의 아름다움에 대한 이해",
+      color: "blue",
+    },
+    {
+      icon: "❤️",
+      title: "정서적 공감",
+      description: "등장인물의 감정이나 상황에 공감하는 능력",
+      color: "orange",
+    },
+    {
+      icon: "⭐",
+      title: "문학적 가치",
+      description: "작품이 담고 있는 주제·의식이나 교훈을 파악하는 능력",
+      color: "green",
+    },
+  ];
+
+  const communicationCompetencies: CompetencyItem[] = [
+    {
+      icon: "💡",
+      title: "창의적 문제 해결",
+      description: "텍스트 내용을 응용하여 새로운 해결책을 찾는 능력",
+      color: "blue",
+    },
+    {
+      icon: "🗣️",
+      title: "표현과 전달 능력",
+      description: "이해 내용을 정확히 표현하고 전달하는 능력",
+      color: "orange",
+    },
+    {
+      icon: "👥",
+      title: "사회적 상호작용",
+      description: "읽은 내용을 바탕으로 타인과 소통하고 협력하는 능력",
+      color: "green",
+    },
+  ];
+
+  const comprehensionCompetencies: CompetencyItem[] = [
+    {
+      icon: "📚",
+      title: "사실적 이해",
+      description: "글에 명시된 정보를 이해하고, 핵심 사실과 세부 내용을 정확히 찾아내는 능력",
+      color: "blue",
+    },
+    {
+      icon: "🔗",
+      title: "추론적 이해",
+      description: "글에 나타나지 않은 의미를 단서와 맥락을 바탕으로 논리적으로 추론하는 능력",
+      color: "orange",
+    },
+    {
+      icon: "🔍",
+      title: "비판적 이해",
+      description: "글의 주장과 근거를 검토하고, 타당성과 관점을 비판적으로 평가하는 능력",
+      color: "green",
+    },
+  ];
+
+  const readerTypes: ReaderTypeItem[] = [
+    {
+      type: "A 유형",
+      subtitle: "감성관계 중심 요인 우세",
+      description:
+        "정서적 반응 요인과 사회적 동기 요인이 상대적으로 높게 나타난 학생군입니다.",
+      characteristics: [
+        "독서를 재미, 감동, 공감의 활동으로 인식",
+        "타인의 반응(칭찬, 권유, 함께 읽기)이 독서 동기에 크게 작용",
+        "독서 후 느낀 나누기, 이야기 공유에 대한 긍정적 태도",
+      ],
+      examples: [
+        '"책을 읽으면 기분이 좋아진다"',
+        '"가족이나 친구와 책 이야기를 나누는 것이 좋다"',
+        '"누군가 권해 주면 책을 더 잘 읽는다"',
+      ],
+      color: "blue",
+    },
+    {
+      type: "B 유형",
+      subtitle: "인지·분석 요인 우세",
+      description:
+        "정보 처리 요인과 인지적 독서 동기가 두드러진 학생군입니다.",
+      characteristics: [
+        "독서를 지식 습득과 이해의 수단으로 인식",
+        "내용의 사실성, 논리성, 활용 가능성을 중시",
+        "구체적 설명, 실제 사례가 있는 책을 선호",
+      ],
+      examples: [
+        '"책을 읽으며 새로운 정보를 얻고 싶다"',
+        '"읽은 내용을 이해하고 설명할 수 있다"',
+        '"실생활에 도움이 되는 책이 좋다"',
+      ],
+      color: "orange",
+    },
+    {
+      type: "C 유형",
+      subtitle: "행동·습관 요인 우세",
+      description:
+        "독서 실천 행동과 자기조절 요인이 가장 안정적으로 나타난 학생군입니다.",
+      characteristics: [
+        "독서가 생활 습관으로 내면화됨",
+        "외적 통제 없이도 꾸준히 독서를 실천",
+        "독서 시간과 분량에 대한 자기 관리 능력 보유",
+      ],
+      examples: [
+        '"정해진 시간에 책을 읽는 편이다"',
+        '"누가 시키지 않아도 스스로 책을 읽는다"',
+        '"독서를 자주, 꾸준히 한다"',
+      ],
+      color: "green",
+    },
+    {
+      type: "D 유형",
+      subtitle: "자율·탐색 요인 우세",
+      description:
+        "호기심 기반 동기와 탐색적 독서 요인이 상대적으로 높은 학생군입니다.",
+      characteristics: [
+        "독서 방식이 유연하고 비정형적",
+        "장르와 주제 선택의 폭이 넓음",
+        "필요와 흥미에 따라 독서 강도가 변동",
+      ],
+      examples: [
+        '"관심 있는 주제라면 어떤 책이든 읽어 보고 싶다"',
+        '"여러 종류의 책을 자유롭게 읽는다"',
+        '"읽다가 흥미가 없으면 다른 책을 선택한다"',
+      ],
+      color: "blue",
+    },
+  ];
+
+  const getColorClasses = (color: "blue" | "orange" | "green") => {
+    const colorMap = {
+      blue: {
+        bg: "bg-blue-50",
+        border: "border-blue-200",
+        text: "text-blue-900",
+        accent: "bg-blue-500",
+        light: "bg-blue-100",
+      },
+      orange: {
+        bg: "bg-orange-50",
+        border: "border-orange-200",
+        text: "text-orange-900",
+        accent: "bg-orange-500",
+        light: "bg-orange-100",
+      },
+      green: {
+        bg: "bg-green-50",
+        border: "border-green-200",
+        text: "text-green-900",
+        accent: "bg-green-500",
+        light: "bg-green-100",
+      },
+    };
+    return colorMap[color];
+  };
+
+  const isVisible = (id: string) => visibleSections.has(id);
+
+  return (
+    <div className="min-h-screen bg-white">
+      <main className="container mx-auto px-4 py-12">
+        {/* Overview Section */}
+        <section
+          id="overview"
+          data-animate
+          className={`mb-16 transition-all duration-700 ${
+            isVisible("overview")
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8"
+          }`}
+        >
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-8 border border-blue-200">
+            <h2 className="text-2xl font-bold text-blue-900 mb-4">개요</h2>
+            <p className="text-blue-800 leading-relaxed">
+              문해력은 글을 읽고 이해하는 것에 그치지 않고, 정보를 해석하고 비판적으로 판단하며 자신의 생각을 근거로 표현하는 능력까지 포함합니다. 리딩 PRO는 학습자가 다양한 텍스트에서 핵심 정보를 정확히 추출하고, 맥락을 고려해 의미를 확장하며, 실제 상황에서 지식을 적용할 수 있는지를 종합적으로 평가합니다.
+            </p>
+          </div>
+        </section>
+
+        {/* Literacy Diagnosis Section */}
+        <section
+          id="literacy-diagnosis"
+          data-animate
+          className={`mb-16 transition-all duration-700 ${
+            isVisible("literacy-diagnosis")
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8"
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-10 bg-blue-500 rounded-full"></div>
+            <h2 className="text-3xl font-bold text-gray-900">문해력 진단</h2>
+          </div>
+
+          <div className="bg-gray-50 rounded-xl p-8 mb-8 border border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              리딩 PRO 문해력 진단은 무엇을 평가하는가?
+            </h3>
+            <p className="text-gray-700 leading-relaxed">
+              리딩 PRO는 학습자의 문해력을 세 가지 핵심 영역으로 나누어 평가합니다. 각 영역은 독립적이면서도 상호 연관되어 있으며, 학생의 종합적인 읽기 능력을 파악하는 데 중요한 역할을 합니다.
+            </p>
+          </div>
+
+          {/* Aesthetic Sensitivity */}
+          <div className="mb-12">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <span className="text-2xl">✨</span> 심미적 감수성
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {aestheticCompetencies.map((item, idx) => {
+                const colors = getColorClasses(item.color);
+                return (
+                  <div
+                    key={idx}
+                    data-animate
+                    className={`transition-all duration-700 ${
+                      isVisible("literacy-diagnosis")
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 translate-y-8"
+                    }`}
+                    style={{ transitionDelay: `${idx * 100}ms` }}
+                  >
+                    <div
+                      className={`${colors.bg} border-l-4 ${colors.border} rounded-lg p-6 hover:shadow-lg transition-shadow`}
+                    >
+                      <div className="text-4xl mb-3">{item.icon}</div>
+                      <h4 className={`text-lg font-semibold ${colors.text} mb-2`}>
+                        {item.title}
+                      </h4>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Communication Ability */}
+          <div className="mb-12">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <span className="text-2xl">💬</span> 의사소통 능력
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {communicationCompetencies.map((item, idx) => {
+                const colors = getColorClasses(item.color);
+                return (
+                  <div
+                    key={idx}
+                    data-animate
+                    className={`transition-all duration-700 ${
+                      isVisible("literacy-diagnosis")
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 translate-y-8"
+                    }`}
+                    style={{ transitionDelay: `${(idx + 3) * 100}ms` }}
+                  >
+                    <div
+                      className={`${colors.bg} border-l-4 ${colors.border} rounded-lg p-6 hover:shadow-lg transition-shadow`}
+                    >
+                      <div className="text-4xl mb-3">{item.icon}</div>
+                      <h4 className={`text-lg font-semibold ${colors.text} mb-2`}>
+                        {item.title}
+                      </h4>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Comprehension */}
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <span className="text-2xl">🧠</span> 이해력
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {comprehensionCompetencies.map((item, idx) => {
+                const colors = getColorClasses(item.color);
+                return (
+                  <div
+                    key={idx}
+                    data-animate
+                    className={`transition-all duration-700 ${
+                      isVisible("literacy-diagnosis")
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 translate-y-8"
+                    }`}
+                    style={{ transitionDelay: `${(idx + 6) * 100}ms` }}
+                  >
+                    <div
+                      className={`${colors.bg} border-l-4 ${colors.border} rounded-lg p-6 hover:shadow-lg transition-shadow`}
+                    >
+                      <div className="text-4xl mb-3">{item.icon}</div>
+                      <h4 className={`text-lg font-semibold ${colors.text} mb-2`}>
+                        {item.title}
+                      </h4>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Reader Preference Test Section */}
+        <section
+          id="reader-preference"
+          data-animate
+          className={`mb-16 transition-all duration-700 ${
+            isVisible("reader-preference")
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8"
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-10 bg-orange-500 rounded-full"></div>
+            <h2 className="text-3xl font-bold text-gray-900">독자성향검사</h2>
+          </div>
+
+          <div className="bg-orange-50 rounded-xl p-8 mb-12 border border-orange-200">
+            <h3 className="text-xl font-semibold text-orange-900 mb-4">
+              독자성향검사란?
+            </h3>
+            <p className="text-orange-800 leading-relaxed mb-4">
+              독자성향검사는 학생들의 읽기 태도와 습관, 동기 등을 종합적으로 진단하여 개인별 읽기 성향을 파악하는 평가도구입니다. 단순한 독해 능력뿐만 아니라 책을 대하는 마음가짐, 선호하는 책의 종류, 읽기 동기와 목적, 독서 습관 및 환경 등 비인지적 특성을 함께 살펴봅니다.
+            </p>
+            <p className="text-orange-800 leading-relaxed">
+              이를 통해 학생 개개인의 강점과 약점을 진단하고, 그 결과를 바탕으로 맞춤형 독서 지도를 제공하는 것이 목적입니다.
+            </p>
+          </div>
+
+          {/* Reader Types */}
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-8 flex items-center gap-2">
+              <span className="text-2xl">📊</span> 독자성향 유형 분석
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {readerTypes.map((type, idx) => {
+                const colors = getColorClasses(type.color);
+                return (
+                  <div
+                    key={idx}
+                    data-animate
+                    className={`transition-all duration-700 ${
+                      isVisible("reader-preference")
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 translate-y-8"
+                    }`}
+                    style={{ transitionDelay: `${idx * 150}ms` }}
+                  >
+                    <div
+                      className={`${colors.bg} border-2 ${colors.border} rounded-xl p-8 h-full hover:shadow-lg transition-shadow`}
+                    >
+                      <div className="flex items-start gap-3 mb-4">
+                        <div
+                          className={`${colors.accent} text-white rounded-full w-10 h-10 flex items-center justify-center font-bold flex-shrink-0`}
+                        >
+                          {type.type.charAt(0)}
+                        </div>
+                        <div>
+                          <h4 className={`text-lg font-bold ${colors.text}`}>
+                            {type.type}
+                          </h4>
+                          <p className={`text-sm ${colors.text} opacity-75`}>
+                            {type.subtitle}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-700 text-sm leading-relaxed mb-6">
+                        {type.description}
+                      </p>
+
+                      <div className="mb-6">
+                        <h5 className="text-sm font-semibold text-gray-900 mb-3">
+                          분류 근거
+                        </h5>
+                        <ul className="space-y-2">
+                          {type.characteristics.map((char, cidx) => (
+                            <li
+                              key={cidx}
+                              className="text-sm text-gray-700 flex items-start gap-2"
+                            >
+                              <span className={`${colors.accent} text-white rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-xs`}>
+                                ✓
+                              </span>
+                              <span>{char}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div>
+                        <h5 className="text-sm font-semibold text-gray-900 mb-3">
+                          측정 지표 예시
+                        </h5>
+                        <ul className="space-y-2">
+                          {type.examples.map((example, eidx) => (
+                            <li
+                              key={eidx}
+                              className="text-sm text-gray-600 italic pl-4 border-l-2 border-gray-300"
+                            >
+                              {example}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section
+          id="cta"
+          data-animate
+          className={`mt-16 transition-all duration-700 ${
+            isVisible("cta")
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8"
+          }`}
+        >
+          <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-12 border border-green-200 text-center">
+            <h2 className="text-2xl font-bold text-green-900 mb-4">
+              리딩 PRO로 시작하세요
+            </h2>
+            <p className="text-green-800 mb-8 max-w-2xl mx-auto">
+              학생의 문해력 수준과 독자성향을 정확히 진단하고, 맞춤형 독서 지도를 통해 더 나은 읽기 능력을 개발해보세요.
+            </p>
+            <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors">
+              진단 시작하기
+            </button>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-gray-50 mt-20">
+        <div className="container mx-auto px-4 py-8 text-center text-gray-600">
+          <p>© 2026 리딩 PRO. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
-    <script>
-      if (window.top === window.self) {
-        window.location.replace("/parent/info");
-      }
-    </script>
-  </body>
-</html>
+  );
+}

@@ -1,6 +1,26 @@
--- 프로젝트별 지문 복사본 테이블
--- 원본 지문(stimuli)은 읽기 전용으로 유지하고,
--- 각 프로젝트에서 사용할 때는 편집 가능한 복사본을 생성
+-- =====================================================
+-- 프로젝트별 지문 복사본 시스템으로 마이그레이션
+-- =====================================================
+-- 실행 순서:
+-- 1. 레거시 컬럼 및 제약조건 제거
+-- 2. project_stimuli 테이블 생성
+-- 3. authoring_projects에 새 컬럼 추가
+-- =====================================================
+
+-- =====================================================
+-- STEP 1: 레거시 스키마 정리
+-- =====================================================
+
+-- 기존 primary_stimulus_id 관련 인덱스 제거
+DROP INDEX IF EXISTS public.idx_authoring_projects_stimulus;
+
+-- 기존 primary_stimulus_id 컬럼 제거
+ALTER TABLE public.authoring_projects
+DROP COLUMN IF EXISTS primary_stimulus_id;
+
+-- =====================================================
+-- STEP 2: project_stimuli 테이블 생성
+-- =====================================================
 
 -- 프로젝트-지문 연결 및 편집 가능한 복사본 테이블
 CREATE TABLE IF NOT EXISTS public.project_stimuli (
@@ -44,6 +64,10 @@ COMMENT ON COLUMN public.project_stimuli.original_stimulus_id IS '원본 지문 
 COMMENT ON COLUMN public.project_stimuli.is_modified IS '원본에서 수정되었는지 여부';
 COMMENT ON COLUMN public.project_stimuli.modified_fields IS '수정된 필드 목록 (예: {title, content_text})';
 
+-- =====================================================
+-- STEP 3: 트리거 설정
+-- =====================================================
+
 -- 기존 트리거 및 함수 삭제 (존재하는 경우)
 DO $$
 BEGIN
@@ -69,17 +93,27 @@ CREATE TRIGGER trigger_update_project_stimuli_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_project_stimuli_updated_at();
 
--- authoring_projects 테이블의 primary_stimulus_id를 project_stimuli로 변경
--- (기존 컬럼을 주석 처리하고 새 컬럼 추가)
-ALTER TABLE public.authoring_projects
-DROP COLUMN IF EXISTS primary_stimulus_id;
+-- =====================================================
+-- STEP 4: authoring_projects 테이블에 새 컬럼 추가
+-- =====================================================
 
+-- primary_project_stimulus_id 컬럼 추가
 ALTER TABLE public.authoring_projects
 ADD COLUMN IF NOT EXISTS primary_project_stimulus_id bigint
 REFERENCES public.project_stimuli(project_stimulus_id) ON DELETE SET NULL;
 
+-- 인덱스 생성
 CREATE INDEX IF NOT EXISTS idx_authoring_projects_project_stimulus
 ON public.authoring_projects(primary_project_stimulus_id);
 
+-- 코멘트 추가
 COMMENT ON COLUMN public.authoring_projects.primary_project_stimulus_id
 IS '프로젝트에 연결된 주요 지문 (project_stimuli 테이블의 복사본)';
+
+-- =====================================================
+-- 완료
+-- =====================================================
+-- 마이그레이션 완료. 다음 단계:
+-- 1. 애플리케이션에서 useStimulusManagement 훅 사용
+-- 2. 레거시 primary_stimulus_id 참조 제거 완료 확인
+-- =====================================================

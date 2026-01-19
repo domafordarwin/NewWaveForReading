@@ -7,3 +7,4 @@ supabase/domains_extended_seed.sql
 supabase/seed.sql
 .env
 .claude/settings.local.json
+nul
