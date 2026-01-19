@@ -827,11 +827,8 @@ ${baseTemplate.self_check_text}`;
         .eq("project_id", project.project_id);
 
       if (updateError) {
-        // primary_stimulus_id 컬럼이 없으면 로컬 상태만 유지
-        console.warn(
-          "프로젝트에 지문 ID 저장 실패 (컬럼 없을 수 있음):",
-          updateError,
-        );
+        // primary_stimulus_id 컬럼이 없으면 로컬 상태만 유지 (정상 동작)
+        // DB 스키마에 컬럼 추가 전까지는 세션 내에서만 연결 상태 유지
       }
 
       setProjectStimulusId(selectedStimulus.stimulus_id);

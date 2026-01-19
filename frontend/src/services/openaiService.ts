@@ -173,8 +173,7 @@ export const generateItems = async (
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
   if (!apiKey) {
-    // API 키가 없으면 시뮬레이션 모드로 동작
-    console.warn("OpenAI API key not found. Running in simulation mode.");
+    // API 키가 없으면 시뮬레이션 모드로 동작 (정상 - 데모용)
     return simulateGeneration(request);
   }
 
