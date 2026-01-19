@@ -26,6 +26,16 @@ CREATE INDEX IF NOT EXISTS idx_books_category ON public.books(category);
 -- RLS(Row Level Security) 활성화
 ALTER TABLE public.books ENABLE ROW LEVEL SECURITY;
 
+-- 기존 정책 삭제 (있는 경우)
+DROP POLICY IF EXISTS "Anyone can read books" ON public.books;
+DROP POLICY IF EXISTS "Authenticated users can insert books" ON public.books;
+DROP POLICY IF EXISTS "Authenticated users can update books" ON public.books;
+DROP POLICY IF EXISTS "Authenticated users can delete books" ON public.books;
+DROP POLICY IF EXISTS "Allow anon read access" ON public.books;
+DROP POLICY IF EXISTS "Allow anon insert access" ON public.books;
+DROP POLICY IF EXISTS "Allow anon update access" ON public.books;
+DROP POLICY IF EXISTS "Allow anon delete access" ON public.books;
+
 -- RLS 정책: 모든 사용자가 읽기 가능
 CREATE POLICY "Anyone can read books" ON public.books
   FOR SELECT
