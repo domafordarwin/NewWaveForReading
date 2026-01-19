@@ -957,9 +957,17 @@ ${baseTemplate.self_check_text}`;
         );
       }
 
+      // 지문 길이 확인 로그
+      const stimulusText = selectedStimulus.content_text || "";
+      console.log("=== 지문 정보 ===");
+      console.log("지문 제목:", selectedStimulus.title);
+      console.log("지문 전체 길이:", stimulusText.length);
+      console.log("지문 내용 (처음 200자):", stimulusText.substring(0, 200));
+      console.log("지문 내용 (마지막 200자):", stimulusText.substring(Math.max(0, stimulusText.length - 200)));
+
       // OpenAI 서비스를 통한 문항 생성
       const response = await generateItems({
-        stimulusText: selectedStimulus.content_text || "",
+        stimulusText: stimulusText,
         stimulusTitle: selectedStimulus.title,
         itemType: aiItemType || "mcq_single",
         gradeBand: project.grade_band,

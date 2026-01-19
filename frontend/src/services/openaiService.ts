@@ -142,6 +142,10 @@ ${isMCQ ? `- **정확히 ${numOptions}개의 선택지를 생성**하세요.` : 
  * 문항 생성 사용자 프롬프트
  */
 const getUserPrompt = (request: GenerateItemsRequest): string => {
+  console.log("=== OpenAI Service - 지문 정보 ===");
+  console.log("지문 전달 받은 길이:", request.stimulusText.length);
+  console.log("지문 처음 100자:", request.stimulusText.substring(0, 100));
+
   const customInstruction = request.customPrompt
     ? `\n추가 요청사항: ${request.customPrompt}`
     : "";
