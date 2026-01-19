@@ -104,7 +104,7 @@ const BooksEdit = () => {
       setSaving(true);
       setError(null);
 
-      const { error: updateError } = await supabase
+      const { data: updateData, error: updateError } = await supabase
         .from("books")
         .update({
           title: formData.title,
@@ -116,9 +116,15 @@ const BooksEdit = () => {
           isbn: formData.isbn || null,
           description: formData.description || null,
         })
-        .eq("book_id", id);
+        .eq("book_id", id)
+        .select();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Update error:", updateError);
+        throw updateError;
+      }
+
+      console.log("Update successful:", updateData);
 
       // 수정 완료 후 상세보기 페이지로 이동
       navigate(`/question-dev/books/${id}`);
