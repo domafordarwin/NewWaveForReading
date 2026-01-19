@@ -171,45 +171,6 @@ const gradeBandLabels: Record<string, string> = {
   중고: "중등 고학년",
 };
 
-// AI 프롬프트 템플릿
-const aiPromptTemplates = [
-  {
-    id: "reading_comprehension",
-    name: "독해력 문항",
-    description: "지문 내용 이해도를 평가하는 문항",
-    prompt:
-      "주어진 지문을 바탕으로 독해력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
-  },
-  {
-    id: "inference",
-    name: "추론 문항",
-    description: "지문에 명시되지 않은 내용을 추론하는 문항",
-    prompt:
-      "주어진 지문을 바탕으로 추론 능력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
-  },
-  {
-    id: "vocabulary",
-    name: "어휘력 문항",
-    description: "어휘의 의미나 사용법을 평가하는 문항",
-    prompt:
-      "주어진 지문의 어휘를 활용하여 어휘력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
-  },
-  {
-    id: "critical_thinking",
-    name: "비판적 사고 문항",
-    description: "내용을 비판적으로 분석하는 문항",
-    prompt:
-      "주어진 지문을 바탕으로 비판적 사고력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
-  },
-  {
-    id: "summary",
-    name: "요약 문항",
-    description: "핵심 내용을 요약하는 문항",
-    prompt:
-      "주어진 지문의 핵심 내용을 파악하고 요약하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
-  },
-];
-
 // 루브릭 템플릿
 const rubricTemplates = [
   {
@@ -273,9 +234,6 @@ const AuthoringProjectDetail = () => {
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiItemType, setAiItemType] = useState("mcq_single");
   const [aiNumOptions, setAiNumOptions] = useState(5); // 객관식 보기 개수 (기본값 5개)
-  const [aiPromptTemplate, setAiPromptTemplate] = useState(
-    aiPromptTemplates[0],
-  );
   const [aiCustomPrompt, setAiCustomPrompt] = useState("");
   const [aiItemCount, setAiItemCount] = useState(3);
   const [aiGeneratedItems, setAiGeneratedItems] = useState<any[]>([]);
@@ -442,9 +400,126 @@ const AuthoringProjectDetail = () => {
     }
   };
 
-  // DB 프롬프트 템플릿 로드
+  // DB 프롬프트 템플릿 로드 (실패 시 fallback 데이터 사용)
   const fetchPromptTemplates = async () => {
-    if (!supabase) return;
+    // Fallback 데이터 - DB 연결 실패 시 사용
+    const fallbackBaseTemplate: PromptBaseTemplate = {
+      base_template_id: 0,
+      template_name: "기본 문해력 진단 평가",
+      template_code: "DEFAULT_LITERACY",
+      persona_text:
+        "너는 문해력 진단 평가의 전문 문항 개발자다. 주어진 지문을 바탕으로 학생의 읽기 능력을 측정하는 문항을 설계한다.",
+      input_schema_text:
+        "- grade_band: {GRADE_BAND}\n- difficulty_level: {DIFFICULTY}\n- num_items: {NUM_ITEMS}\n- num_options: {NUM_OPTIONS}\n- stimulus_text: {STIMULUS_TEXT}",
+      task_text:
+        "주어진 지문을 바탕으로 객관식 문항을 생성하라. 정답은 명확히 하나만 존재해야 한다.",
+      quality_rules_text:
+        "- 정답은 하나만 존재해야 한다\n- 보기들은 길이와 문체가 비슷해야 한다\n- 지문에 근거한 정답이어야 한다",
+      output_format_text:
+        '{"items": [{"stem": "string", "options": ["string"], "correct_index": number}]}',
+      self_check_text: "정답이 1개인지, 지문 근거가 있는지 확인하라.",
+      placeholders: [
+        "GRADE_BAND",
+        "DIFFICULTY",
+        "NUM_ITEMS",
+        "NUM_OPTIONS",
+        "STIMULUS_TEXT",
+      ],
+      target_grade_bands: ["초저", "초고", "중저", "중고"],
+      version: 1,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const fallbackAreaTemplates: PromptAreaTemplate[] = [
+      {
+        area_template_id: 1,
+        area_code: "READING_COMPREHENSION",
+        area_name: "독해력 문항",
+        area_description: "지문 내용 이해도를 평가",
+        objective_text:
+          "지문에 명시적으로 제시된 정보를 정확히 찾고 이해하는 능력을 측정한다.",
+        guidelines_text: "정답은 지문에 직접 근거가 있어야 한다.",
+        example_patterns: null,
+        skill_tags: ["detail", "relationship"],
+        display_order: 1,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        area_template_id: 2,
+        area_code: "INFERENCE",
+        area_name: "추론 문항",
+        area_description: "지문 단서 기반 추론 평가",
+        objective_text:
+          "지문에 직접 쓰이지 않은 결론을 논리적으로 도출하는 능력을 측정한다.",
+        guidelines_text: "정답은 지문 단서 2개 이상으로 정당화 가능해야 한다.",
+        example_patterns: null,
+        skill_tags: ["inference", "implication"],
+        display_order: 2,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        area_template_id: 3,
+        area_code: "VOCAB_IN_CONTEXT",
+        area_name: "어휘력 문항",
+        area_description: "문맥 속 어휘 의미 파악",
+        objective_text: "문맥 속 단어/표현의 의미를 파악하는 능력을 측정한다.",
+        guidelines_text: "핵심 이해에 영향이 큰 단어/표현을 선택하라.",
+        example_patterns: null,
+        skill_tags: ["vocabulary", "context"],
+        display_order: 3,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        area_template_id: 4,
+        area_code: "CRITICAL_THINKING",
+        area_name: "비판적 사고 문항",
+        area_description: "논리적 타당성 평가",
+        objective_text:
+          "글의 주장과 근거를 구분하고 논리적 타당성을 점검하는 능력을 측정한다.",
+        guidelines_text: "주장, 근거, 예시, 결론을 구분하는 문항을 포함하라.",
+        example_patterns: null,
+        skill_tags: ["critical", "logic"],
+        display_order: 4,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        area_template_id: 5,
+        area_code: "SUMMARIZATION",
+        area_name: "요약 문항",
+        area_description: "핵심 내용 추출 평가",
+        objective_text:
+          "지문의 핵심 내용을 추출하고 주제/요지를 파악하는 능력을 측정한다.",
+        guidelines_text:
+          "가장 적절한 요약문, 제목, 주제문을 고르는 문항을 포함하라.",
+        example_patterns: null,
+        skill_tags: ["summary", "main_idea"],
+        display_order: 5,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
+
+    if (!supabase) {
+      // Supabase 연결 없으면 fallback 사용
+      console.log("Using fallback prompt templates (no supabase)");
+      setDbBaseTemplates([fallbackBaseTemplate]);
+      setDbAreaTemplates(fallbackAreaTemplates);
+      if (!selectedBaseTemplate) setSelectedBaseTemplate(fallbackBaseTemplate);
+      if (!selectedAreaTemplate)
+        setSelectedAreaTemplate(fallbackAreaTemplates[0]);
+      return;
+    }
 
     try {
       // Base 템플릿 로드
@@ -456,12 +531,18 @@ const AuthoringProjectDetail = () => {
 
       if (baseError) {
         console.error("Base templates fetch error:", baseError);
+        // 에러 시 fallback 사용
+        setDbBaseTemplates([fallbackBaseTemplate]);
+        if (!selectedBaseTemplate)
+          setSelectedBaseTemplate(fallbackBaseTemplate);
       } else if (baseData && baseData.length > 0) {
         setDbBaseTemplates(baseData);
-        // 기본 템플릿 선택
-        if (!selectedBaseTemplate) {
-          setSelectedBaseTemplate(baseData[0]);
-        }
+        if (!selectedBaseTemplate) setSelectedBaseTemplate(baseData[0]);
+      } else {
+        // 데이터 없으면 fallback 사용
+        setDbBaseTemplates([fallbackBaseTemplate]);
+        if (!selectedBaseTemplate)
+          setSelectedBaseTemplate(fallbackBaseTemplate);
       }
 
       // Area 템플릿 로드
@@ -473,6 +554,10 @@ const AuthoringProjectDetail = () => {
 
       if (areaError) {
         console.error("Area templates fetch error:", areaError);
+        // 에러 시 fallback 사용
+        setDbAreaTemplates(fallbackAreaTemplates);
+        if (!selectedAreaTemplate)
+          setSelectedAreaTemplate(fallbackAreaTemplates[0]);
       } else if (areaData && areaData.length > 0) {
         setDbAreaTemplates(areaData);
         // 기본 영역 선택 (독해력)
@@ -484,6 +569,11 @@ const AuthoringProjectDetail = () => {
             ) || areaData[0];
           setSelectedAreaTemplate(defaultArea);
         }
+      } else {
+        // 데이터 없으면 fallback 사용
+        setDbAreaTemplates(fallbackAreaTemplates);
+        if (!selectedAreaTemplate)
+          setSelectedAreaTemplate(fallbackAreaTemplates[0]);
       }
 
       // 사용자 즐겨찾기 프롬프트 로드 (user_id=1 임시 사용)
@@ -762,21 +852,14 @@ ${baseTemplate.self_check_text}`;
     setAiGeneratedItems([]);
 
     try {
-      // DB 프롬프트 또는 커스텀 프롬프트 사용
-      const finalPrompt =
-        aiCustomPrompt ||
-        composedPrompt ||
-        aiPromptTemplate.prompt
-          .replace(
-            "{item_type}",
-            itemTypeOptions.find((o) => o.value === aiItemType)?.label ||
-              aiItemType,
-          )
-          .replace(
-            "{grade_band}",
-            gradeBandLabels[project.grade_band] || project.grade_band,
-          )
-          .replace("{difficulty}", String(project.difficulty_target || 3));
+      // DB 프롬프트 또는 커스텀 프롬프트 사용 (fallback 제거)
+      const finalPrompt = aiCustomPrompt || composedPrompt;
+
+      if (!finalPrompt || finalPrompt === "프롬프트 템플릿을 선택해주세요.") {
+        throw new Error(
+          "프롬프트가 준비되지 않았습니다. 템플릿을 선택해주세요.",
+        );
+      }
 
       // OpenAI 서비스를 통한 문항 생성
       const response = await generateItems({
@@ -1252,16 +1335,39 @@ ${baseTemplate.self_check_text}`;
                   <Typography variant="subtitle1" fontWeight="bold">
                     {selectedStimulus.title}
                   </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() =>
-                      navigate(
-                        `/question-dev/stimuli/${selectedStimulus.stimulus_id}`,
-                      )
-                    }
-                  >
-                    <Visibility fontSize="small" />
-                  </IconButton>
+                  <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="primary"
+                      startIcon={
+                        stimulusSaving ? (
+                          <CircularProgress size={16} />
+                        ) : (
+                          <Save />
+                        )
+                      }
+                      onClick={handleSaveStimulusToProject}
+                      disabled={
+                        stimulusSaving ||
+                        projectStimulusId === selectedStimulus.stimulus_id
+                      }
+                    >
+                      {projectStimulusId === selectedStimulus.stimulus_id
+                        ? "저장됨"
+                        : "저장"}
+                    </Button>
+                    <IconButton
+                      size="small"
+                      onClick={() =>
+                        navigate(
+                          `/question-dev/stimuli/${selectedStimulus.stimulus_id}`,
+                        )
+                      }
+                    >
+                      <Visibility fontSize="small" />
+                    </IconButton>
+                  </Box>
                 </Box>
                 <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
                   <Chip label={selectedStimulus.content_type} size="small" />
@@ -1301,42 +1407,6 @@ ${baseTemplate.self_check_text}`;
                   }}
                 >
                   {selectedStimulus.content_text || "내용이 없습니다."}
-                </Box>
-
-                {/* 지문 저장/변경 버튼 */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1,
-                    mt: 2,
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Search />}
-                    onClick={handleOpenStimulusDialog}
-                  >
-                    다른 지문 선택
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="primary"
-                    startIcon={
-                      stimulusSaving ? <CircularProgress size={16} /> : <Save />
-                    }
-                    onClick={handleSaveStimulusToProject}
-                    disabled={
-                      stimulusSaving ||
-                      projectStimulusId === selectedStimulus.stimulus_id
-                    }
-                  >
-                    {projectStimulusId === selectedStimulus.stimulus_id
-                      ? "저장됨"
-                      : "프로젝트에 저장"}
-                  </Button>
                 </Box>
               </Box>
             ) : (
