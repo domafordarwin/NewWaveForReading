@@ -847,6 +847,7 @@ ${baseTemplate.self_check_text}`;
     if (!supabase || !selectedStimulus) return;
 
     setStimulusUpdateSaving(true);
+    setError(null);
     try {
       const wordCount = editingStimulusData.content_text.replace(
         /\s/g,
@@ -870,10 +871,17 @@ ${baseTemplate.self_check_text}`;
 
       // 업데이트된 지문으로 상태 갱신
       setSelectedStimulus(data);
+      // stimuli 목록도 업데이트
+      setStimuli((prev) =>
+        prev.map((s) => (s.stimulus_id === data.stimulus_id ? data : s)),
+      );
       setIsEditingStimulus(false);
       setSuccess("지문이 수정되었습니다.");
-    } catch (err: any) {
-      setError(err.message || "지문 수정에 실패했습니다.");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "지문 수정에 실패했습니다.";
+      setError(errorMessage);
+      console.error("지문 수정 에러:", err);
     } finally {
       setStimulusUpdateSaving(false);
     }
@@ -892,6 +900,7 @@ ${baseTemplate.self_check_text}`;
     }
 
     setStimulusSaving(true);
+    setError(null);
 
     try {
       // 프로젝트에 지문 연결 (primary_stimulus_id 업데이트)
@@ -904,15 +913,25 @@ ${baseTemplate.self_check_text}`;
         .eq("project_id", project.project_id);
 
       if (updateError) {
-        console.warn("프로젝트 지문 연결 업데이트:", updateError);
+        console.error("프로젝트 지문 연결 실패:", updateError);
+        // primary_stimulus_id 컬럼이 없으면 에러 메시지 표시
+        if (updateError.message?.includes("primary_stimulus_id")) {
+          throw new Error(
+            "DB에 primary_stimulus_id 컬럼이 없습니다. Supabase에서 MUST_RUN_add_primary_stimulus_id.sql을 실행해주세요.",
+          );
+        }
+        throw updateError;
       }
 
       setProjectStimulusId(selectedStimulus.stimulus_id);
       setSuccess(
         `지문 "${selectedStimulus.title}"이(가) 프로젝트에 연결되었습니다.`,
       );
-    } catch (err: any) {
-      setError(err.message || "지문 저장에 실패했습니다.");
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "지문 저장에 실패했습니다.";
+      setError(errorMessage);
+      console.error("지문 저장 에러:", err);
     } finally {
       setStimulusSaving(false);
     }
