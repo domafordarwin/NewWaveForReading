@@ -136,11 +136,15 @@ const ItemDetail = () => {
   const navigate = useNavigate();
   const [item, setItem] = useState<ItemBank | null>(null);
   const [options, setOptions] = useState<ItemOption[]>([]);
-  const [optionScoring, setOptionScoring] = useState<Record<number, ItemOptionScoring>>({});
+  const [optionScoring, setOptionScoring] = useState<
+    Record<number, ItemOptionScoring>
+  >({});
   const [itemKey, setItemKey] = useState<ItemKey | null>(null);
   const [rubric, setRubric] = useState<Rubric | null>(null);
   const [rubricCriteria, setRubricCriteria] = useState<RubricCriterion[]>([]);
-  const [rubricLevels, setRubricLevels] = useState<Record<number, RubricLevel[]>>({});
+  const [rubricLevels, setRubricLevels] = useState<
+    Record<number, RubricLevel[]>
+  >({});
   const [stimulus, setStimulus] = useState<Stimulus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -180,7 +184,7 @@ const ItemDetail = () => {
       }
 
       // 문항 옵션 조회 (객관식)
-      if (itemData.item_type.startsWith("mcq")) {
+      if (itemData.item_type?.startsWith("mcq")) {
         const { data: optionsData } = await supabase
           .from("item_options")
           .select("*")
@@ -216,7 +220,10 @@ const ItemDetail = () => {
       setItemKey(keyData);
 
       // 루브릭 조회 (서술형)
-      if (itemData.item_type === "essay" || itemData.item_type === "composite") {
+      if (
+        itemData.item_type === "essay" ||
+        itemData.item_type === "composite"
+      ) {
         const { data: rubricData } = await supabase
           .from("rubrics")
           .select("*")
@@ -278,7 +285,10 @@ const ItemDetail = () => {
         <Alert severity="error" sx={{ mb: 3 }}>
           {error || "문항을 찾을 수 없습니다."}
         </Alert>
-        <Button startIcon={<ArrowBack />} onClick={() => navigate("/question-dev/items")}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate("/question-dev/items")}
+        >
           목록으로
         </Button>
       </Box>
@@ -296,7 +306,14 @@ const ItemDetail = () => {
     <Box>
       {/* 헤더 */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            mb: 2,
+          }}
+        >
           <Box>
             <Button
               startIcon={<ArrowBack />}
@@ -332,10 +349,7 @@ const ItemDetail = () => {
             icon={<Category />}
             label={itemTypeLabels[item.item_type] || item.item_type}
           />
-          <Chip
-            icon={<Grade />}
-            label={`배점: ${item.max_score}점`}
-          />
+          <Chip icon={<Grade />} label={`배점: ${item.max_score}점`} />
           {item.difficulty_level && (
             <Chip
               label={`난이도: ${difficultyLabels[item.difficulty_level] || item.difficulty_level}`}
@@ -355,11 +369,19 @@ const ItemDetail = () => {
           <Grid item xs={12}>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                >
                   <Assignment />
                   지문
                 </Typography>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  gutterBottom
+                >
                   {stimulus.title}
                 </Typography>
                 <Divider sx={{ my: 2 }} />
@@ -382,7 +404,7 @@ const ItemDetail = () => {
         )}
 
         {/* 문항 내용 */}
-        <Grid item xs={12} md={item.item_type.startsWith("mcq") ? 8 : 12}>
+        <Grid item xs={12} md={item.item_type?.startsWith("mcq") ? 8 : 12}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -404,7 +426,11 @@ const ItemDetail = () => {
               {/* 객관식 보기 */}
               {options.length > 0 && (
                 <Box sx={{ mt: 3 }}>
-                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    gutterBottom
+                  >
                     보기
                   </Typography>
                   <List>
@@ -416,11 +442,15 @@ const ItemDetail = () => {
                         <ListItem
                           key={option.option_id}
                           sx={{
-                            bgcolor: isCorrect ? "success.light" : "transparent",
+                            bgcolor: isCorrect
+                              ? "success.light"
+                              : "transparent",
                             borderRadius: 1,
                             mb: 1,
                             border: "1px solid",
-                            borderColor: isCorrect ? "success.main" : "grey.300",
+                            borderColor: isCorrect
+                              ? "success.main"
+                              : "grey.300",
                           }}
                         >
                           <ListItemIcon>
@@ -432,17 +462,32 @@ const ItemDetail = () => {
                           </ListItemIcon>
                           <ListItemText
                             primary={
-                              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                <Typography fontWeight="bold">{option.label}</Typography>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                <Typography fontWeight="bold">
+                                  {option.label}
+                                </Typography>
                                 <Typography>{option.option_text}</Typography>
                                 {isCorrect && (
-                                  <Chip label="정답" size="small" color="success" />
+                                  <Chip
+                                    label="정답"
+                                    size="small"
+                                    color="success"
+                                  />
                                 )}
                               </Box>
                             }
                             secondary={
                               scoring?.rationale_text && (
-                                <Typography variant="caption" color="text.secondary">
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
                                   {scoring.rationale_text}
                                   {scoring.partial_score !== undefined && (
                                     <> (근접도: {scoring.partial_score}%)</>
@@ -462,7 +507,7 @@ const ItemDetail = () => {
         </Grid>
 
         {/* 정답 정보 (객관식) */}
-        {item.item_type.startsWith("mcq") && itemKey && (
+        {item.item_type?.startsWith("mcq") && itemKey && (
           <Grid item xs={12} md={4}>
             <Card>
               <CardContent>
@@ -471,7 +516,10 @@ const ItemDetail = () => {
                 </Typography>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  정답 유형: {itemKey.answer_type === "single_option" ? "단일 선택" : "복수 선택"}
+                  정답 유형:{" "}
+                  {itemKey.answer_type === "single_option"
+                    ? "단일 선택"
+                    : "복수 선택"}
                 </Typography>
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="subtitle2" gutterBottom>
@@ -504,15 +552,25 @@ const ItemDetail = () => {
                   채점 기준 (루브릭)
                 </Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {rubric.rubric_json?.title || "서술형 채점 기준"} - 총점: {rubric.rubric_json?.total_points || item.max_score}점
+                  {rubric.rubric_json?.title || "서술형 채점 기준"} - 총점:{" "}
+                  {rubric.rubric_json?.total_points || item.max_score}점
                 </Typography>
                 <Divider sx={{ my: 2 }} />
 
                 {rubricCriteria.map((criterion) => (
                   <Accordion key={criterion.criterion_id} defaultExpanded>
                     <AccordionSummary expandIcon={<ExpandMore />}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 2, width: "100%" }}>
-                        <Typography fontWeight="bold">{criterion.name}</Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                          width: "100%",
+                        }}
+                      >
+                        <Typography fontWeight="bold">
+                          {criterion.name}
+                        </Typography>
                         <Chip
                           label={`${criterion.max_points}점`}
                           size="small"
@@ -527,29 +585,43 @@ const ItemDetail = () => {
                     </AccordionSummary>
                     <AccordionDetails>
                       <List dense>
-                        {(rubricLevels[criterion.criterion_id] || []).map((level) => (
-                          <ListItem
-                            key={level.level_id}
-                            sx={{
-                              bgcolor: "grey.50",
-                              borderRadius: 1,
-                              mb: 1,
-                            }}
-                          >
-                            <ListItemText
-                              primary={
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                  <Chip
-                                    label={`${level.points}점`}
-                                    size="small"
-                                    color={level.points === criterion.max_points ? "success" : "default"}
-                                  />
-                                  <Typography variant="body2">{level.descriptor}</Typography>
-                                </Box>
-                              }
-                            />
-                          </ListItem>
-                        ))}
+                        {(rubricLevels[criterion.criterion_id] || []).map(
+                          (level) => (
+                            <ListItem
+                              key={level.level_id}
+                              sx={{
+                                bgcolor: "grey.50",
+                                borderRadius: 1,
+                                mb: 1,
+                              }}
+                            >
+                              <ListItemText
+                                primary={
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <Chip
+                                      label={`${level.points}점`}
+                                      size="small"
+                                      color={
+                                        level.points === criterion.max_points
+                                          ? "success"
+                                          : "default"
+                                      }
+                                    />
+                                    <Typography variant="body2">
+                                      {level.descriptor}
+                                    </Typography>
+                                  </Box>
+                                }
+                              />
+                            </ListItem>
+                          ),
+                        )}
                       </List>
                     </AccordionDetails>
                   </Accordion>
@@ -590,16 +662,17 @@ const ItemDetail = () => {
                   </Typography>
                   <Typography variant="body2">{item.item_id}</Typography>
                 </Grid>
-                {item.constraints_json && Object.keys(item.constraints_json).length > 0 && (
-                  <Grid item xs={6} md={3}>
-                    <Typography variant="caption" color="text.secondary">
-                      제약 조건
-                    </Typography>
-                    <Typography variant="body2">
-                      {JSON.stringify(item.constraints_json)}
-                    </Typography>
-                  </Grid>
-                )}
+                {item.constraints_json &&
+                  Object.keys(item.constraints_json).length > 0 && (
+                    <Grid item xs={6} md={3}>
+                      <Typography variant="caption" color="text.secondary">
+                        제약 조건
+                      </Typography>
+                      <Typography variant="body2">
+                        {JSON.stringify(item.constraints_json)}
+                      </Typography>
+                    </Grid>
+                  )}
               </Grid>
             </CardContent>
           </Card>

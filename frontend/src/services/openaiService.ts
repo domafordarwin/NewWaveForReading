@@ -376,7 +376,7 @@ export const validateGeneratedItem = (item: GeneratedItem): string[] => {
   }
 
   // 객관식 검증
-  if (item.item_type.startsWith("mcq")) {
+  if (item.item_type?.startsWith("mcq")) {
     if (!item.options || item.options.length < 2) {
       errors.push("객관식 문항은 최소 2개 이상의 선택지가 필요합니다.");
     }

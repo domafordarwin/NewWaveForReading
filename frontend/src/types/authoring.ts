@@ -9,7 +9,6 @@ export interface AuthoringProject {
   topic_tags: string[];
   difficulty_target: number | null;
   status: string;
-  primary_stimulus_id: number | null; // 레거시: 직접 연결된 지문 ID
   primary_project_stimulus_id: number | null; // 프로젝트별 편집 가능한 지문 복사본 ID
   created_at: string;
   updated_at: string;

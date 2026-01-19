@@ -27,12 +27,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import {
-  ArrowBack,
-  Save,
-  Add,
-  Delete,
-} from "@mui/icons-material";
+import { ArrowBack, Save, Add, Delete } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../services/supabaseClient";
 
@@ -119,7 +114,9 @@ const ItemEdit = () => {
 
   // Option edit dialog
   const [optionDialogOpen, setOptionDialogOpen] = useState(false);
-  const [editingOption, setEditingOption] = useState<OptionWithScoring | null>(null);
+  const [editingOption, setEditingOption] = useState<OptionWithScoring | null>(
+    null,
+  );
   const [optionForm, setOptionForm] = useState({
     label: "",
     option_text: "",
@@ -164,7 +161,7 @@ const ItemEdit = () => {
       });
 
       // Fetch options with scoring for MCQ types
-      if (itemData.item_type.startsWith("mcq")) {
+      if (itemData.item_type?.startsWith("mcq")) {
         const { data: optionsData } = await supabase
           .from("item_options")
           .select("*")
@@ -398,7 +395,13 @@ const ItemEdit = () => {
     <Box>
       {/* Header */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <IconButton onClick={() => navigate(-1)}>
               <ArrowBack />
@@ -438,7 +441,11 @@ const ItemEdit = () => {
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
+        <Alert
+          severity="success"
+          sx={{ mb: 3 }}
+          onClose={() => setSuccess(null)}
+        >
           {success}
         </Alert>
       )}
@@ -450,11 +457,19 @@ const ItemEdit = () => {
         </Typography>
         <Divider sx={{ mb: 3 }} />
 
-        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 3 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: 3,
+          }}
+        >
           <TextField
             label="문항 코드"
             value={formData.item_code}
-            onChange={(e) => setFormData({ ...formData, item_code: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, item_code: e.target.value })
+            }
             fullWidth
           />
 
@@ -463,7 +478,9 @@ const ItemEdit = () => {
             <Select
               value={formData.grade_band}
               label="학년군"
-              onChange={(e) => setFormData({ ...formData, grade_band: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, grade_band: e.target.value })
+              }
             >
               {Object.entries(gradeBandLabels).map(([key, label]) => (
                 <MenuItem key={key} value={key}>
@@ -478,7 +495,9 @@ const ItemEdit = () => {
             <Select
               value={formData.item_type}
               label="문항 유형"
-              onChange={(e) => setFormData({ ...formData, item_type: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, item_type: e.target.value })
+              }
             >
               {Object.entries(itemTypeLabels).map(([key, label]) => (
                 <MenuItem key={key} value={key}>
@@ -492,7 +511,12 @@ const ItemEdit = () => {
             label="배점"
             type="number"
             value={formData.max_score}
-            onChange={(e) => setFormData({ ...formData, max_score: parseInt(e.target.value) || 1 })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                max_score: parseInt(e.target.value) || 1,
+              })
+            }
             inputProps={{ min: 1, max: 100 }}
             fullWidth
           />
@@ -501,7 +525,12 @@ const ItemEdit = () => {
             label="난이도 (1-5)"
             type="number"
             value={formData.difficulty_level}
-            onChange={(e) => setFormData({ ...formData, difficulty_level: parseInt(e.target.value) || 3 })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                difficulty_level: parseInt(e.target.value) || 3,
+              })
+            }
             inputProps={{ min: 1, max: 5 }}
             fullWidth
           />
@@ -510,7 +539,9 @@ const ItemEdit = () => {
             control={
               <Switch
                 checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_active: e.target.checked })
+                }
               />
             }
             label="활성화"
@@ -530,9 +561,16 @@ const ItemEdit = () => {
       </Paper>
 
       {/* Options Section for MCQ */}
-      {formData.item_type.startsWith("mcq") && (
+      {formData.item_type?.startsWith("mcq") && (
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
+            }}
+          >
             <Typography variant="h6" fontWeight="bold">
               선택지 관리
             </Typography>
@@ -548,7 +586,10 @@ const ItemEdit = () => {
           <Divider sx={{ mb: 3 }} />
 
           {options.length === 0 ? (
-            <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
+            <Typography
+              color="text.secondary"
+              sx={{ textAlign: "center", py: 4 }}
+            >
               등록된 선택지가 없습니다.
             </Typography>
           ) : (
@@ -558,9 +599,15 @@ const ItemEdit = () => {
                   <TableRow sx={{ bgcolor: "grey.100" }}>
                     <TableCell width={80}>번호</TableCell>
                     <TableCell>내용</TableCell>
-                    <TableCell width={100} align="center">정답여부</TableCell>
-                    <TableCell width={100} align="center">부분점수</TableCell>
-                    <TableCell width={100} align="center">관리</TableCell>
+                    <TableCell width={100} align="center">
+                      정답여부
+                    </TableCell>
+                    <TableCell width={100} align="center">
+                      부분점수
+                    </TableCell>
+                    <TableCell width={100} align="center">
+                      관리
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -610,14 +657,23 @@ const ItemEdit = () => {
           </Typography>
           <Divider sx={{ mb: 3 }} />
 
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 2 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, 1fr)",
+              gap: 2,
+            }}
+          >
             <Box>
               <Typography variant="body2" color="text.secondary">
                 정답 유형
               </Typography>
               <Typography variant="body1">
-                {itemKey.answer_type === "option_ids" ? "선택지 ID" :
-                 itemKey.answer_type === "text" ? "텍스트" : itemKey.answer_type}
+                {itemKey.answer_type === "option_ids"
+                  ? "선택지 ID"
+                  : itemKey.answer_type === "text"
+                    ? "텍스트"
+                    : itemKey.answer_type}
               </Typography>
             </Box>
             <Box>
@@ -641,7 +697,13 @@ const ItemEdit = () => {
         </Typography>
         <Divider sx={{ mb: 3 }} />
 
-        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 2,
+          }}
+        >
           <Box>
             <Typography variant="body2" color="text.secondary">
               문항 ID
@@ -668,7 +730,12 @@ const ItemEdit = () => {
       </Paper>
 
       {/* Option Edit Dialog */}
-      <Dialog open={optionDialogOpen} onClose={() => setOptionDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={optionDialogOpen}
+        onClose={() => setOptionDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
           {editingOption ? "선택지 수정" : "선택지 추가"}
         </DialogTitle>
@@ -677,13 +744,17 @@ const ItemEdit = () => {
             <TextField
               label="번호 (예: A, B, C)"
               value={optionForm.label}
-              onChange={(e) => setOptionForm({ ...optionForm, label: e.target.value })}
+              onChange={(e) =>
+                setOptionForm({ ...optionForm, label: e.target.value })
+              }
               fullWidth
             />
             <TextField
               label="선택지 내용"
               value={optionForm.option_text}
-              onChange={(e) => setOptionForm({ ...optionForm, option_text: e.target.value })}
+              onChange={(e) =>
+                setOptionForm({ ...optionForm, option_text: e.target.value })
+              }
               multiline
               rows={3}
               fullWidth
@@ -692,14 +763,24 @@ const ItemEdit = () => {
               label="표시 순서"
               type="number"
               value={optionForm.display_order}
-              onChange={(e) => setOptionForm({ ...optionForm, display_order: parseInt(e.target.value) || 0 })}
+              onChange={(e) =>
+                setOptionForm({
+                  ...optionForm,
+                  display_order: parseInt(e.target.value) || 0,
+                })
+              }
               fullWidth
             />
             <FormControlLabel
               control={
                 <Switch
                   checked={optionForm.is_correct}
-                  onChange={(e) => setOptionForm({ ...optionForm, is_correct: e.target.checked })}
+                  onChange={(e) =>
+                    setOptionForm({
+                      ...optionForm,
+                      is_correct: e.target.checked,
+                    })
+                  }
                 />
               }
               label="정답"
@@ -708,13 +789,20 @@ const ItemEdit = () => {
               label="부분 점수"
               type="number"
               value={optionForm.partial_score}
-              onChange={(e) => setOptionForm({ ...optionForm, partial_score: parseInt(e.target.value) || 0 })}
+              onChange={(e) =>
+                setOptionForm({
+                  ...optionForm,
+                  partial_score: parseInt(e.target.value) || 0,
+                })
+              }
               fullWidth
             />
             <TextField
               label="해설"
               value={optionForm.rationale_text}
-              onChange={(e) => setOptionForm({ ...optionForm, rationale_text: e.target.value })}
+              onChange={(e) =>
+                setOptionForm({ ...optionForm, rationale_text: e.target.value })
+              }
               multiline
               rows={2}
               fullWidth
@@ -723,7 +811,11 @@ const ItemEdit = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOptionDialogOpen(false)}>취소</Button>
-          <Button variant="contained" onClick={handleSaveOption} disabled={saving}>
+          <Button
+            variant="contained"
+            onClick={handleSaveOption}
+            disabled={saving}
+          >
             {saving ? "저장 중..." : "저장"}
           </Button>
         </DialogActions>
