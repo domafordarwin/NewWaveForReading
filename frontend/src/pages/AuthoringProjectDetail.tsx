@@ -114,6 +114,8 @@ interface PromptBaseTemplate {
   target_grade_bands: string[];
   version: number;
   is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface PromptAreaTemplate {
@@ -127,6 +129,8 @@ interface PromptAreaTemplate {
   skill_tags: string[];
   display_order: number;
   is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface UserFavoritePrompt {
@@ -1745,6 +1749,7 @@ ${baseTemplate.self_check_text}`;
         onClose={() => setStimulusDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        disableRestoreFocus
       >
         <DialogTitle>지문 선택</DialogTitle>
         <DialogContent>
@@ -1831,6 +1836,7 @@ ${baseTemplate.self_check_text}`;
         onClose={() => setNewStimulusDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        disableRestoreFocus
       >
         <DialogTitle>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -1976,6 +1982,7 @@ ${baseTemplate.self_check_text}`;
         onClose={() => setAiDialogOpen(false)}
         maxWidth="lg"
         fullWidth
+        disableRestoreFocus
       >
         <DialogTitle>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -2354,6 +2361,7 @@ ${baseTemplate.self_check_text}`;
         onClose={() => setItemEditDialogOpen(false)}
         maxWidth="md"
         fullWidth
+        disableRestoreFocus
       >
         <DialogTitle>문항 편집</DialogTitle>
         <DialogContent>
@@ -2564,6 +2572,7 @@ ${baseTemplate.self_check_text}`;
         onClose={() => setVersionHistoryOpen(false)}
         maxWidth="md"
         fullWidth
+        disableRestoreFocus
       >
         <DialogTitle>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
