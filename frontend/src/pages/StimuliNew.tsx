@@ -62,11 +62,12 @@ const StimuliNew = () => {
     title: "",
     content_type: "text",
     content_text: "",
-    content_url: "",
     grade_band: "초고",
     genre: "",
     source: "",
     author: "",
+    copyright: "",
+    note: "",
   });
 
   const calculateWordCount = (text: string): number => {
@@ -92,18 +93,28 @@ const StimuliNew = () => {
 
       const wordCount = calculateWordCount(formData.content_text);
 
+      // source_meta_json 구성
+      const source_meta_json = {
+        source: formData.source || null,
+        author: formData.author || null,
+        copyright: formData.copyright || null,
+        note: formData.note || null,
+      };
+
+      // assets_json 구성 (빈 객체로 초기화)
+      const assets_json = {};
+
       const { data, error: insertError } = await supabase
         .from("stimuli")
         .insert([{
           title: formData.title,
           content_type: formData.content_type,
           content_text: formData.content_text || null,
-          content_url: formData.content_url || null,
           grade_band: formData.grade_band,
           genre: formData.genre || null,
-          source: formData.source || null,
-          author: formData.author || null,
           word_count: wordCount > 0 ? wordCount : null,
+          source_meta_json,
+          assets_json,
         }])
         .select()
         .single();
@@ -238,26 +249,20 @@ const StimuliNew = () => {
             </Typography>
             <Divider sx={{ mb: 3 }} />
 
-            {formData.content_type === "image" || formData.content_type === "pdf" ? (
-              <TextField
-                label="콘텐츠 URL"
-                value={formData.content_url}
-                onChange={(e) => setFormData({ ...formData, content_url: e.target.value })}
-                fullWidth
-                placeholder="https://..."
-                helperText="이미지 또는 PDF 파일의 URL을 입력하세요"
-              />
-            ) : (
-              <TextField
-                label="지문 텍스트"
-                value={formData.content_text}
-                onChange={(e) => setFormData({ ...formData, content_text: e.target.value })}
-                multiline
-                rows={15}
-                fullWidth
-                placeholder="지문 내용을 입력하세요..."
-              />
-            )}
+            <TextField
+              label="지문 텍스트"
+              value={formData.content_text}
+              onChange={(e) => setFormData({ ...formData, content_text: e.target.value })}
+              multiline
+              rows={15}
+              fullWidth
+              placeholder="지문 내용을 입력하세요..."
+              helperText={
+                formData.content_type === "image" || formData.content_type === "pdf"
+                  ? "이미지나 PDF의 경우, 텍스트 추출 내용이나 설명을 입력하세요"
+                  : undefined
+              }
+            />
 
             <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
               <Typography variant="body2" color="text.secondary">
@@ -290,6 +295,24 @@ const StimuliNew = () => {
                 onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                 fullWidth
                 placeholder="저자 또는 작가명"
+              />
+
+              <TextField
+                label="저작권 정보"
+                value={formData.copyright}
+                onChange={(e) => setFormData({ ...formData, copyright: e.target.value })}
+                fullWidth
+                placeholder="저작권자, 라이선스 등"
+              />
+
+              <TextField
+                label="비고"
+                value={formData.note}
+                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                fullWidth
+                multiline
+                rows={2}
+                placeholder="추가 설명이나 주의사항"
               />
             </Box>
           </Paper>

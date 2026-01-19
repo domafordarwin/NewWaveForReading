@@ -1,8 +1,10 @@
 import { Box, Paper, Typography, Grid, Card, CardContent, Button, Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton } from "@mui/material";
 import { MenuBook, Quiz, Edit, Add, Visibility, Delete } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/session";
 
 const QuestionDeveloperDashboard = () => {
+  const navigate = useNavigate();
   const user = getCurrentUser();
 
   const recentQuestions = [
@@ -85,13 +87,29 @@ const QuestionDeveloperDashboard = () => {
               빠른 액션
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
-              <Button variant="contained" startIcon={<MenuBook />} fullWidth>
+              <Button
+                variant="contained"
+                startIcon={<MenuBook />}
+                fullWidth
+                onClick={() => navigate("/question-dev/stimuli/new")}
+              >
                 새 도서 등록
               </Button>
-              <Button variant="contained" startIcon={<Quiz />} fullWidth color="secondary">
+              <Button
+                variant="contained"
+                startIcon={<Quiz />}
+                fullWidth
+                color="secondary"
+                onClick={() => navigate("/question-dev/authoring")}
+              >
                 새 문항 개발
               </Button>
-              <Button variant="outlined" startIcon={<Edit />} fullWidth>
+              <Button
+                variant="outlined"
+                startIcon={<Edit />}
+                fullWidth
+                onClick={() => navigate("/question-dev/items")}
+              >
                 문항 검토하기
               </Button>
             </Box>
@@ -105,7 +123,9 @@ const QuestionDeveloperDashboard = () => {
               <Typography variant="h6" fontWeight="bold">
                 최근 개발 문항
               </Typography>
-              <Button size="small">전체 보기</Button>
+              <Button size="small" onClick={() => navigate("/question-dev/authoring")}>
+                전체 보기
+              </Button>
             </Box>
             <Table>
               <TableHead>
