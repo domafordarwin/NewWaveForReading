@@ -1,5 +1,5 @@
 import { Box, Paper, Typography, Grid, Card, CardContent, Button, Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton, CircularProgress } from "@mui/material";
-import { MenuBook, Quiz, Edit, Add, Visibility } from "@mui/icons-material";
+import { MenuBook, Quiz, Edit, Add, Visibility, Article } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/session";
 import { useState, useEffect } from "react";
@@ -27,6 +27,7 @@ const QuestionDeveloperDashboard = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const [bookCount, setBookCount] = useState<number>(0);
+  const [stimuliCount, setStimuliCount] = useState<number>(0);
   const [itemCount, setItemCount] = useState<number>(0);
   const [reviewPendingCount, setReviewPendingCount] = useState<number>(0);
   const [monthlyNewCount, setMonthlyNewCount] = useState<number>(0);
@@ -38,11 +39,17 @@ const QuestionDeveloperDashboard = () => {
       if (!supabase) return;
 
       try {
-        // 등록된 도서 수
-        const { count: stimuliCount } = await supabase
+        // 등록된 도서 수 (books 테이블)
+        const { count: booksCount } = await supabase
+          .from("books")
+          .select("*", { count: "exact", head: true });
+        setBookCount(booksCount || 0);
+
+        // 등록된 지문 수 (stimuli 테이블)
+        const { count: stimuliCountData } = await supabase
           .from("stimuli")
           .select("*", { count: "exact", head: true });
-        setBookCount(stimuliCount || 0);
+        setStimuliCount(stimuliCountData || 0);
 
         // 개발된 문항 수
         const { count: itemsCount } = await supabase
@@ -131,6 +138,20 @@ const QuestionDeveloperDashboard = () => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)", color: "white" }}>
+            <CardContent>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Box>
+                  <Typography variant="body2" sx={{ opacity: 0.8 }}>등록된 지문</Typography>
+                  <Typography variant="h4" fontWeight="bold">{stimuliCount}</Typography>
+                </Box>
+                <Article sx={{ fontSize: 48, opacity: 0.8 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: "linear-gradient(135deg, #f5576c 0%, #f093fb 100%)", color: "white" }}>
             <CardContent>
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -183,9 +204,18 @@ const QuestionDeveloperDashboard = () => {
                 variant="contained"
                 startIcon={<MenuBook />}
                 fullWidth
-                onClick={() => navigate("/question-dev/stimuli/new")}
+                onClick={() => navigate("/question-dev/books/new")}
               >
                 새 도서 등록
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<Article />}
+                fullWidth
+                color="info"
+                onClick={() => navigate("/question-dev/stimuli/new")}
+              >
+                새 지문 등록
               </Button>
               <Button
                 variant="contained"

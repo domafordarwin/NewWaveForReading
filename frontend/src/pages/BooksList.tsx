@@ -26,80 +26,70 @@ import {
   Edit,
   Visibility,
   Search,
-  Article,
-  Image,
-  PictureAsPdf,
+  MenuBook,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabaseClient";
 
-interface Stimulus {
-  stimulus_id: number;
+interface Book {
+  book_id: number;
   title: string;
-  content_type: string;
-  content_text: string | null;
-  grade_band: string;
-  genre: string | null;
-  word_count: number | null;
+  author: string;
+  publisher: string;
+  published_year: number;
+  category: string;
+  difficulty_level: string;
+  isbn: string;
   created_at: string;
-  updated_at: string;
 }
 
-const contentTypeIcons: Record<string, React.ReactNode> = {
-  text: <Article />,
-  html: <Article />,
-  markdown: <Article />,
-  image: <Image />,
-  pdf: <PictureAsPdf />,
-  mixed: <Article />,
+const difficultyLevelLabels: Record<string, string> = {
+  ELEM_LOW: "초등 저학년",
+  ELEM_HIGH: "초등 고학년",
+  MIDDLE: "중등 저학년",
+  HIGH: "중등 고학년",
 };
 
-const gradeBandLabels: Record<string, string> = {
-  초저: "초등 저학년",
-  초고: "초등 고학년",
-  중저: "중등 저학년",
-  중고: "중등 고학년",
-};
-
-const StimuliList = () => {
+const BooksList = () => {
   const navigate = useNavigate();
-  const [stimuli, setStimuli] = useState<Stimulus[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterGrade, setFilterGrade] = useState<string>("");
+  const [filterDifficulty, setFilterDifficulty] = useState<string>("");
 
   useEffect(() => {
-    fetchStimuli();
+    fetchBooks();
   }, []);
 
-  const fetchStimuli = async () => {
+  const fetchBooks = async () => {
     try {
       setLoading(true);
       if (!supabase) {
-        setStimuli([]);
+        setBooks([]);
         return;
       }
       const { data, error } = await supabase
-        .from("stimuli")
+        .from("books")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setStimuli(data || []);
+      setBooks(data || []);
     } catch (err: any) {
-      setError(err.message || "지문 목록을 불러오는데 실패했습니다.");
+      setError(err.message || "도서 목록을 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredStimuli = stimuli.filter((s) => {
+  const filteredBooks = books.filter((b) => {
     const matchesSearch =
-      s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.content_text?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
-    const matchesGrade = !filterGrade || s.grade_band === filterGrade;
-    return matchesSearch && matchesGrade;
+      b.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (b.author?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+      (b.publisher?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
+    const matchesDifficulty = !filterDifficulty || b.difficulty_level === filterDifficulty;
+    return matchesSearch && matchesDifficulty;
   });
 
   return (
@@ -108,18 +98,18 @@ const StimuliList = () => {
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight="bold" gutterBottom>
-              지문 관리
+              도서 관리
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              문항 개발에 사용되는 지문을 확인하고 관리합니다.
+              등록된 도서 정보를 확인하고 관리합니다.
             </Typography>
           </Box>
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => navigate("/question-dev/stimuli/new")}
+            onClick={() => navigate("/question-dev/books/new")}
           >
-            새 지문 등록
+            새 도서 등록
           </Button>
         </Box>
 
@@ -127,7 +117,7 @@ const StimuliList = () => {
         <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
           <TextField
             size="small"
-            placeholder="지문 검색..."
+            placeholder="도서 검색 (제목, 저자, 출판사)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
@@ -136,17 +126,17 @@ const StimuliList = () => {
             sx={{ minWidth: 250 }}
           />
           <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>학년군</InputLabel>
+            <InputLabel>난이도</InputLabel>
             <Select
-              value={filterGrade}
-              label="학년군"
-              onChange={(e) => setFilterGrade(e.target.value)}
+              value={filterDifficulty}
+              label="난이도"
+              onChange={(e) => setFilterDifficulty(e.target.value)}
             >
               <MenuItem value="">전체</MenuItem>
-              <MenuItem value="초저">초등 저학년</MenuItem>
-              <MenuItem value="초고">초등 고학년</MenuItem>
-              <MenuItem value="중저">중등 저학년</MenuItem>
-              <MenuItem value="중고">중등 고학년</MenuItem>
+              <MenuItem value="ELEM_LOW">초등 저학년</MenuItem>
+              <MenuItem value="ELEM_HIGH">초등 고학년</MenuItem>
+              <MenuItem value="MIDDLE">중등 저학년</MenuItem>
+              <MenuItem value="HIGH">중등 고학년</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -168,85 +158,62 @@ const StimuliList = () => {
             <TableHead>
               <TableRow sx={{ bgcolor: "grey.100" }}>
                 <TableCell>제목</TableCell>
-                <TableCell>학년군</TableCell>
-                <TableCell>장르</TableCell>
-                <TableCell align="center">글자수</TableCell>
-                <TableCell>등록일</TableCell>
+                <TableCell>저자</TableCell>
+                <TableCell>출판사</TableCell>
+                <TableCell>출판년도</TableCell>
+                <TableCell>난이도</TableCell>
+                <TableCell>카테고리</TableCell>
                 <TableCell align="center">관리</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredStimuli.length === 0 ? (
+              {filteredBooks.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <Typography color="text.secondary">
-                      {stimuli.length === 0
-                        ? "등록된 지문이 없습니다."
+                      {books.length === 0
+                        ? "등록된 도서가 없습니다."
                         : "검색 결과가 없습니다."}
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredStimuli.map((stimulus) => (
+                filteredBooks.map((book) => (
                   <TableRow
-                    key={stimulus.stimulus_id}
+                    key={book.book_id}
                     hover
                     sx={{ cursor: "pointer" }}
-                    onClick={() => navigate(`/question-dev/stimuli/${stimulus.stimulus_id}`)}
+                    onClick={() => navigate(`/question-dev/books/${book.book_id}`)}
                   >
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        {contentTypeIcons[stimulus.content_type] || <Article />}
-                        <Box>
-                          <Typography variant="body2" fontWeight="medium">
-                            {stimulus.title}
-                          </Typography>
-                          {stimulus.content_text && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{
-                                display: "block",
-                                maxWidth: 400,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {stimulus.content_text.substring(0, 80)}...
-                            </Typography>
-                          )}
-                        </Box>
+                        <MenuBook color="primary" />
+                        <Typography variant="body2" fontWeight="medium">
+                          {book.title}
+                        </Typography>
                       </Box>
                     </TableCell>
+                    <TableCell>{book.author}</TableCell>
+                    <TableCell>{book.publisher}</TableCell>
+                    <TableCell>{book.published_year}</TableCell>
                     <TableCell>
                       <Chip
-                        label={gradeBandLabels[stimulus.grade_band] || stimulus.grade_band}
+                        label={difficultyLevelLabels[book.difficulty_level] || book.difficulty_level}
                         size="small"
                         color="primary"
                         variant="outlined"
                       />
                     </TableCell>
                     <TableCell>
-                      {stimulus.genre && (
-                        <Chip label={stimulus.genre} size="small" />
+                      {book.category && (
+                        <Chip label={book.category} size="small" />
                       )}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="body2">
-                        {stimulus.word_count ? `${stimulus.word_count.toLocaleString()}자` : "-"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {new Date(stimulus.created_at).toLocaleDateString("ko-KR")}
-                      </Typography>
                     </TableCell>
                     <TableCell align="center" onClick={(e) => e.stopPropagation()}>
                       <Tooltip title="상세보기">
                         <IconButton
                           size="small"
-                          onClick={() => navigate(`/question-dev/stimuli/${stimulus.stimulus_id}`)}
+                          onClick={() => navigate(`/question-dev/books/${book.book_id}`)}
                         >
                           <Visibility fontSize="small" />
                         </IconButton>
@@ -254,7 +221,7 @@ const StimuliList = () => {
                       <Tooltip title="수정">
                         <IconButton
                           size="small"
-                          onClick={() => navigate(`/question-dev/stimuli/${stimulus.stimulus_id}/edit`)}
+                          onClick={() => navigate(`/question-dev/books/${book.book_id}/edit`)}
                         >
                           <Edit fontSize="small" />
                         </IconButton>
@@ -270,11 +237,11 @@ const StimuliList = () => {
 
       <Box sx={{ mt: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Typography variant="body2" color="text.secondary">
-          총 {filteredStimuli.length}개 지문
+          총 {filteredBooks.length}개 도서
         </Typography>
       </Box>
     </Box>
   );
 };
 
-export default StimuliList;
+export default BooksList;
