@@ -40,8 +40,8 @@ SELECT
     'note', CONCAT('ISBN: ', isbn, ' | 출판년도: ', published_year)
   ) as source_meta_json,
   '{}'::jsonb as assets_json,
-  COALESCE(created_at, NOW()) as created_at,
-  COALESCE(updated_at, NOW()) as updated_at
+  NOW() as created_at,
+  NOW() as updated_at
 FROM public.books
 WHERE NOT EXISTS (
   SELECT 1 FROM public.stimuli
