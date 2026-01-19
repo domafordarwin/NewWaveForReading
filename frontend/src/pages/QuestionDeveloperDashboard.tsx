@@ -1,5 +1,5 @@
 import { Box, Paper, Typography, Grid, Card, CardContent, Button, Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton, CircularProgress } from "@mui/material";
-import { MenuBook, Quiz, Edit, Add, Visibility, Article } from "@mui/icons-material";
+import { MenuBook, Quiz, Edit, Visibility, Article } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/session";
 import { useState, useEffect } from "react";
@@ -30,7 +30,6 @@ const QuestionDeveloperDashboard = () => {
   const [stimuliCount, setStimuliCount] = useState<number>(0);
   const [itemCount, setItemCount] = useState<number>(0);
   const [reviewPendingCount, setReviewPendingCount] = useState<number>(0);
-  const [monthlyNewCount, setMonthlyNewCount] = useState<number>(0);
   const [recentQuestions, setRecentQuestions] = useState<RecentQuestion[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,17 +62,6 @@ const QuestionDeveloperDashboard = () => {
           .select("*", { count: "exact", head: true })
           .eq("is_active", false);
         setReviewPendingCount(reviewCount || 0);
-
-        // 이번 달 신규 문항 수
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-
-        const { count: monthlyCount } = await supabase
-          .from("item_bank")
-          .select("*", { count: "exact", head: true })
-          .gte("created_at", startOfMonth.toISOString());
-        setMonthlyNewCount(monthlyCount || 0);
 
         // 최근 개발 문항 (최근 3개)
         const { data: recentItems } = await supabase
@@ -122,7 +110,7 @@ const QuestionDeveloperDashboard = () => {
       </Paper>
 
       <Grid container spacing={3}>
-        {/* 요약 카드 */}
+        {/* 요약 카드 - 첫 번째 줄 */}
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white" }}>
             <CardContent>
@@ -174,20 +162,6 @@ const QuestionDeveloperDashboard = () => {
                   <Typography variant="h4" fontWeight="bold">{reviewPendingCount}</Typography>
                 </Box>
                 <Edit sx={{ fontSize: 48, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)", color: "white" }}>
-            <CardContent>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Box>
-                  <Typography variant="body2" sx={{ opacity: 0.8 }}>이번 달 신규</Typography>
-                  <Typography variant="h4" fontWeight="bold">{monthlyNewCount}</Typography>
-                </Box>
-                <Add sx={{ fontSize: 48, opacity: 0.8 }} />
               </Box>
             </CardContent>
           </Card>
