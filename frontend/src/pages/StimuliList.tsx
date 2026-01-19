@@ -207,13 +207,17 @@ const StimuliList = () => {
                               color="text.secondary"
                               sx={{
                                 display: "block",
-                                maxWidth: 400,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
+                                maxWidth: 800,
+                                maxHeight: 300,
+                                overflow: "auto",
+                                whiteSpace: "pre-wrap",
+                                mt: 1,
+                                p: 1,
+                                bgcolor: "grey.50",
+                                borderRadius: 1,
                               }}
                             >
-                              {stimulus.content_text.substring(0, 80)}...
+                              {stimulus.content_text}
                             </Typography>
                           )}
                         </Box>
