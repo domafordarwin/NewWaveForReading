@@ -8,3 +8,4 @@ supabase/seed.sql
 .env
 .claude/settings.local.json
 nul
+frontend/.env

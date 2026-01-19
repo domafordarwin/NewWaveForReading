@@ -54,16 +54,6 @@ const contentTypeIcons: Record<string, React.ReactNode> = {
   mixed: <Article />,
 };
 
-const contentTypeLabels: Record<string, string> = {
-  text: "텍스트",
-  html: "HTML",
-  markdown: "마크다운",
-  image: "이미지",
-  table: "표",
-  pdf: "PDF",
-  mixed: "복합",
-};
-
 const gradeBandLabels: Record<string, string> = {
   초저: "초등 저학년",
   초고: "초등 고학년",

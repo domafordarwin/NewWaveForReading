@@ -1,5 +1,5 @@
 import { Box, Paper, Typography, Grid, Card, CardContent, Button, Table, TableBody, TableCell, TableHead, TableRow, Chip, IconButton, CircularProgress } from "@mui/material";
-import { MenuBook, Quiz, Edit, Add, Visibility, Delete } from "@mui/icons-material";
+import { MenuBook, Quiz, Edit, Add, Visibility } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/session";
 import { useState, useEffect } from "react";
