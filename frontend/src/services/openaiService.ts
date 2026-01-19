@@ -82,7 +82,8 @@ const difficultyDescriptions: Record<number, string> = {
  */
 const getSystemPrompt = (request: GenerateItemsRequest): string => {
   const numOptions = request.numOptions || 5;
-  const isMCQ = request.itemType.startsWith("mcq");
+  const itemType = request.itemType || "mcq_single";
+  const isMCQ = itemType.startsWith("mcq");
 
   return `당신은 한국어 독서 평가 문항을 제작하는 전문가입니다.
 다음 지침을 철저히 따라 고품질의 평가 문항을 생성해주세요.
@@ -146,7 +147,8 @@ const getUserPrompt = (request: GenerateItemsRequest): string => {
     : "";
 
   const numOptions = request.numOptions || 5;
-  const optionsInfo = request.itemType.startsWith("mcq")
+  const itemType = request.itemType || "mcq_single";
+  const optionsInfo = itemType.startsWith("mcq")
     ? `\n- 객관식 보기 개수: ${numOptions}개 (정답 1개 포함)`
     : "";
 
@@ -156,14 +158,14 @@ const getUserPrompt = (request: GenerateItemsRequest): string => {
 ${request.stimulusText}
 
 ## 생성 요청
-- 문항 유형: ${getItemTypeDescription(request.itemType, request.numOptions)}
+- 문항 유형: ${getItemTypeDescription(itemType, request.numOptions)}
 - 학년군: ${gradeBandDescriptions[request.gradeBand] || request.gradeBand}
 - 난이도: ${request.difficulty}/5 (${difficultyDescriptions[request.difficulty] || ""})
 - 생성 개수: ${request.count}개${optionsInfo}
 ${customInstruction}
 
-위 지문을 바탕으로 ${request.count}개의 ${getItemTypeDescription(request.itemType, request.numOptions)} 문항을 JSON 형식으로 생성해주세요.
-${request.itemType.startsWith("mcq") ? `\n중요: 각 문항은 정확히 ${numOptions}개의 선택지를 포함해야 하며, 그 중 정답은 반드시 1개만 is_correct: true로 설정되어야 합니다.` : ""}`;
+위 지문을 바탕으로 ${request.count}개의 ${getItemTypeDescription(itemType, request.numOptions)} 문항을 JSON 형식으로 생성해주세요.
+${itemType.startsWith("mcq") ? `\n중요: 각 문항은 정확히 ${numOptions}개의 선택지를 포함해야 하며, 그 중 정답은 반드시 1개만 is_correct: true로 설정되어야 합니다.` : ""}`;
 };
 
 /**

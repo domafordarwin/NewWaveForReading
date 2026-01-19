@@ -85,11 +85,11 @@ export const useAIGeneration = (
       const response = await generateItems({
         stimulusText: selectedStimulus.content_text || "",
         stimulusTitle: selectedStimulus.title,
-        itemType: aiItemType,
+        itemType: aiItemType || "mcq_single",
         gradeBand: project.grade_band,
         difficulty: project.difficulty_target || 3,
         count: aiItemCount,
-        numOptions: aiItemType.startsWith("mcq") ? aiNumOptions : undefined,
+        numOptions: aiItemType?.startsWith("mcq") ? aiNumOptions : undefined,
         customPrompt: finalPrompt,
       });
 

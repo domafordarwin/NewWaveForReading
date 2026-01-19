@@ -856,11 +856,11 @@ ${baseTemplate.self_check_text}`;
       const response = await generateItems({
         stimulusText: selectedStimulus.content_text || "",
         stimulusTitle: selectedStimulus.title,
-        itemType: aiItemType,
+        itemType: aiItemType || "mcq_single",
         gradeBand: project.grade_band,
         difficulty: project.difficulty_target || 3,
         count: aiItemCount,
-        numOptions: aiItemType.startsWith("mcq") ? aiNumOptions : undefined,
+        numOptions: aiItemType?.startsWith("mcq") ? aiNumOptions : undefined,
         customPrompt: finalPrompt,
       });
 
@@ -2015,7 +2015,7 @@ ${baseTemplate.self_check_text}`;
               </FormControl>
 
               {/* 객관식일 때만 보기 개수 표시 */}
-              {aiItemType.startsWith("mcq") && (
+              {aiItemType?.startsWith("mcq") && (
                 <>
                   <Typography
                     variant="subtitle2"
