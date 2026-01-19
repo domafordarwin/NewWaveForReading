@@ -249,9 +249,10 @@ const simulateGeneration = async (
 
   const items: GeneratedItem[] = [];
   const numOptions = request.numOptions || 5;
+  const itemType = request.itemType || "mcq_single";
 
   for (let i = 0; i < request.count; i++) {
-    if (request.itemType === "mcq_single" || request.itemType === "mcq_multi") {
+    if (itemType === "mcq_single" || itemType === "mcq_multi") {
       // 지정된 개수만큼 선택지 생성
       const options = [];
       const correctIndex = Math.floor(Math.random() * numOptions); // 랜덤 위치에 정답 배치
@@ -279,21 +280,21 @@ const simulateGeneration = async (
 
       items.push({
         stem: `[AI 생성 ${i + 1}] "${request.stimulusTitle}"의 내용을 바탕으로, 다음 중 올바른 것을 고르시오.`,
-        item_type: request.itemType,
+        item_type: itemType,
         options,
         explanation: `정답은 ${correctIndex + 1}번입니다. 지문에서 해당 내용을 명시적으로 언급하고 있습니다.`,
       });
-    } else if (request.itemType === "short_text") {
+    } else if (itemType === "short_text") {
       items.push({
         stem: `[AI 생성 ${i + 1}] "${request.stimulusTitle}"에서 언급된 핵심 개념을 한 단어로 쓰시오.`,
-        item_type: request.itemType,
+        item_type: itemType,
         keywords: ["핵심개념", "키워드"],
         explanation: "지문에서 반복적으로 강조된 핵심 개념입니다.",
       });
-    } else if (request.itemType === "essay") {
+    } else if (itemType === "essay") {
       items.push({
         stem: `[AI 생성 ${i + 1}] "${request.stimulusTitle}"의 주제와 관련하여 자신의 생각을 논리적으로 서술하시오.`,
-        item_type: request.itemType,
+        item_type: itemType,
         answer_hint:
           "지문의 주제를 파악하고, 자신의 경험이나 지식과 연결하여 논리적으로 서술합니다.",
         rubric: {

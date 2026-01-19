@@ -923,16 +923,20 @@ ${baseTemplate.self_check_text}`;
     if (!supabase || !project || !selectedStimulus) return;
 
     try {
+      // item_type 기본값 처리
+      const itemType = item.item_type || "mcq_single";
+      const itemKind =
+        itemType === "mcq_single" || itemType === "mcq_multi"
+          ? "mcq"
+          : itemType;
+
       // 1. 먼저 authoring_items에 문항 생성
       const { data: itemData, error: itemError } = await supabase
         .from("authoring_items")
         .insert([
           {
             project_id: project.project_id,
-            item_kind:
-              item.item_type === "mcq_single" || item.item_type === "mcq_multi"
-                ? "mcq"
-                : item.item_type,
+            item_kind: itemKind,
             status: "ai_draft",
           },
         ])
