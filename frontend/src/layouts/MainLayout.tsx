@@ -37,6 +37,7 @@ import {
   SmartToy,
   Category,
   MenuBook,
+  Code,
 } from "@mui/icons-material";
 import { getCurrentUser, clearCurrentUser } from "../utils/session";
 import type { UserType } from "../types";
@@ -83,6 +84,7 @@ const menusByUserType: Record<UserType, { label: string; icon: React.ReactNode; 
     { label: "문항 은행", icon: <LibraryBooks />, path: "/question-dev/items" },
     { label: "지문 관리", icon: <Article />, path: "/question-dev/stimuli" },
     { label: "문항 제작", icon: <SmartToy />, path: "/question-dev/authoring" },
+    { label: "프롬프트 관리", icon: <Code />, path: "/question-dev/prompts" },
     { label: "도서 관리", icon: <MenuBook />, path: "/question-dev/books" },
   ],
   SYSTEM_ADMIN: [

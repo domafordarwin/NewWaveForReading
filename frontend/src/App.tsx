@@ -39,6 +39,7 @@ import ReadingQuestionGuide from "./pages/ReadingQuestionGuide";
 import StimuliNew from "./pages/StimuliNew";
 import TestPage from "./pages/TestPage";
 import DiagnosticsPage from "./pages/DiagnosticsPage";
+import PromptManagement from "./pages/PromptManagement";
 
 const theme = createTheme({
   palette: {
@@ -160,6 +161,7 @@ function App() {
             <Route path="test" element={<TestPage />} />
             <Route path="test/:id" element={<TestPage />} />
             <Route path="domains" element={<DomainList />} />
+            <Route path="prompts" element={<PromptManagement />} />
           </Route>
 
           {/* 시스템 관리자 라우트 */}
