@@ -2,10 +2,32 @@ import { Box, Paper, Typography, Grid, Card, CardContent, Button, Table, TableBo
 import { MenuBook, Quiz, Edit, Add, Visibility, Delete } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/session";
+import { useState, useEffect } from "react";
+import { supabase } from "../services/supabaseClient";
 
 const QuestionDeveloperDashboard = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const [bookCount, setBookCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchBookCount = async () => {
+      if (!supabase) return;
+
+      try {
+        const { count, error } = await supabase
+          .from("stimuli")
+          .select("*", { count: "exact", head: true });
+
+        if (error) throw error;
+        setBookCount(count || 0);
+      } catch (error) {
+        console.error("Error fetching book count:", error);
+      }
+    };
+
+    fetchBookCount();
+  }, []);
 
   const recentQuestions = [
     { id: 1, book: "동물농장", topic: "권력의 부패 분석", type: "분석형", status: "활성" },
@@ -30,7 +52,7 @@ const QuestionDeveloperDashboard = () => {
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Box>
                   <Typography variant="body2" sx={{ opacity: 0.8 }}>등록된 도서</Typography>
-                  <Typography variant="h4" fontWeight="bold">12</Typography>
+                  <Typography variant="h4" fontWeight="bold">{bookCount}</Typography>
                 </Box>
                 <MenuBook sx={{ fontSize: 48, opacity: 0.8 }} />
               </Box>

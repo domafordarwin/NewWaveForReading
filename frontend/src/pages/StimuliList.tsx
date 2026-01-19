@@ -118,10 +118,10 @@ const StimuliList = () => {
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight="bold" gutterBottom>
-              지문 관리
+              도서 현황
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              문항에 사용될 지문과 자료를 관리합니다.
+              등록된 도서와 지문을 확인하고 관리합니다.
             </Typography>
           </Box>
           <Button
@@ -177,57 +177,57 @@ const StimuliList = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: "grey.100" }}>
-                <TableCell>유형</TableCell>
                 <TableCell>제목</TableCell>
                 <TableCell>학년군</TableCell>
                 <TableCell>장르</TableCell>
                 <TableCell align="center">글자수</TableCell>
                 <TableCell>등록일</TableCell>
-                <TableCell>최종 수정일</TableCell>
                 <TableCell align="center">관리</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredStimuli.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                     <Typography color="text.secondary">
                       {stimuli.length === 0
-                        ? "등록된 지문이 없습니다."
+                        ? "등록된 도서가 없습니다."
                         : "검색 결과가 없습니다."}
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredStimuli.map((stimulus) => (
-                  <TableRow key={stimulus.stimulus_id} hover>
+                  <TableRow
+                    key={stimulus.stimulus_id}
+                    hover
+                    sx={{ cursor: "pointer" }}
+                    onClick={() => navigate(`/question-dev/stimuli/${stimulus.stimulus_id}`)}
+                  >
                     <TableCell>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         {contentTypeIcons[stimulus.content_type] || <Article />}
-                        <Typography variant="body2">
-                          {contentTypeLabels[stimulus.content_type] || stimulus.content_type}
-                        </Typography>
+                        <Box>
+                          <Typography variant="body2" fontWeight="medium">
+                            {stimulus.title}
+                          </Typography>
+                          {stimulus.content_text && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                display: "block",
+                                maxWidth: 400,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {stimulus.content_text.substring(0, 80)}...
+                            </Typography>
+                          )}
+                        </Box>
                       </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight="medium">
-                        {stimulus.title}
-                      </Typography>
-                      {stimulus.content_text && (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{
-                            display: "block",
-                            maxWidth: 300,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {stimulus.content_text.substring(0, 100)}...
-                        </Typography>
-                      )}
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -243,15 +243,16 @@ const StimuliList = () => {
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {stimulus.word_count ? `${stimulus.word_count}자` : "-"}
+                      <Typography variant="body2">
+                        {stimulus.word_count ? `${stimulus.word_count.toLocaleString()}자` : "-"}
+                      </Typography>
                     </TableCell>
                     <TableCell>
-                      {new Date(stimulus.created_at).toLocaleDateString("ko-KR")}
+                      <Typography variant="body2">
+                        {new Date(stimulus.created_at).toLocaleDateString("ko-KR")}
+                      </Typography>
                     </TableCell>
-                    <TableCell>
-                      {new Date(stimulus.updated_at).toLocaleDateString("ko-KR")}
-                    </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" onClick={(e) => e.stopPropagation()}>
                       <Tooltip title="상세보기">
                         <IconButton
                           size="small"
@@ -279,7 +280,7 @@ const StimuliList = () => {
 
       <Box sx={{ mt: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Typography variant="body2" color="text.secondary">
-          총 {filteredStimuli.length}개 지문
+          총 {filteredStimuli.length}개 도서
         </Typography>
       </Box>
     </Box>
