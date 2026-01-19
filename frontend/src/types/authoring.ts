@@ -9,11 +9,13 @@ export interface AuthoringProject {
   topic_tags: string[];
   difficulty_target: number | null;
   status: string;
-  primary_stimulus_id: number | null; // 프로젝트에 연결된 주요 지문 ID
+  primary_stimulus_id: number | null; // 레거시: 직접 연결된 지문 ID
+  primary_project_stimulus_id: number | null; // 프로젝트별 편집 가능한 지문 복사본 ID
   created_at: string;
   updated_at: string;
 }
 
+// 원본 지문 (읽기 전용)
 export interface Stimulus {
   stimulus_id: number;
   title: string;
@@ -22,6 +24,37 @@ export interface Stimulus {
   grade_band: string;
   genre: string | null;
   word_count: number | null;
+  source_title?: string;
+  source_author?: string;
+  source_year?: string;
+}
+
+// 프로젝트별 지문 복사본 (편집 가능)
+export interface ProjectStimulus {
+  project_stimulus_id: number;
+  project_id: number;
+  original_stimulus_id: number | null; // 원본 지문 참조
+
+  // 편집 가능한 필드
+  title: string;
+  content_type: string;
+  content_text: string | null;
+  grade_band: string;
+  genre: string | null;
+  word_count: number | null;
+
+  // 메타데이터
+  source_title: string | null;
+  source_author: string | null;
+  source_year: string | null;
+  source_url: string | null;
+
+  // 편집 이력
+  is_modified: boolean;
+  modified_fields: string[] | null;
+
+  created_at: string;
+  updated_at: string;
 }
 
 // 실제 DB 스키마에 맞춘 인터페이스
