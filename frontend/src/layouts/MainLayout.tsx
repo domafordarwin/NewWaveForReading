@@ -77,11 +77,11 @@ const menusByUserType: Record<UserType, { label: string; icon: React.ReactNode; 
   ],
   QUESTION_DEVELOPER: [
     { label: "대시보드", icon: <Dashboard />, path: "/question-dev/dashboard" },
+    { label: "평가 영역", icon: <Category />, path: "/question-dev/domains" },
     { label: "문항 은행", icon: <LibraryBooks />, path: "/question-dev/items" },
     { label: "지문 관리", icon: <Article />, path: "/question-dev/stimuli" },
-    { label: "도서 관리", icon: <MenuBook />, path: "/question-dev/books" },
     { label: "문항 제작", icon: <SmartToy />, path: "/question-dev/authoring" },
-    { label: "평가 영역", icon: <Category />, path: "/question-dev/domains" },
+    { label: "도서 관리", icon: <MenuBook />, path: "/question-dev/books" },
   ],
   SYSTEM_ADMIN: [
     { label: "대시보드", icon: <Dashboard />, path: "/admin/dashboard" },
