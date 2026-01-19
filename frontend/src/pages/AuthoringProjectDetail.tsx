@@ -69,7 +69,7 @@ interface AuthoringProject {
   topic_tags: string[];
   difficulty_target: number | null;
   status: string;
-  primary_stimulus_id: number | null; // 프로젝트에 연결된 주요 지문 ID
+  primary_project_stimulus_id: number | null; // 프로젝트별 편집 가능한 지문 복사본 ID
   created_at: string;
   updated_at: string;
 }
@@ -817,20 +817,9 @@ ${baseTemplate.self_check_text}`;
     setStimulusSaving(true);
 
     try {
-      // 프로젝트에 지문 연결 업데이트 (authoring_projects 테이블에 stimulus_id 컬럼이 있다고 가정)
-      // 만약 별도 연결 테이블이 필요하면 그 테이블에 저장
-      const { error: updateError } = await supabase
-        .from("authoring_projects")
-        .update({
-          primary_stimulus_id: selectedStimulus.stimulus_id,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("project_id", project.project_id);
-
-      if (updateError) {
-        // primary_stimulus_id 컬럼이 없으면 로컬 상태만 유지 (정상 동작)
-        // DB 스키마에 컬럼 추가 전까지는 세션 내에서만 연결 상태 유지
-      }
+      // TODO: project_stimuli 테이블을 통한 복사본 생성 방식으로 변경 필요
+      // 현재는 useStimulusManagement 훅의 linkStimulusToProject 사용 권장
+      // 레거시 직접 연결 방식은 더 이상 사용하지 않음
 
       setProjectStimulusId(selectedStimulus.stimulus_id);
       setSuccess(
@@ -914,6 +903,7 @@ ${baseTemplate.self_check_text}`;
             : null),
       }));
 
+      console.log("Generated items with validation:", itemsWithValidation);
       setAiGeneratedItems(itemsWithValidation);
       setSuccess(
         `AI 문항 초안 ${response.items.length}개가 생성되었습니다. 검토 후 저장해주세요.`,
@@ -1516,10 +1506,10 @@ ${baseTemplate.self_check_text}`;
                           startIcon={<Edit />}
                           onClick={() => {
                             setEditingItemData({
-                              stem: item.stem,
-                              item_type: item.item_type,
+                              stem: item.stem || "",
+                              item_type: item.item_type || "mcq_single",
                               options: item.options || [],
-                              rubric: item.rubric,
+                              rubric: item.rubric || null,
                             });
                             setItemEditDialogOpen(true);
                           }}
@@ -2395,7 +2385,7 @@ ${baseTemplate.self_check_text}`;
             sx={{ mb: 2 }}
           />
 
-          {editingItemData.item_type.startsWith("mcq") && (
+          {editingItemData.item_type?.startsWith("mcq") && (
             <Box>
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                 선택지
