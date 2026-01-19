@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -19,21 +19,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Tabs,
-  Tab,
   Divider,
   IconButton,
   Tooltip,
-  LinearProgress,
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
-  Autocomplete,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -55,10 +46,7 @@ import {
   Article,
   Search,
   CheckCircle,
-  Schedule,
-  PlayArrow,
   ExpandMore,
-  ContentCopy,
   History,
   Refresh,
   Star,
@@ -107,15 +95,16 @@ interface AuthoringItem {
   };
 }
 
-interface AIGenerationJob {
-  job_id: number;
-  job_type: string;
-  status: string;
-  progress: number;
-  result_json: any;
-  error_message: string | null;
-  created_at: string;
-}
+// Unused interface - keeping for future use
+// interface AIGenerationJob {
+//   job_id: number;
+//   job_type: string;
+//   status: string;
+//   progress: number;
+//   result_json: any;
+//   error_message: string | null;
+//   created_at: string;
+// }
 
 // 문항 유형 옵션 (DB 스키마의 item_kind에 맞춤)
 const itemTypeOptions = [
@@ -204,14 +193,14 @@ const AuthoringProjectDetail = () => {
 
   // 상태
   const [project, setProject] = useState<AuthoringProject | null>(null);
-  const [stimuli, setStimuli] = useState<Stimulus[]>([]);
+  const [_stimuli, setStimuli] = useState<Stimulus[]>([]);
   const [items, setItems] = useState<AuthoringItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   // 탭 상태
-  const [activeTab, setActiveTab] = useState(0);
+  const [_activeTab, _setActiveTab] = useState(0);
 
   // 지문 선택 다이얼로그
   const [stimulusDialogOpen, setStimulusDialogOpen] = useState(false);
@@ -240,7 +229,7 @@ const AuthoringProjectDetail = () => {
 
   // 버전 히스토리 다이얼로그
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
-  const [itemVersions, setItemVersions] = useState<any[]>([]);
+  const [_itemVersions, _setItemVersions] = useState<any[]>([]);
 
   // 프롬프트 즐겨찾기
   const [favoritePrompts, setFavoritePrompts] = useState<string[]>(() => {
@@ -559,18 +548,18 @@ const AuthoringProjectDetail = () => {
     });
   };
 
-  // 유사 문항 검색
-  const searchSimilarItems = async (stem: string) => {
-    if (!supabase) return [];
+  // 유사 문항 검색 (현재 미사용 - 향후 기능 구현용)
+  // const _searchSimilarItems = async (stem: string) => {
+  //   if (!supabase) return [];
 
-    const { data } = await supabase
-      .from("item_bank")
-      .select("*")
-      .ilike("stem", `%${stem.substring(0, 20)}%`)
-      .limit(5);
+  //   const { data } = await supabase
+  //     .from("item_bank")
+  //     .select("*")
+  //     .ilike("stem", `%${stem.substring(0, 20)}%`)
+  //     .limit(5);
 
-    return data || [];
-  };
+  //   return data || [];
+  // };
 
   // 유효성 검증 - OpenAI 서비스의 validateGeneratedItem 활용
   const validateItem = (item: any): string[] => {
