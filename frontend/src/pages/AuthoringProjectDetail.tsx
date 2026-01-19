@@ -256,11 +256,16 @@ const AuthoringProjectDetail = () => {
   }, [id]);
 
   const fetchProjectData = async () => {
-    if (!supabase || !id) return;
+    if (!supabase || !id) {
+      console.error("Missing supabase or id:", { supabase: !!supabase, id });
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
+
+      console.log("Fetching project with id:", id);
 
       // 프로젝트 조회
       const { data: projectData, error: projectError } = await supabase
@@ -268,6 +273,8 @@ const AuthoringProjectDetail = () => {
         .select("*")
         .eq("project_id", parseInt(id))
         .single();
+
+      console.log("Project data:", { projectData, projectError });
 
       if (projectError) throw projectError;
       if (!projectData) throw new Error("프로젝트를 찾을 수 없습니다.");
@@ -296,8 +303,8 @@ const AuthoringProjectDetail = () => {
       }
 
       if (itemsData && itemsData.length > 0) {
+        console.log("Items fetched:", itemsData.length);
         // 버전 정보를 별도로 조회
-        const itemIds = itemsData.map((item: any) => item.draft_item_id);
         const versionIds = itemsData
           .map((item: any) => item.current_version_id)
           .filter((id: any) => id != null);
@@ -305,10 +312,13 @@ const AuthoringProjectDetail = () => {
         let versionsMap: Record<number, any> = {};
 
         if (versionIds.length > 0) {
-          const { data: versionsData } = await supabase
+          console.log("Fetching versions for ids:", versionIds);
+          const { data: versionsData, error: versionsError } = await supabase
             .from("authoring_item_versions")
             .select("version_id, content_json, created_at")
             .in("version_id", versionIds);
+
+          console.log("Versions data:", { count: versionsData?.length, error: versionsError });
 
           if (versionsData) {
             versionsMap = versionsData.reduce((acc: Record<number, any>, v: any) => {
@@ -324,10 +334,13 @@ const AuthoringProjectDetail = () => {
           current_version: item.current_version_id ? versionsMap[item.current_version_id] || null : null,
         }));
         setItems(formattedItems);
+        console.log("Items set:", formattedItems.length);
       } else {
+        console.log("No items found for project");
         setItems([]);
       }
     } catch (err: any) {
+      console.error("Error fetching project data:", err);
       setError(err.message || "데이터를 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
