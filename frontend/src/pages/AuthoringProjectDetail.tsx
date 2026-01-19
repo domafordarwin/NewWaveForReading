@@ -56,7 +56,11 @@ import {
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../services/supabaseClient";
-import { generateItems, validateGeneratedItem, type GeneratedItem } from "../services/openaiService";
+import {
+  generateItems,
+  validateGeneratedItem,
+  type GeneratedItem,
+} from "../services/openaiService";
 
 interface AuthoringProject {
   project_id: number;
@@ -115,7 +119,13 @@ const itemTypeOptions = [
 ];
 
 // 상태 설정 (DB 스키마의 status에 맞춤)
-const statusConfig: Record<string, { label: string; color: "default" | "primary" | "success" | "warning" | "error" }> = {
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    color: "default" | "primary" | "success" | "warning" | "error";
+  }
+> = {
   ai_draft: { label: "AI 초안", color: "default" },
   editing: { label: "편집 중", color: "warning" },
   in_review: { label: "검토 중", color: "primary" },
@@ -136,31 +146,36 @@ const aiPromptTemplates = [
     id: "reading_comprehension",
     name: "독해력 문항",
     description: "지문 내용 이해도를 평가하는 문항",
-    prompt: "주어진 지문을 바탕으로 독해력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
+    prompt:
+      "주어진 지문을 바탕으로 독해력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
   },
   {
     id: "inference",
     name: "추론 문항",
     description: "지문에 명시되지 않은 내용을 추론하는 문항",
-    prompt: "주어진 지문을 바탕으로 추론 능력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
+    prompt:
+      "주어진 지문을 바탕으로 추론 능력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
   },
   {
     id: "vocabulary",
     name: "어휘력 문항",
     description: "어휘의 의미나 사용법을 평가하는 문항",
-    prompt: "주어진 지문의 어휘를 활용하여 어휘력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
+    prompt:
+      "주어진 지문의 어휘를 활용하여 어휘력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
   },
   {
     id: "critical_thinking",
     name: "비판적 사고 문항",
     description: "내용을 비판적으로 분석하는 문항",
-    prompt: "주어진 지문을 바탕으로 비판적 사고력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
+    prompt:
+      "주어진 지문을 바탕으로 비판적 사고력을 평가하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
   },
   {
     id: "summary",
     name: "요약 문항",
     description: "핵심 내용을 요약하는 문항",
-    prompt: "주어진 지문의 핵심 내용을 파악하고 요약하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
+    prompt:
+      "주어진 지문의 핵심 내용을 파악하고 요약하는 {item_type} 문항을 생성해주세요. 학년군: {grade_band}, 난이도: {difficulty}/5",
   },
 ];
 
@@ -171,9 +186,21 @@ const rubricTemplates = [
     name: "서술형 기본 루브릭",
     itemType: "essay",
     criteria: [
-      { name: "내용 이해", weight: 40, levels: ["불충분", "기초", "보통", "우수", "탁월"] },
-      { name: "논리적 전개", weight: 30, levels: ["불충분", "기초", "보통", "우수", "탁월"] },
-      { name: "표현력", weight: 30, levels: ["불충분", "기초", "보통", "우수", "탁월"] },
+      {
+        name: "내용 이해",
+        weight: 40,
+        levels: ["불충분", "기초", "보통", "우수", "탁월"],
+      },
+      {
+        name: "논리적 전개",
+        weight: 30,
+        levels: ["불충분", "기초", "보통", "우수", "탁월"],
+      },
+      {
+        name: "표현력",
+        weight: 30,
+        levels: ["불충분", "기초", "보통", "우수", "탁월"],
+      },
     ],
   },
   {
@@ -206,14 +233,18 @@ const AuthoringProjectDetail = () => {
   const [stimulusDialogOpen, setStimulusDialogOpen] = useState(false);
   const [availableStimuli, setAvailableStimuli] = useState<Stimulus[]>([]);
   const [stimulusSearch, setStimulusSearch] = useState("");
-  const [selectedStimulus, setSelectedStimulus] = useState<Stimulus | null>(null);
+  const [selectedStimulus, setSelectedStimulus] = useState<Stimulus | null>(
+    null,
+  );
 
   // AI 생성 다이얼로그
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiItemType, setAiItemType] = useState("mcq_single");
   const [aiNumOptions, setAiNumOptions] = useState(5); // 객관식 보기 개수 (기본값 5개)
-  const [aiPromptTemplate, setAiPromptTemplate] = useState(aiPromptTemplates[0]);
+  const [aiPromptTemplate, setAiPromptTemplate] = useState(
+    aiPromptTemplates[0],
+  );
   const [aiCustomPrompt, setAiCustomPrompt] = useState("");
   const [aiItemCount, setAiItemCount] = useState(3);
   const [aiGeneratedItems, setAiGeneratedItems] = useState<any[]>([]);
@@ -231,6 +262,17 @@ const AuthoringProjectDetail = () => {
   // 버전 히스토리 다이얼로그
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const [_itemVersions, _setItemVersions] = useState<any[]>([]);
+
+  // 새 지문 생성 다이얼로그
+  const [newStimulusDialogOpen, setNewStimulusDialogOpen] = useState(false);
+  const [newStimulusSaving, setNewStimulusSaving] = useState(false);
+  const [newStimulusData, setNewStimulusData] = useState({
+    title: "",
+    content_type: "text" as string,
+    content_text: "",
+    genre: "" as string,
+    source: "",
+  });
 
   // 프롬프트 즐겨찾기
   const [favoritePrompts, setFavoritePrompts] = useState<string[]>(() => {
@@ -308,20 +350,28 @@ const AuthoringProjectDetail = () => {
             .select("version_id, content_json, created_at")
             .in("version_id", versionIds);
 
-          console.log("Versions data:", { count: versionsData?.length, error: versionsError });
+          console.log("Versions data:", {
+            count: versionsData?.length,
+            error: versionsError,
+          });
 
           if (versionsData) {
-            versionsMap = versionsData.reduce((acc: Record<number, any>, v: any) => {
-              acc[v.version_id] = v;
-              return acc;
-            }, {});
+            versionsMap = versionsData.reduce(
+              (acc: Record<number, any>, v: any) => {
+                acc[v.version_id] = v;
+                return acc;
+              },
+              {},
+            );
           }
         }
 
         // 조인된 데이터 구조 정리
         const formattedItems = itemsData.map((item: any) => ({
           ...item,
-          current_version: item.current_version_id ? versionsMap[item.current_version_id] || null : null,
+          current_version: item.current_version_id
+            ? versionsMap[item.current_version_id] || null
+            : null,
         }));
         setItems(formattedItems);
         console.log("Items set:", formattedItems.length);
@@ -373,10 +423,19 @@ const AuthoringProjectDetail = () => {
 
     try {
       // 프롬프트 템플릿 적용
-      const finalPrompt = aiCustomPrompt || aiPromptTemplate.prompt
-        .replace("{item_type}", itemTypeOptions.find(o => o.value === aiItemType)?.label || aiItemType)
-        .replace("{grade_band}", gradeBandLabels[project.grade_band] || project.grade_band)
-        .replace("{difficulty}", String(project.difficulty_target || 3));
+      const finalPrompt =
+        aiCustomPrompt ||
+        aiPromptTemplate.prompt
+          .replace(
+            "{item_type}",
+            itemTypeOptions.find((o) => o.value === aiItemType)?.label ||
+              aiItemType,
+          )
+          .replace(
+            "{grade_band}",
+            gradeBandLabels[project.grade_band] || project.grade_band,
+          )
+          .replace("{difficulty}", String(project.difficulty_target || 3));
 
       // OpenAI 서비스를 통한 문항 생성
       const response = await generateItems({
@@ -395,13 +454,19 @@ const AuthoringProjectDetail = () => {
       }
 
       // 생성된 문항 설정
-      const itemsWithValidation = response.items.map(item => ({
+      const itemsWithValidation = response.items.map((item) => ({
         ...item,
-        rubric: item.rubric || (item.item_type === "essay" ? rubricTemplates.find(r => r.itemType === "essay") : null),
+        rubric:
+          item.rubric ||
+          (item.item_type === "essay"
+            ? rubricTemplates.find((r) => r.itemType === "essay")
+            : null),
       }));
 
       setAiGeneratedItems(itemsWithValidation);
-      setSuccess(`AI 문항 초안 ${response.items.length}개가 생성되었습니다. 검토 후 저장해주세요.`);
+      setSuccess(
+        `AI 문항 초안 ${response.items.length}개가 생성되었습니다. 검토 후 저장해주세요.`,
+      );
 
       // AI 생성 완료 후 다이얼로그 닫기
       setAiDialogOpen(false);
@@ -420,11 +485,16 @@ const AuthoringProjectDetail = () => {
       // 1. 먼저 authoring_items에 문항 생성
       const { data: itemData, error: itemError } = await supabase
         .from("authoring_items")
-        .insert([{
-          project_id: project.project_id,
-          item_kind: item.item_type === "mcq_single" || item.item_type === "mcq_multi" ? "mcq" : item.item_type,
-          status: "ai_draft",
-        }])
+        .insert([
+          {
+            project_id: project.project_id,
+            item_kind:
+              item.item_type === "mcq_single" || item.item_type === "mcq_multi"
+                ? "mcq"
+                : item.item_type,
+            status: "ai_draft",
+          },
+        ])
         .select()
         .single();
 
@@ -442,11 +512,13 @@ const AuthoringProjectDetail = () => {
 
       const { data: versionData, error: versionError } = await supabase
         .from("authoring_item_versions")
-        .insert([{
-          draft_item_id: itemData.draft_item_id,
-          content_json: contentJson,
-          change_summary: "AI 초안 생성",
-        }])
+        .insert([
+          {
+            draft_item_id: itemData.draft_item_id,
+            content_json: contentJson,
+            change_summary: "AI 초안 생성",
+          },
+        ])
         .select()
         .single();
 
@@ -462,7 +534,7 @@ const AuthoringProjectDetail = () => {
       await fetchProjectData();
 
       // 저장된 항목 제거
-      setAiGeneratedItems(prev => prev.filter((_, i) => i !== index));
+      setAiGeneratedItems((prev) => prev.filter((_, i) => i !== index));
       setSuccess("문항이 저장되었습니다.");
     } catch (err: any) {
       setError(err.message || "문항 저장에 실패했습니다.");
@@ -495,12 +567,14 @@ const AuthoringProjectDetail = () => {
 
       const { data: versionData, error: versionError } = await supabase
         .from("authoring_item_versions")
-        .insert([{
-          draft_item_id: editingItem.draft_item_id,
-          based_on_version_id: editingItem.current_version_id,
-          content_json: contentJson,
-          change_summary: "수동 편집",
-        }])
+        .insert([
+          {
+            draft_item_id: editingItem.draft_item_id,
+            based_on_version_id: editingItem.current_version_id,
+            content_json: contentJson,
+            change_summary: "수동 편집",
+          },
+        ])
         .select()
         .single();
 
@@ -545,11 +619,93 @@ const AuthoringProjectDetail = () => {
     }
   };
 
+  // 새 지문 저장
+  const handleSaveNewStimulus = async () => {
+    if (!supabase || !project) {
+      setError("데이터베이스 연결이 필요합니다.");
+      return;
+    }
+
+    if (!newStimulusData.title.trim()) {
+      setError("지문 제목을 입력해주세요.");
+      return;
+    }
+
+    if (!newStimulusData.content_text.trim()) {
+      setError("지문 내용을 입력해주세요.");
+      return;
+    }
+
+    try {
+      setNewStimulusSaving(true);
+      setError(null);
+
+      // 글자 수 계산
+      const wordCount = newStimulusData.content_text.replace(/\s/g, "").length;
+
+      const { data, error: insertError } = await supabase
+        .from("stimuli")
+        .insert([
+          {
+            title: newStimulusData.title,
+            content_type: newStimulusData.content_type,
+            content_text: newStimulusData.content_text,
+            grade_band: project.grade_band, // 프로젝트 학년군 사용
+            genre: newStimulusData.genre || null,
+            source_meta_json: newStimulusData.source
+              ? { source: newStimulusData.source }
+              : {},
+            word_count: wordCount > 0 ? wordCount : null,
+          },
+        ])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // 생성된 지문 자동 선택
+      setSelectedStimulus(data);
+
+      // 지문 목록 갱신
+      await fetchAvailableStimuli();
+
+      // 다이얼로그 닫기 및 초기화
+      setNewStimulusDialogOpen(false);
+      setNewStimulusData({
+        title: "",
+        content_type: "text",
+        content_text: "",
+        genre: "",
+        source: "",
+      });
+
+      setSuccess(`지문 "${data.title}"이(가) 생성되었습니다.`);
+    } catch (err: any) {
+      setError(err.message || "지문 저장에 실패했습니다.");
+    } finally {
+      setNewStimulusSaving(false);
+    }
+  };
+
+  // 새 지문 다이얼로그 열기
+  const handleOpenNewStimulusDialog = () => {
+    // 기본값 설정 (프로젝트 제목 기반)
+    const timestamp = new Date().toISOString().slice(0, 10);
+    setNewStimulusData({
+      title: `${project?.title || ""}_지문_${timestamp}`,
+      content_type: "text",
+      content_text: "",
+      genre: "",
+      source: "",
+    });
+    setNewStimulusDialogOpen(true);
+  };
+
   // 프롬프트 즐겨찾기 토글
   const toggleFavoritePrompt = (promptId: string) => {
-    setFavoritePrompts(prev => {
+    setFavoritePrompts((prev) => {
       const newFavorites = prev.includes(promptId)
-        ? prev.filter(id => id !== promptId)
+        ? prev.filter((id) => id !== promptId)
         : [...prev, promptId];
       localStorage.setItem("favoritePrompts", JSON.stringify(newFavorites));
       return newFavorites;
@@ -586,23 +742,34 @@ const AuthoringProjectDetail = () => {
     return (
       <Alert severity="error">
         프로젝트를 찾을 수 없습니다.
-        <Button onClick={() => navigate("/question-dev/authoring")} sx={{ ml: 2 }}>
+        <Button
+          onClick={() => navigate("/question-dev/authoring")}
+          sx={{ ml: 2 }}
+        >
           목록으로
         </Button>
       </Alert>
     );
   }
 
-  const filteredStimuli = availableStimuli.filter(s =>
-    s.title.toLowerCase().includes(stimulusSearch.toLowerCase()) ||
-    (s.content_text?.toLowerCase().includes(stimulusSearch.toLowerCase()) ?? false)
+  const filteredStimuli = availableStimuli.filter(
+    (s) =>
+      s.title.toLowerCase().includes(stimulusSearch.toLowerCase()) ||
+      (s.content_text?.toLowerCase().includes(stimulusSearch.toLowerCase()) ??
+        false),
   );
 
   return (
     <Box>
       {/* 헤더 */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <IconButton onClick={() => navigate("/question-dev/authoring")}>
               <ArrowBack />
@@ -618,7 +785,9 @@ const AuthoringProjectDetail = () => {
                   size="small"
                 />
                 <Chip
-                  label={gradeBandLabels[project.grade_band] || project.grade_band}
+                  label={
+                    gradeBandLabels[project.grade_band] || project.grade_band
+                  }
                   size="small"
                   variant="outlined"
                 />
@@ -657,7 +826,11 @@ const AuthoringProjectDetail = () => {
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
+        <Alert
+          severity="success"
+          sx={{ mb: 3 }}
+          onClose={() => setSuccess(null)}
+        >
           {success}
         </Alert>
       )}
@@ -666,7 +839,14 @@ const AuthoringProjectDetail = () => {
         {/* 왼쪽: 지문 영역 */}
         <Grid item xs={12} md={5}>
           <Paper sx={{ p: 3, mb: 3 }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
               <Typography variant="h6" fontWeight="bold">
                 <Article sx={{ mr: 1, verticalAlign: "middle" }} />
                 지문
@@ -682,7 +862,7 @@ const AuthoringProjectDetail = () => {
                 <Button
                   size="small"
                   startIcon={<Add />}
-                  onClick={() => navigate("/question-dev/stimuli/new")}
+                  onClick={handleOpenNewStimulusDialog}
                 >
                   새 지문
                 </Button>
@@ -692,22 +872,52 @@ const AuthoringProjectDetail = () => {
 
             {selectedStimulus ? (
               <Box>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    mb: 2,
+                  }}
+                >
                   <Typography variant="subtitle1" fontWeight="bold">
                     {selectedStimulus.title}
                   </Typography>
                   <IconButton
                     size="small"
-                    onClick={() => navigate(`/question-dev/stimuli/${selectedStimulus.stimulus_id}`)}
+                    onClick={() =>
+                      navigate(
+                        `/question-dev/stimuli/${selectedStimulus.stimulus_id}`,
+                      )
+                    }
                   >
                     <Visibility fontSize="small" />
                   </IconButton>
                 </Box>
                 <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
                   <Chip label={selectedStimulus.content_type} size="small" />
-                  <Chip label={gradeBandLabels[selectedStimulus.grade_band] || selectedStimulus.grade_band} size="small" variant="outlined" />
-                  {selectedStimulus.genre && <Chip label={selectedStimulus.genre} size="small" variant="outlined" />}
-                  {selectedStimulus.word_count && <Chip label={`${selectedStimulus.word_count}자`} size="small" variant="outlined" />}
+                  <Chip
+                    label={
+                      gradeBandLabels[selectedStimulus.grade_band] ||
+                      selectedStimulus.grade_band
+                    }
+                    size="small"
+                    variant="outlined"
+                  />
+                  {selectedStimulus.genre && (
+                    <Chip
+                      label={selectedStimulus.genre}
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
+                  {selectedStimulus.word_count && (
+                    <Chip
+                      label={`${selectedStimulus.word_count}자`}
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
                 </Box>
                 <Box
                   sx={{
@@ -726,7 +936,9 @@ const AuthoringProjectDetail = () => {
               </Box>
             ) : (
               <Box sx={{ textAlign: "center", py: 4 }}>
-                <Article sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
+                <Article
+                  sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                />
                 <Typography color="text.secondary" gutterBottom>
                   지문을 선택해주세요
                 </Typography>
@@ -746,7 +958,9 @@ const AuthoringProjectDetail = () => {
           {aiGeneratedItems.length > 0 && (
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" fontWeight="bold" gutterBottom>
-                <AutoAwesome sx={{ mr: 1, verticalAlign: "middle", color: "primary.main" }} />
+                <AutoAwesome
+                  sx={{ mr: 1, verticalAlign: "middle", color: "primary.main" }}
+                />
                 AI 생성 문항 ({aiGeneratedItems.length}개)
               </Typography>
               <Divider sx={{ mb: 2 }} />
@@ -755,13 +969,27 @@ const AuthoringProjectDetail = () => {
                 return (
                   <Card key={idx} variant="outlined" sx={{ mb: 2 }}>
                     <CardContent>
-                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
                         <Chip
-                          label={itemTypeOptions.find(o => o.value === item.item_type)?.label || item.item_type}
+                          label={
+                            itemTypeOptions.find(
+                              (o) => o.value === item.item_type,
+                            )?.label || item.item_type
+                          }
                           size="small"
                           color="primary"
                         />
-                        <Chip label="AI 생성" size="small" icon={<SmartToy />} />
+                        <Chip
+                          label="AI 생성"
+                          size="small"
+                          icon={<SmartToy />}
+                        />
                       </Box>
                       <Typography variant="body2" sx={{ mb: 2 }}>
                         {item.stem}
@@ -773,8 +1001,12 @@ const AuthoringProjectDetail = () => {
                               <ListItemText
                                 primary={`${String.fromCharCode(65 + optIdx)}. ${opt.text}`}
                                 primaryTypographyProps={{
-                                  fontWeight: opt.is_correct ? "bold" : "normal",
-                                  color: opt.is_correct ? "success.main" : "text.primary",
+                                  fontWeight: opt.is_correct
+                                    ? "bold"
+                                    : "normal",
+                                  color: opt.is_correct
+                                    ? "success.main"
+                                    : "text.primary",
                                 }}
                               />
                             </ListItem>
@@ -784,13 +1016,24 @@ const AuthoringProjectDetail = () => {
                       {validationErrors.length > 0 && (
                         <Alert severity="warning" sx={{ mt: 1 }}>
                           {validationErrors.map((err, i) => (
-                            <Typography key={i} variant="caption" display="block">
+                            <Typography
+                              key={i}
+                              variant="caption"
+                              display="block"
+                            >
                               - {err}
                             </Typography>
                           ))}
                         </Alert>
                       )}
-                      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: 1,
+                          mt: 2,
+                        }}
+                      >
                         <Button
                           size="small"
                           startIcon={<Edit />}
@@ -827,7 +1070,14 @@ const AuthoringProjectDetail = () => {
         {/* 오른쪽: 문항 목록 */}
         <Grid item xs={12} md={7}>
           <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
               <Typography variant="h6" fontWeight="bold">
                 문항 목록 ({items.length}개)
               </Typography>
@@ -843,7 +1093,9 @@ const AuthoringProjectDetail = () => {
 
             {items.length === 0 ? (
               <Box sx={{ textAlign: "center", py: 4 }}>
-                <SmartToy sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
+                <SmartToy
+                  sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                />
                 <Typography color="text.secondary" gutterBottom>
                   아직 문항이 없습니다
                 </Typography>
@@ -873,7 +1125,11 @@ const AuthoringProjectDetail = () => {
                           <TableCell>{idx + 1}</TableCell>
                           <TableCell>
                             <Chip
-                              label={itemTypeOptions.find(o => o.value === item.item_kind)?.label || item.item_kind}
+                              label={
+                                itemTypeOptions.find(
+                                  (o) => o.value === item.item_kind,
+                                )?.label || item.item_kind
+                              }
                               size="small"
                             />
                           </TableCell>
@@ -890,27 +1146,41 @@ const AuthoringProjectDetail = () => {
                               {content.stem || "(내용 없음)"}
                             </Typography>
                             {item.status === "ai_draft" && (
-                              <Chip label="AI" size="small" sx={{ ml: 1 }} icon={<SmartToy />} />
+                              <Chip
+                                label="AI"
+                                size="small"
+                                sx={{ ml: 1 }}
+                                icon={<SmartToy />}
+                              />
                             )}
                           </TableCell>
                           <TableCell>
                             <Chip
-                              label={statusConfig[item.status]?.label || item.status}
-                              color={statusConfig[item.status]?.color || "default"}
+                              label={
+                                statusConfig[item.status]?.label || item.status
+                              }
+                              color={
+                                statusConfig[item.status]?.color || "default"
+                              }
                               size="small"
                             />
                           </TableCell>
                           <TableCell>v{versionCount}</TableCell>
                           <TableCell align="center">
                             <Tooltip title="수정">
-                              <IconButton size="small" onClick={() => handleEditItem(item)}>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleEditItem(item)}
+                              >
                                 <Edit fontSize="small" />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="삭제">
                               <IconButton
                                 size="small"
-                                onClick={() => handleDeleteItem(item.draft_item_id)}
+                                onClick={() =>
+                                  handleDeleteItem(item.draft_item_id)
+                                }
                               >
                                 <Delete fontSize="small" />
                               </IconButton>
@@ -935,33 +1205,58 @@ const AuthoringProjectDetail = () => {
               <Grid item xs={6} sm={3}>
                 <Paper sx={{ p: 2, textAlign: "center", bgcolor: "grey.50" }}>
                   <Typography variant="h4" fontWeight="bold">
-                    {items.filter(i => i.status === "ai_draft" || i.status === "editing").length}
+                    {
+                      items.filter(
+                        (i) =>
+                          i.status === "ai_draft" || i.status === "editing",
+                      ).length
+                    }
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">초안/편집</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    초안/편집
+                  </Typography>
                 </Paper>
               </Grid>
               <Grid item xs={6} sm={3}>
-                <Paper sx={{ p: 2, textAlign: "center", bgcolor: "warning.50" }}>
-                  <Typography variant="h4" fontWeight="bold" color="warning.main">
-                    {items.filter(i => i.status === "in_review").length}
+                <Paper
+                  sx={{ p: 2, textAlign: "center", bgcolor: "warning.50" }}
+                >
+                  <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    color="warning.main"
+                  >
+                    {items.filter((i) => i.status === "in_review").length}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">검토 중</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    검토 중
+                  </Typography>
                 </Paper>
               </Grid>
               <Grid item xs={6} sm={3}>
-                <Paper sx={{ p: 2, textAlign: "center", bgcolor: "success.50" }}>
-                  <Typography variant="h4" fontWeight="bold" color="success.main">
-                    {items.filter(i => i.status === "approved").length}
+                <Paper
+                  sx={{ p: 2, textAlign: "center", bgcolor: "success.50" }}
+                >
+                  <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    color="success.main"
+                  >
+                    {items.filter((i) => i.status === "approved").length}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">승인됨</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    승인됨
+                  </Typography>
                 </Paper>
               </Grid>
               <Grid item xs={6} sm={3}>
                 <Paper sx={{ p: 2, textAlign: "center", bgcolor: "error.50" }}>
                   <Typography variant="h4" fontWeight="bold" color="error.main">
-                    {items.filter(i => i.status === "rejected").length}
+                    {items.filter((i) => i.status === "rejected").length}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">반려됨</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    반려됨
+                  </Typography>
                 </Paper>
               </Grid>
             </Grid>
@@ -985,7 +1280,9 @@ const AuthoringProjectDetail = () => {
             value={stimulusSearch}
             onChange={(e) => setStimulusSearch(e.target.value)}
             InputProps={{
-              startAdornment: <Search sx={{ color: "text.secondary", mr: 1 }} />,
+              startAdornment: (
+                <Search sx={{ color: "text.secondary", mr: 1 }} />
+              ),
             }}
             sx={{ mb: 2 }}
           />
@@ -1008,10 +1305,27 @@ const AuthoringProjectDetail = () => {
                     <Box>
                       <Box sx={{ display: "flex", gap: 0.5, mt: 0.5 }}>
                         <Chip label={stimulus.content_type} size="small" />
-                        <Chip label={gradeBandLabels[stimulus.grade_band] || stimulus.grade_band} size="small" variant="outlined" />
-                        {stimulus.genre && <Chip label={stimulus.genre} size="small" variant="outlined" />}
+                        <Chip
+                          label={
+                            gradeBandLabels[stimulus.grade_band] ||
+                            stimulus.grade_band
+                          }
+                          size="small"
+                          variant="outlined"
+                        />
+                        {stimulus.genre && (
+                          <Chip
+                            label={stimulus.genre}
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
                       </Box>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: "block", mt: 1 }}
+                      >
                         {stimulus.content_text?.substring(0, 100)}...
                       </Typography>
                     </Box>
@@ -1028,10 +1342,155 @@ const AuthoringProjectDetail = () => {
             startIcon={<Add />}
             onClick={() => {
               setStimulusDialogOpen(false);
-              navigate("/question-dev/stimuli/new");
+              handleOpenNewStimulusDialog();
             }}
           >
             새 지문 등록
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 새 지문 생성 다이얼로그 */}
+      <Dialog
+        open={newStimulusDialogOpen}
+        onClose={() => setNewStimulusDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Article color="primary" />새 지문 등록
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 1 }}>
+            <TextField
+              fullWidth
+              label="지문 제목"
+              value={newStimulusData.title}
+              onChange={(e) =>
+                setNewStimulusData((prev) => ({
+                  ...prev,
+                  title: e.target.value,
+                }))
+              }
+              sx={{ mb: 2 }}
+              required
+            />
+
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={6}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>콘텐츠 유형</InputLabel>
+                  <Select
+                    value={newStimulusData.content_type}
+                    label="콘텐츠 유형"
+                    onChange={(e) =>
+                      setNewStimulusData((prev) => ({
+                        ...prev,
+                        content_type: e.target.value,
+                      }))
+                    }
+                  >
+                    <MenuItem value="text">텍스트</MenuItem>
+                    <MenuItem value="html">HTML</MenuItem>
+                    <MenuItem value="markdown">마크다운</MenuItem>
+                    <MenuItem value="mixed">복합</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>장르</InputLabel>
+                  <Select
+                    value={newStimulusData.genre}
+                    label="장르"
+                    onChange={(e) =>
+                      setNewStimulusData((prev) => ({
+                        ...prev,
+                        genre: e.target.value,
+                      }))
+                    }
+                  >
+                    <MenuItem value="">선택 안 함</MenuItem>
+                    <MenuItem value="문학-시">문학-시</MenuItem>
+                    <MenuItem value="문학-소설">문학-소설</MenuItem>
+                    <MenuItem value="문학-수필">문학-수필</MenuItem>
+                    <MenuItem value="비문학-설명문">비문학-설명문</MenuItem>
+                    <MenuItem value="비문학-논설문">비문학-논설문</MenuItem>
+                    <MenuItem value="비문학-기사문">비문학-기사문</MenuItem>
+                    <MenuItem value="복합">복합</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+
+            <TextField
+              fullWidth
+              label="지문 내용"
+              multiline
+              rows={12}
+              value={newStimulusData.content_text}
+              onChange={(e) =>
+                setNewStimulusData((prev) => ({
+                  ...prev,
+                  content_text: e.target.value,
+                }))
+              }
+              placeholder="지문 내용을 입력하세요..."
+              sx={{ mb: 2 }}
+              required
+            />
+
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                글자 수:{" "}
+                {newStimulusData.content_text.replace(/\s/g, "").length}자
+              </Typography>
+              <Chip
+                label={`학년군: ${gradeBandLabels[project?.grade_band || ""] || project?.grade_band || "미지정"}`}
+                size="small"
+                variant="outlined"
+              />
+            </Box>
+
+            <TextField
+              fullWidth
+              label="출처 (선택)"
+              value={newStimulusData.source}
+              onChange={(e) =>
+                setNewStimulusData((prev) => ({
+                  ...prev,
+                  source: e.target.value,
+                }))
+              }
+              placeholder="예: 2024 수능, 교과서 p.123"
+              size="small"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setNewStimulusDialogOpen(false)}>취소</Button>
+          <Button
+            variant="contained"
+            startIcon={
+              newStimulusSaving ? <CircularProgress size={16} /> : <Save />
+            }
+            onClick={handleSaveNewStimulus}
+            disabled={
+              newStimulusSaving ||
+              !newStimulusData.title.trim() ||
+              !newStimulusData.content_text.trim()
+            }
+          >
+            {newStimulusSaving ? "저장 중..." : "지문 저장"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1087,13 +1546,19 @@ const AuthoringProjectDetail = () => {
               {/* 객관식일 때만 보기 개수 표시 */}
               {aiItemType.startsWith("mcq") && (
                 <>
-                  <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="bold"
+                    gutterBottom
+                  >
                     객관식 보기 개수
                   </Typography>
                   <FormControl fullWidth size="small" sx={{ mb: 2 }}>
                     <Select
                       value={aiNumOptions}
-                      onChange={(e) => setAiNumOptions(e.target.value as number)}
+                      onChange={(e) =>
+                        setAiNumOptions(e.target.value as number)
+                      }
                     >
                       {[2, 3, 4, 5, 6].map((num) => (
                         <MenuItem key={num} value={num}>
@@ -1115,13 +1580,28 @@ const AuthoringProjectDetail = () => {
                   sx={{
                     mb: 1,
                     cursor: "pointer",
-                    bgcolor: aiPromptTemplate.id === template.id ? "primary.50" : "transparent",
-                    borderColor: aiPromptTemplate.id === template.id ? "primary.main" : "divider",
+                    bgcolor:
+                      aiPromptTemplate.id === template.id
+                        ? "primary.50"
+                        : "transparent",
+                    borderColor:
+                      aiPromptTemplate.id === template.id
+                        ? "primary.main"
+                        : "divider",
                   }}
-                  onClick={() => setAiPromptTemplate(template)}
+                  onClick={() => {
+                    setAiPromptTemplate(template);
+                    setAiCustomPrompt("");
+                  }}
                 >
                   <CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
                       <Typography variant="body2" fontWeight="medium">
                         {template.name}
                       </Typography>
@@ -1155,10 +1635,22 @@ const AuthoringProjectDetail = () => {
                 fullWidth
                 multiline
                 rows={8}
-                value={aiCustomPrompt || aiPromptTemplate.prompt
-                  .replace("{item_type}", itemTypeOptions.find(o => o.value === aiItemType)?.label || aiItemType)
-                  .replace("{grade_band}", gradeBandLabels[project.grade_band] || project.grade_band)
-                  .replace("{difficulty}", String(project.difficulty_target || 3))
+                value={
+                  aiCustomPrompt ||
+                  aiPromptTemplate.prompt
+                    .replace(
+                      "{item_type}",
+                      itemTypeOptions.find((o) => o.value === aiItemType)
+                        ?.label || aiItemType,
+                    )
+                    .replace(
+                      "{grade_band}",
+                      gradeBandLabels[project.grade_band] || project.grade_band,
+                    )
+                    .replace(
+                      "{difficulty}",
+                      String(project.difficulty_target || 3),
+                    )
                 }
                 onChange={(e) => setAiCustomPrompt(e.target.value)}
                 placeholder="프롬프트를 직접 수정하거나 추가 지시사항을 입력하세요..."
@@ -1171,7 +1663,8 @@ const AuthoringProjectDetail = () => {
                     선택된 지문: {selectedStimulus.title}
                   </Typography>
                   <Typography variant="caption" display="block">
-                    {selectedStimulus.word_count}자 | {gradeBandLabels[selectedStimulus.grade_band]}
+                    {selectedStimulus.word_count}자 |{" "}
+                    {gradeBandLabels[selectedStimulus.grade_band]}
                   </Typography>
                 </Alert>
               )}
@@ -1214,7 +1707,12 @@ const AuthoringProjectDetail = () => {
             <Select
               value={editingItemData.item_type}
               label="문항 유형"
-              onChange={(e) => setEditingItemData({ ...editingItemData, item_type: e.target.value })}
+              onChange={(e) =>
+                setEditingItemData({
+                  ...editingItemData,
+                  item_type: e.target.value,
+                })
+              }
             >
               {itemTypeOptions.map((opt) => (
                 <MenuItem key={opt.value} value={opt.value}>
@@ -1230,7 +1728,9 @@ const AuthoringProjectDetail = () => {
             rows={4}
             label="발문"
             value={editingItemData.stem}
-            onChange={(e) => setEditingItemData({ ...editingItemData, stem: e.target.value })}
+            onChange={(e) =>
+              setEditingItemData({ ...editingItemData, stem: e.target.value })
+            }
             sx={{ mb: 2 }}
           />
 
@@ -1248,7 +1748,10 @@ const AuthoringProjectDetail = () => {
                     onChange={(e) => {
                       const newOptions = [...editingItemData.options];
                       newOptions[idx].text = e.target.value;
-                      setEditingItemData({ ...editingItemData, options: newOptions });
+                      setEditingItemData({
+                        ...editingItemData,
+                        options: newOptions,
+                      });
                     }}
                     placeholder={`선택지 ${String.fromCharCode(65 + idx)}`}
                   />
@@ -1256,19 +1759,34 @@ const AuthoringProjectDetail = () => {
                     variant={opt.is_correct ? "contained" : "outlined"}
                     color={opt.is_correct ? "success" : "inherit"}
                     onClick={() => {
-                      const newOptions = editingItemData.options.map((o, i) => ({
-                        ...o,
-                        is_correct: editingItemData.item_type === "mcq_single" ? i === idx : (i === idx ? !o.is_correct : o.is_correct),
-                      }));
-                      setEditingItemData({ ...editingItemData, options: newOptions });
+                      const newOptions = editingItemData.options.map(
+                        (o, i) => ({
+                          ...o,
+                          is_correct:
+                            editingItemData.item_type === "mcq_single"
+                              ? i === idx
+                              : i === idx
+                                ? !o.is_correct
+                                : o.is_correct,
+                        }),
+                      );
+                      setEditingItemData({
+                        ...editingItemData,
+                        options: newOptions,
+                      });
                     }}
                   >
                     {opt.is_correct ? <CheckCircle /> : "정답"}
                   </Button>
                   <IconButton
                     onClick={() => {
-                      const newOptions = editingItemData.options.filter((_, i) => i !== idx);
-                      setEditingItemData({ ...editingItemData, options: newOptions });
+                      const newOptions = editingItemData.options.filter(
+                        (_, i) => i !== idx,
+                      );
+                      setEditingItemData({
+                        ...editingItemData,
+                        options: newOptions,
+                      });
                     }}
                     disabled={editingItemData.options.length <= 2}
                   >
@@ -1282,7 +1800,10 @@ const AuthoringProjectDetail = () => {
                 onClick={() => {
                   setEditingItemData({
                     ...editingItemData,
-                    options: [...editingItemData.options, { text: "", is_correct: false }],
+                    options: [
+                      ...editingItemData.options,
+                      { text: "", is_correct: false },
+                    ],
                   });
                 }}
                 disabled={editingItemData.options.length >= 6}
@@ -1298,7 +1819,11 @@ const AuthoringProjectDetail = () => {
                 <Typography fontWeight="bold">루브릭 (채점 기준)</Typography>
               </AccordionSummary>
               <AccordionDetails>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
                   서술형 문항의 채점 기준을 설정합니다.
                 </Typography>
                 <FormControl fullWidth size="small" sx={{ mb: 2 }}>
@@ -1307,17 +1832,24 @@ const AuthoringProjectDetail = () => {
                     value=""
                     label="루브릭 템플릿"
                     onChange={(e) => {
-                      const template = rubricTemplates.find(r => r.id === e.target.value);
+                      const template = rubricTemplates.find(
+                        (r) => r.id === e.target.value,
+                      );
                       if (template) {
-                        setEditingItemData({ ...editingItemData, rubric: template });
+                        setEditingItemData({
+                          ...editingItemData,
+                          rubric: template,
+                        });
                       }
                     }}
                   >
-                    {rubricTemplates.filter(r => r.itemType === "essay").map((template) => (
-                      <MenuItem key={template.id} value={template.id}>
-                        {template.name}
-                      </MenuItem>
-                    ))}
+                    {rubricTemplates
+                      .filter((r) => r.itemType === "essay")
+                      .map((template) => (
+                        <MenuItem key={template.id} value={template.id}>
+                          {template.name}
+                        </MenuItem>
+                      ))}
                   </Select>
                 </FormControl>
                 {editingItemData.rubric && (
@@ -1331,13 +1863,15 @@ const AuthoringProjectDetail = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {editingItemData.rubric.criteria?.map((c: any, idx: number) => (
-                          <TableRow key={idx}>
-                            <TableCell>{c.name}</TableCell>
-                            <TableCell>{c.weight}%</TableCell>
-                            <TableCell>{c.levels?.join(" / ")}</TableCell>
-                          </TableRow>
-                        ))}
+                        {editingItemData.rubric.criteria?.map(
+                          (c: any, idx: number) => (
+                            <TableRow key={idx}>
+                              <TableCell>{c.name}</TableCell>
+                              <TableCell>{c.weight}%</TableCell>
+                              <TableCell>{c.levels?.join(" / ")}</TableCell>
+                            </TableRow>
+                          ),
+                        )}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -1391,11 +1925,21 @@ const AuthoringProjectDetail = () => {
             return (
               <Accordion key={item.draft_item_id}>
                 <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      width: "100%",
+                    }}
+                  >
                     <Typography fontWeight="bold" sx={{ flex: 1 }}>
                       {(content.stem || "(내용 없음)").substring(0, 50)}...
                     </Typography>
-                    <Chip label={item.current_version_id ? "v1" : "v0"} size="small" />
+                    <Chip
+                      label={item.current_version_id ? "v1" : "v0"}
+                      size="small"
+                    />
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails>
