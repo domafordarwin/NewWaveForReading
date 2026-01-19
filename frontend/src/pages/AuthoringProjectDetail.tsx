@@ -99,16 +99,47 @@ interface AuthoringItem {
   };
 }
 
-// Unused interface - keeping for future use
-// interface AIGenerationJob {
-//   job_id: number;
-//   job_type: string;
-//   status: string;
-//   progress: number;
-//   result_json: any;
-//   error_message: string | null;
-//   created_at: string;
-// }
+// DB 프롬프트 템플릿 인터페이스
+interface PromptBaseTemplate {
+  base_template_id: number;
+  template_name: string;
+  template_code: string;
+  persona_text: string;
+  input_schema_text: string;
+  task_text: string;
+  quality_rules_text: string;
+  output_format_text: string;
+  self_check_text: string;
+  placeholders: string[];
+  target_grade_bands: string[];
+  version: number;
+  is_active: boolean;
+}
+
+interface PromptAreaTemplate {
+  area_template_id: number;
+  area_code: string;
+  area_name: string;
+  area_description: string | null;
+  objective_text: string;
+  guidelines_text: string;
+  example_patterns: string | null;
+  skill_tags: string[];
+  display_order: number;
+  is_active: boolean;
+}
+
+interface UserFavoritePrompt {
+  favorite_id: number;
+  user_id: number;
+  favorite_name: string;
+  base_template_id: number | null;
+  area_template_id: number | null;
+  custom_prompt_text: string | null;
+  custom_overrides: Record<string, string>;
+  usage_count: number;
+  last_used_at: string | null;
+}
 
 // 문항 유형 옵션 (DB 스키마의 item_kind에 맞춤)
 const itemTypeOptions = [
@@ -274,11 +305,30 @@ const AuthoringProjectDetail = () => {
     source: "",
   });
 
-  // 프롬프트 즐겨찾기
+  // 프롬프트 즐겨찾기 (로컬)
   const [favoritePrompts, setFavoritePrompts] = useState<string[]>(() => {
     const saved = localStorage.getItem("favoritePrompts");
     return saved ? JSON.parse(saved) : [];
   });
+
+  // DB 프롬프트 템플릿 상태
+  const [dbBaseTemplates, setDbBaseTemplates] = useState<PromptBaseTemplate[]>(
+    [],
+  );
+  const [dbAreaTemplates, setDbAreaTemplates] = useState<PromptAreaTemplate[]>(
+    [],
+  );
+  const [selectedBaseTemplate, setSelectedBaseTemplate] =
+    useState<PromptBaseTemplate | null>(null);
+  const [selectedAreaTemplate, setSelectedAreaTemplate] =
+    useState<PromptAreaTemplate | null>(null);
+  const [userFavoritePrompts, setUserFavoritePrompts] = useState<
+    UserFavoritePrompt[]
+  >([]);
+  const [composedPrompt, setComposedPrompt] = useState<string>("");
+  const [isPromptModified, setIsPromptModified] = useState(false);
+  const [promptSaving, setPromptSaving] = useState(false);
+  const [showBasePromptDetail, setShowBasePromptDetail] = useState(false);
 
   // 데이터 로드
   useEffect(() => {
@@ -312,6 +362,11 @@ const AuthoringProjectDetail = () => {
       if (!projectData) throw new Error("프로젝트를 찾을 수 없습니다.");
 
       setProject(projectData);
+
+      // 프로젝트에 저장된 지문 ID 설정
+      if (projectData.primary_stimulus_id) {
+        setProjectStimulusId(projectData.primary_stimulus_id);
+      }
 
       // 연결된 지문 조회
       const { data: stimuliData } = await supabase
@@ -387,6 +442,243 @@ const AuthoringProjectDetail = () => {
     }
   };
 
+  // DB 프롬프트 템플릿 로드
+  const fetchPromptTemplates = async () => {
+    if (!supabase) return;
+
+    try {
+      // Base 템플릿 로드
+      const { data: baseData, error: baseError } = await supabase
+        .from("prompt_base_templates")
+        .select("*")
+        .eq("is_active", true)
+        .order("template_name");
+
+      if (baseError) {
+        console.error("Base templates fetch error:", baseError);
+      } else if (baseData && baseData.length > 0) {
+        setDbBaseTemplates(baseData);
+        // 기본 템플릿 선택
+        if (!selectedBaseTemplate) {
+          setSelectedBaseTemplate(baseData[0]);
+        }
+      }
+
+      // Area 템플릿 로드
+      const { data: areaData, error: areaError } = await supabase
+        .from("prompt_area_templates")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order");
+
+      if (areaError) {
+        console.error("Area templates fetch error:", areaError);
+      } else if (areaData && areaData.length > 0) {
+        setDbAreaTemplates(areaData);
+        // 기본 영역 선택 (독해력)
+        if (!selectedAreaTemplate) {
+          const defaultArea =
+            areaData.find(
+              (a: PromptAreaTemplate) =>
+                a.area_code === "READING_COMPREHENSION",
+            ) || areaData[0];
+          setSelectedAreaTemplate(defaultArea);
+        }
+      }
+
+      // 사용자 즐겨찾기 프롬프트 로드 (user_id=1 임시 사용)
+      const { data: favData } = await supabase
+        .from("prompt_user_favorites")
+        .select("*")
+        .eq("user_id", 1)
+        .order("usage_count", { ascending: false });
+
+      if (favData) {
+        setUserFavoritePrompts(favData);
+      }
+    } catch (err) {
+      console.error("Error fetching prompt templates:", err);
+    }
+  };
+
+  // 프롬프트 조합 함수
+  const composePrompt = (
+    baseTemplate: PromptBaseTemplate | null,
+    areaTemplate: PromptAreaTemplate | null,
+    stimulus: Stimulus | null,
+    projectData: AuthoringProject | null,
+    itemCount: number,
+    numOptions: number,
+  ): string => {
+    if (!baseTemplate || !areaTemplate) {
+      return "프롬프트 템플릿을 선택해주세요.";
+    }
+
+    // 플레이스홀더 치환
+    const replacePlaceholders = (text: string): string => {
+      return text
+        .replace(/{STIMULUS_ID}/g, stimulus?.stimulus_id?.toString() || "N/A")
+        .replace(/{GRADE_BAND}/g, projectData?.grade_band || "중저")
+        .replace(
+          /{DIFFICULTY}/g,
+          (projectData?.difficulty_target || 3).toString(),
+        )
+        .replace(/{NUM_ITEMS}/g, itemCount.toString())
+        .replace(/{NUM_OPTIONS}/g, numOptions.toString())
+        .replace(
+          /{STIMULUS_TEXT}/g,
+          stimulus?.content_text || "[지문을 선택해주세요]",
+        );
+    };
+
+    // 전체 프롬프트 조합
+    const fullPrompt = `## [ROLE / PERSONA]
+${baseTemplate.persona_text}
+
+## [INPUT]
+${replacePlaceholders(baseTemplate.input_schema_text)}
+
+## [TASK]
+${baseTemplate.task_text}
+
+## [AREA PROMPT - ${areaTemplate.area_name}]
+### 목표
+${areaTemplate.objective_text}
+
+### 문항 설계 지침
+${areaTemplate.guidelines_text}
+${areaTemplate.example_patterns ? `\n### 예시 패턴\n${areaTemplate.example_patterns}` : ""}
+
+## [QUALITY RULES]
+${baseTemplate.quality_rules_text}
+
+## [OUTPUT FORMAT]
+${baseTemplate.output_format_text}
+
+## [SELF-CHECK]
+${baseTemplate.self_check_text}`;
+
+    return fullPrompt;
+  };
+
+  // 영역 템플릿 변경 시 프롬프트 재조합
+  useEffect(() => {
+    if (selectedBaseTemplate && selectedAreaTemplate) {
+      const newPrompt = composePrompt(
+        selectedBaseTemplate,
+        selectedAreaTemplate,
+        selectedStimulus,
+        project,
+        aiItemCount,
+        aiNumOptions,
+      );
+      setComposedPrompt(newPrompt);
+      setIsPromptModified(false);
+      setAiCustomPrompt(""); // 기존 커스텀 프롬프트 초기화
+    }
+  }, [
+    selectedBaseTemplate,
+    selectedAreaTemplate,
+    selectedStimulus,
+    project,
+    aiItemCount,
+    aiNumOptions,
+  ]);
+
+  // AI 다이얼로그 열릴 때 프롬프트 템플릿 로드
+  useEffect(() => {
+    if (aiDialogOpen) {
+      fetchPromptTemplates();
+    }
+  }, [aiDialogOpen]);
+
+  // 사용자 커스텀 프롬프트 저장
+  const handleSaveCustomPrompt = async () => {
+    if (!supabase || !selectedBaseTemplate || !selectedAreaTemplate) {
+      setError("프롬프트 템플릿을 먼저 선택해주세요.");
+      return;
+    }
+
+    const customPromptText = aiCustomPrompt || composedPrompt;
+    if (!customPromptText.trim()) {
+      setError("저장할 프롬프트가 없습니다.");
+      return;
+    }
+
+    setPromptSaving(true);
+
+    try {
+      const favoriteName = `${selectedAreaTemplate.area_name} 커스텀 - ${new Date().toLocaleDateString()}`;
+
+      const { data, error: insertError } = await supabase
+        .from("prompt_user_favorites")
+        .insert([
+          {
+            user_id: 1, // TODO: 실제 로그인 사용자 ID로 변경
+            favorite_name: favoriteName,
+            base_template_id: selectedBaseTemplate.base_template_id,
+            area_template_id: selectedAreaTemplate.area_template_id,
+            custom_prompt_text: customPromptText,
+            custom_overrides: {},
+            usage_count: 0,
+          },
+        ])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // 즐겨찾기 목록 갱신
+      setUserFavoritePrompts((prev) => [data, ...prev]);
+      setSuccess("프롬프트가 저장되었습니다.");
+      setIsPromptModified(false);
+    } catch (err: any) {
+      setError(err.message || "프롬프트 저장에 실패했습니다.");
+    } finally {
+      setPromptSaving(false);
+    }
+  };
+
+  // 저장된 프롬프트 불러오기
+  const handleLoadFavoritePrompt = (favorite: UserFavoritePrompt) => {
+    if (favorite.custom_prompt_text) {
+      setAiCustomPrompt(favorite.custom_prompt_text);
+      setIsPromptModified(true);
+    }
+    // 사용 횟수 업데이트
+    if (supabase) {
+      supabase
+        .from("prompt_user_favorites")
+        .update({
+          usage_count: (favorite.usage_count || 0) + 1,
+          last_used_at: new Date().toISOString(),
+        })
+        .eq("favorite_id", favorite.favorite_id)
+        .then();
+    }
+  };
+
+  // 저장된 프롬프트 삭제
+  const handleDeleteFavoritePrompt = async (favoriteId: number) => {
+    if (!supabase || !window.confirm("이 프롬프트를 삭제하시겠습니까?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("prompt_user_favorites")
+        .delete()
+        .eq("favorite_id", favoriteId);
+
+      if (error) throw error;
+
+      setUserFavoritePrompts((prev) =>
+        prev.filter((f) => f.favorite_id !== favoriteId),
+      );
+      setSuccess("프롬프트가 삭제되었습니다.");
+    } catch (err: any) {
+      setError(err.message || "프롬프트 삭제에 실패했습니다.");
+    }
+  };
+
   // 지문 검색
   const fetchAvailableStimuli = async () => {
     if (!supabase) return;
@@ -409,6 +701,54 @@ const AuthoringProjectDetail = () => {
   const handleSelectStimulus = (stimulus: Stimulus) => {
     setSelectedStimulus(stimulus);
     setStimulusDialogOpen(false);
+    // 선택한 지문이 이미 프로젝트에 저장된 것인지 확인
+    if (projectStimulusId !== stimulus.stimulus_id) {
+      // 다른 지문 선택됨 - 저장 필요 상태로 변경하지 않음 (버튼으로 명시적 저장)
+    }
+  };
+
+  // 선택된 지문을 프로젝트에 연결 저장
+  const [stimulusSaving, setStimulusSaving] = useState(false);
+  const [projectStimulusId, setProjectStimulusId] = useState<number | null>(
+    null,
+  );
+
+  const handleSaveStimulusToProject = async () => {
+    if (!supabase || !project || !selectedStimulus) {
+      setError("지문을 먼저 선택해주세요.");
+      return;
+    }
+
+    setStimulusSaving(true);
+
+    try {
+      // 프로젝트에 지문 연결 업데이트 (authoring_projects 테이블에 stimulus_id 컬럼이 있다고 가정)
+      // 만약 별도 연결 테이블이 필요하면 그 테이블에 저장
+      const { error: updateError } = await supabase
+        .from("authoring_projects")
+        .update({
+          primary_stimulus_id: selectedStimulus.stimulus_id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("project_id", project.project_id);
+
+      if (updateError) {
+        // primary_stimulus_id 컬럼이 없으면 로컬 상태만 유지
+        console.warn(
+          "프로젝트에 지문 ID 저장 실패 (컬럼 없을 수 있음):",
+          updateError,
+        );
+      }
+
+      setProjectStimulusId(selectedStimulus.stimulus_id);
+      setSuccess(
+        `지문 "${selectedStimulus.title}"이(가) 프로젝트에 연결되었습니다.`,
+      );
+    } catch (err: any) {
+      setError(err.message || "지문 저장에 실패했습니다.");
+    } finally {
+      setStimulusSaving(false);
+    }
   };
 
   // AI 문항 생성
@@ -422,9 +762,10 @@ const AuthoringProjectDetail = () => {
     setAiGeneratedItems([]);
 
     try {
-      // 프롬프트 템플릿 적용
+      // DB 프롬프트 또는 커스텀 프롬프트 사용
       const finalPrompt =
         aiCustomPrompt ||
+        composedPrompt ||
         aiPromptTemplate.prompt
           .replace(
             "{item_type}",
@@ -445,12 +786,37 @@ const AuthoringProjectDetail = () => {
         gradeBand: project.grade_band,
         difficulty: project.difficulty_target || 3,
         count: aiItemCount,
-        numOptions: aiItemType.startsWith("mcq") ? aiNumOptions : undefined, // 객관식일 때만 보기 개수 전달
+        numOptions: aiItemType.startsWith("mcq") ? aiNumOptions : undefined,
         customPrompt: finalPrompt,
       });
 
       if (!response.success) {
         throw new Error(response.error || "문항 생성에 실패했습니다.");
+      }
+
+      // 프롬프트 사용 로그 기록
+      if (supabase && selectedBaseTemplate && selectedAreaTemplate) {
+        await supabase
+          .from("prompt_usage_logs")
+          .insert([
+            {
+              base_template_id: selectedBaseTemplate.base_template_id,
+              area_template_id: selectedAreaTemplate.area_template_id,
+              user_id: 1, // TODO: 실제 사용자 ID
+              project_id: project.project_id,
+              stimulus_id: selectedStimulus.stimulus_id,
+              final_prompt_text: finalPrompt.substring(0, 5000), // 최대 길이 제한
+              input_params: {
+                item_type: aiItemType,
+                item_count: aiItemCount,
+                num_options: aiNumOptions,
+                difficulty: project.difficulty_target,
+              },
+              model_name: "gpt-4",
+              items_generated: response.items.length,
+            },
+          ])
+          .then(); // 비동기로 기록 (에러 무시)
       }
 
       // 생성된 문항 설정
@@ -665,6 +1031,9 @@ const AuthoringProjectDetail = () => {
 
       // 생성된 지문 자동 선택
       setSelectedStimulus(data);
+
+      // 프로젝트 저장 상태 초기화 (새 지문이므로 아직 프로젝트에 저장 안됨)
+      setProjectStimulusId(null);
 
       // 지문 목록 갱신
       await fetchAvailableStimuli();
@@ -924,7 +1293,7 @@ const AuthoringProjectDetail = () => {
                     p: 2,
                     bgcolor: "#f9fafb",
                     borderRadius: 2,
-                    maxHeight: 400,
+                    maxHeight: 300,
                     overflow: "auto",
                     whiteSpace: "pre-wrap",
                     lineHeight: 1.8,
@@ -932,6 +1301,42 @@ const AuthoringProjectDetail = () => {
                   }}
                 >
                   {selectedStimulus.content_text || "내용이 없습니다."}
+                </Box>
+
+                {/* 지문 저장/변경 버튼 */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    mt: 2,
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Search />}
+                    onClick={handleOpenStimulusDialog}
+                  >
+                    다른 지문 선택
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="primary"
+                    startIcon={
+                      stimulusSaving ? <CircularProgress size={16} /> : <Save />
+                    }
+                    onClick={handleSaveStimulusToProject}
+                    disabled={
+                      stimulusSaving ||
+                      projectStimulusId === selectedStimulus.stimulus_id
+                    }
+                  >
+                    {projectStimulusId === selectedStimulus.stimulus_id
+                      ? "저장됨"
+                      : "프로젝트에 저장"}
+                  </Button>
                 </Box>
               </Box>
             ) : (
@@ -1499,7 +1904,7 @@ const AuthoringProjectDetail = () => {
       <Dialog
         open={aiDialogOpen}
         onClose={() => setAiDialogOpen(false)}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
       >
         <DialogTitle>
@@ -1510,7 +1915,8 @@ const AuthoringProjectDetail = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            {/* 왼쪽: 설정 영역 */}
+            <Grid item xs={12} md={4}>
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                 문항 유형
               </Typography>
@@ -1570,29 +1976,116 @@ const AuthoringProjectDetail = () => {
                 </>
               )}
 
+              <Divider sx={{ my: 2 }} />
+
+              {/* 기본 프롬프트 템플릿 */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 1,
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="bold">
+                  기본 프롬프트
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={() => setShowBasePromptDetail(!showBasePromptDetail)}
+                >
+                  {showBasePromptDetail ? "접기" : "상세보기"}
+                </Button>
+              </Box>
+              {dbBaseTemplates.length > 0 ? (
+                <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                  <Select
+                    value={selectedBaseTemplate?.base_template_id || ""}
+                    onChange={(e) => {
+                      const template = dbBaseTemplates.find(
+                        (t) => t.base_template_id === e.target.value,
+                      );
+                      if (template) setSelectedBaseTemplate(template);
+                    }}
+                  >
+                    {dbBaseTemplates.map((template) => (
+                      <MenuItem
+                        key={template.base_template_id}
+                        value={template.base_template_id}
+                      >
+                        {template.template_name} (v{template.version})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              ) : (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  <Typography variant="caption">
+                    DB에서 프롬프트 템플릿을 불러오는 중...
+                  </Typography>
+                </Alert>
+              )}
+
+              {showBasePromptDetail && selectedBaseTemplate && (
+                <Paper
+                  variant="outlined"
+                  sx={{ p: 1.5, mb: 2, maxHeight: 200, overflow: "auto" }}
+                >
+                  <Typography
+                    variant="caption"
+                    color="primary"
+                    fontWeight="bold"
+                  >
+                    페르소나:
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    display="block"
+                    sx={{ mb: 1, whiteSpace: "pre-wrap" }}
+                  >
+                    {selectedBaseTemplate.persona_text.substring(0, 200)}...
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="primary"
+                    fontWeight="bold"
+                  >
+                    품질 규칙:
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    display="block"
+                    sx={{ whiteSpace: "pre-wrap" }}
+                  >
+                    {selectedBaseTemplate.quality_rules_text.substring(0, 200)}
+                    ...
+                  </Typography>
+                </Paper>
+              )}
+
+              {/* 영역별 프롬프트 템플릿 */}
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                프롬프트 템플릿
+                영역 프롬프트
               </Typography>
-              {aiPromptTemplates.map((template) => (
+              {dbAreaTemplates.map((template) => (
                 <Card
-                  key={template.id}
+                  key={template.area_template_id}
                   variant="outlined"
                   sx={{
                     mb: 1,
                     cursor: "pointer",
                     bgcolor:
-                      aiPromptTemplate.id === template.id
+                      selectedAreaTemplate?.area_template_id ===
+                      template.area_template_id
                         ? "primary.50"
                         : "transparent",
                     borderColor:
-                      aiPromptTemplate.id === template.id
+                      selectedAreaTemplate?.area_template_id ===
+                      template.area_template_id
                         ? "primary.main"
                         : "divider",
                   }}
-                  onClick={() => {
-                    setAiPromptTemplate(template);
-                    setAiCustomPrompt("");
-                  }}
+                  onClick={() => setSelectedAreaTemplate(template)}
                 >
                   <CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
                     <Box
@@ -1603,16 +2096,16 @@ const AuthoringProjectDetail = () => {
                       }}
                     >
                       <Typography variant="body2" fontWeight="medium">
-                        {template.name}
+                        {template.area_name}
                       </Typography>
                       <IconButton
                         size="small"
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleFavoritePrompt(template.id);
+                          toggleFavoritePrompt(template.area_code);
                         }}
                       >
-                        {favoritePrompts.includes(template.id) ? (
+                        {favoritePrompts.includes(template.area_code) ? (
                           <Star fontSize="small" color="warning" />
                         ) : (
                           <StarBorder fontSize="small" />
@@ -1620,41 +2113,133 @@ const AuthoringProjectDetail = () => {
                       </IconButton>
                     </Box>
                     <Typography variant="caption" color="text.secondary">
-                      {template.description}
+                      {template.area_description ||
+                        template.objective_text.substring(0, 50)}
+                      ...
                     </Typography>
                   </CardContent>
                 </Card>
               ))}
+
+              {/* 저장된 커스텀 프롬프트 */}
+              {userFavoritePrompts.length > 0 && (
+                <>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="bold"
+                    gutterBottom
+                  >
+                    내 저장된 프롬프트
+                  </Typography>
+                  {userFavoritePrompts.slice(0, 3).map((fav) => (
+                    <Card
+                      key={fav.favorite_id}
+                      variant="outlined"
+                      sx={{ mb: 1, cursor: "pointer" }}
+                      onClick={() => handleLoadFavoritePrompt(fav)}
+                    >
+                      <CardContent sx={{ py: 1, "&:last-child": { pb: 1 } }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Typography variant="caption" fontWeight="medium">
+                            {fav.favorite_name}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteFavoritePrompt(fav.favorite_id);
+                            }}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          사용: {fav.usage_count}회
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </>
+              )}
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                프롬프트 미리보기 및 수정
-              </Typography>
+            {/* 오른쪽: 프롬프트 미리보기 및 수정 */}
+            <Grid item xs={12} md={8}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 1,
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="bold">
+                  프롬프트 미리보기 및 수정
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  {isPromptModified && (
+                    <Chip label="수정됨" size="small" color="warning" />
+                  )}
+                  <Button
+                    size="small"
+                    startIcon={
+                      promptSaving ? <CircularProgress size={14} /> : <Save />
+                    }
+                    onClick={handleSaveCustomPrompt}
+                    disabled={
+                      promptSaving || (!aiCustomPrompt && !isPromptModified)
+                    }
+                  >
+                    프롬프트 저장
+                  </Button>
+                  <Button
+                    size="small"
+                    startIcon={<Refresh />}
+                    onClick={() => {
+                      setAiCustomPrompt("");
+                      setIsPromptModified(false);
+                      if (selectedBaseTemplate && selectedAreaTemplate) {
+                        const newPrompt = composePrompt(
+                          selectedBaseTemplate,
+                          selectedAreaTemplate,
+                          selectedStimulus,
+                          project,
+                          aiItemCount,
+                          aiNumOptions,
+                        );
+                        setComposedPrompt(newPrompt);
+                      }
+                    }}
+                  >
+                    초기화
+                  </Button>
+                </Box>
+              </Box>
+
               <TextField
                 fullWidth
                 multiline
-                rows={8}
-                value={
-                  aiCustomPrompt ||
-                  aiPromptTemplate.prompt
-                    .replace(
-                      "{item_type}",
-                      itemTypeOptions.find((o) => o.value === aiItemType)
-                        ?.label || aiItemType,
-                    )
-                    .replace(
-                      "{grade_band}",
-                      gradeBandLabels[project.grade_band] || project.grade_band,
-                    )
-                    .replace(
-                      "{difficulty}",
-                      String(project.difficulty_target || 3),
-                    )
-                }
-                onChange={(e) => setAiCustomPrompt(e.target.value)}
+                rows={18}
+                value={aiCustomPrompt || composedPrompt}
+                onChange={(e) => {
+                  setAiCustomPrompt(e.target.value);
+                  setIsPromptModified(true);
+                }}
                 placeholder="프롬프트를 직접 수정하거나 추가 지시사항을 입력하세요..."
-                sx={{ mb: 2 }}
+                sx={{
+                  mb: 2,
+                  "& .MuiInputBase-root": {
+                    fontFamily: "monospace",
+                    fontSize: "0.85rem",
+                  },
+                }}
               />
 
               {selectedStimulus && (

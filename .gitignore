@@ -6,3 +6,4 @@ supabase/*_rubrics_seed.sql
 supabase/domains_extended_seed.sql
 supabase/seed.sql
 .env
+.claude/settings.local.json
