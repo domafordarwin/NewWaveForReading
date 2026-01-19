@@ -30,6 +30,8 @@ import StimuliDetail from "./pages/StimuliDetail";
 import StimuliEdit from "./pages/StimuliEdit";
 import BooksList from "./pages/BooksList";
 import BooksNew from "./pages/BooksNew";
+import BooksDetail from "./pages/BooksDetail";
+import BooksEdit from "./pages/BooksEdit";
 import AuthoringProjects from "./pages/AuthoringProjects";
 import AuthoringProjectDetail from "./pages/AuthoringProjectDetail";
 import DomainList from "./pages/DomainList";
@@ -147,6 +149,8 @@ function App() {
             <Route path="stimuli/:id/edit" element={<StimuliEdit />} />
             <Route path="books" element={<BooksList />} />
             <Route path="books/new" element={<BooksNew />} />
+            <Route path="books/:id" element={<BooksDetail />} />
+            <Route path="books/:id/edit" element={<BooksEdit />} />
             <Route path="authoring" element={<AuthoringProjects />} />
             <Route path="authoring/:id" element={<AuthoringProjectDetail />} />
             <Route
