@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import {
   Box,
   Drawer,
@@ -44,7 +44,7 @@ import type { UserType } from "../types";
 const drawerWidth = 260;
 
 interface MainLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 // 사용자 타입별 메뉴 구성
@@ -248,7 +248,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           mt: 8,
         }}
       >
-        {children}
+        {children || <Outlet />}
       </Box>
     </Box>
   );

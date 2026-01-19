@@ -118,24 +118,20 @@ function App() {
           } />
 
           {/* 문항 개발 교사 라우트 */}
-          <Route path="/question-dev/*" element={
-            <MainLayout>
-              <Routes>
-                <Route path="dashboard" element={<QuestionDeveloperDashboard />} />
-                <Route path="items" element={<ItemBankList />} />
-                <Route path="items/:id" element={<ItemDetail />} />
-                <Route path="items/:id/edit" element={<ItemEdit />} />
-                <Route path="stimuli" element={<StimuliList />} />
-                <Route path="stimuli/new" element={<StimuliNew />} />
-                <Route path="stimuli/:id" element={<StimuliDetail />} />
-                <Route path="stimuli/:id/edit" element={<StimuliEdit />} />
-                <Route path="authoring" element={<AuthoringProjects />} />
-                <Route path="authoring/:id" element={<AuthoringProjectDetail />} />
-                <Route path="authoring/:id/edit" element={<AuthoringEditRedirect />} />
-                <Route path="domains" element={<DomainList />} />
-              </Routes>
-            </MainLayout>
-          } />
+          <Route path="/question-dev/*" element={<MainLayout />}>
+            <Route path="dashboard" element={<QuestionDeveloperDashboard />} />
+            <Route path="items" element={<ItemBankList />} />
+            <Route path="items/:id" element={<ItemDetail />} />
+            <Route path="items/:id/edit" element={<ItemEdit />} />
+            <Route path="stimuli" element={<StimuliList />} />
+            <Route path="stimuli/new" element={<StimuliNew />} />
+            <Route path="stimuli/:id" element={<StimuliDetail />} />
+            <Route path="stimuli/:id/edit" element={<StimuliEdit />} />
+            <Route path="authoring" element={<AuthoringProjects />} />
+            <Route path="authoring/:id" element={<AuthoringProjectDetail />} />
+            <Route path="authoring/:id/edit" element={<AuthoringEditRedirect />} />
+            <Route path="domains" element={<DomainList />} />
+          </Route>
 
           {/* 시스템 관리자 라우트 */}
           <Route path="/admin/*" element={
