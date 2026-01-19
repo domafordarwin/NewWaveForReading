@@ -23,6 +23,7 @@ import AuthoringProjectDetail from './pages/AuthoringProjectDetail';
 import DomainList from './pages/DomainList';
 import ReadingQuestionGuide from './pages/ReadingQuestionGuide';
 import StimuliNew from './pages/StimuliNew';
+import TestPage from './pages/TestPage';
 
 const theme = createTheme({
   palette: {
@@ -114,6 +115,8 @@ function App() {
             <Route path="authoring" element={<AuthoringProjects />} />
             <Route path="authoring/:id" element={<AuthoringProjectDetail />} />
             <Route path="authoring/:id/edit" element={<AuthoringEditRedirect />} />
+            <Route path="test" element={<TestPage />} />
+            <Route path="test/:id" element={<TestPage />} />
             <Route path="domains" element={<DomainList />} />
           </Route>
 
