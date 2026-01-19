@@ -10,7 +10,7 @@ export interface GenerateItemsRequest {
   gradeBand: string;
   difficulty: number;
   count: number;
-  numOptions?: number; // 객관식 보기 개수 (기본값: 4)
+  numOptions?: number; // 객관식 보기 개수 (기본값: 5)
   promptTemplate?: string;
   customPrompt?: string;
 }
@@ -53,7 +53,7 @@ const gradeBandDescriptions: Record<string, string> = {
 
 // 문항 유형별 설명 (동적으로 생성)
 const getItemTypeDescription = (itemType: string, numOptions?: number): string => {
-  const optionsText = numOptions ? `${numOptions}개 선택지` : "4-5개 선택지";
+  const optionsText = numOptions ? `${numOptions}개 선택지` : "5개 선택지";
   const descriptions: Record<string, string> = {
     mcq_single: `단일 정답 선택형 객관식 문항 (${optionsText} 중 1개 정답)`,
     mcq_multi: `복수 정답 선택형 객관식 문항 (${optionsText}, 여러 개 정답 가능)`,
@@ -78,7 +78,7 @@ const difficultyDescriptions: Record<number, string> = {
  * 문항 생성 시스템 프롬프트
  */
 const getSystemPrompt = (request: GenerateItemsRequest): string => {
-  const numOptions = request.numOptions || 4;
+  const numOptions = request.numOptions || 5;
   const isMCQ = request.itemType.startsWith("mcq");
 
   return `당신은 한국어 독서 평가 문항을 제작하는 전문가입니다.
@@ -142,7 +142,7 @@ const getUserPrompt = (request: GenerateItemsRequest): string => {
     ? `\n추가 요청사항: ${request.customPrompt}`
     : "";
 
-  const numOptions = request.numOptions || 4;
+  const numOptions = request.numOptions || 5;
   const optionsInfo = request.itemType.startsWith("mcq")
     ? `\n- 객관식 보기 개수: ${numOptions}개 (정답 1개 포함)`
     : "";
@@ -242,7 +242,7 @@ const simulateGeneration = async (
   await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000));
 
   const items: GeneratedItem[] = [];
-  const numOptions = request.numOptions || 4;
+  const numOptions = request.numOptions || 5;
 
   for (let i = 0; i < request.count; i++) {
     if (request.itemType === "mcq_single" || request.itemType === "mcq_multi") {

@@ -212,7 +212,7 @@ const AuthoringProjectDetail = () => {
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiItemType, setAiItemType] = useState("mcq_single");
-  const [aiNumOptions, setAiNumOptions] = useState(4); // 객관식 보기 개수
+  const [aiNumOptions, setAiNumOptions] = useState(5); // 객관식 보기 개수 (기본값 5개)
   const [aiPromptTemplate, setAiPromptTemplate] = useState(aiPromptTemplates[0]);
   const [aiCustomPrompt, setAiCustomPrompt] = useState("");
   const [aiItemCount, setAiItemCount] = useState(3);
@@ -372,6 +372,12 @@ const AuthoringProjectDetail = () => {
     setAiGeneratedItems([]);
 
     try {
+      // 프롬프트 템플릿 적용
+      const finalPrompt = aiCustomPrompt || aiPromptTemplate.prompt
+        .replace("{item_type}", itemTypeOptions.find(o => o.value === aiItemType)?.label || aiItemType)
+        .replace("{grade_band}", gradeBandLabels[project.grade_band] || project.grade_band)
+        .replace("{difficulty}", String(project.difficulty_target || 3));
+
       // OpenAI 서비스를 통한 문항 생성
       const response = await generateItems({
         stimulusText: selectedStimulus.content_text || "",
@@ -381,7 +387,7 @@ const AuthoringProjectDetail = () => {
         difficulty: project.difficulty_target || 3,
         count: aiItemCount,
         numOptions: aiItemType.startsWith("mcq") ? aiNumOptions : undefined, // 객관식일 때만 보기 개수 전달
-        customPrompt: aiCustomPrompt || undefined,
+        customPrompt: finalPrompt,
       });
 
       if (!response.success) {
