@@ -284,32 +284,48 @@ const AuthoringProjectDetail = () => {
         setStimuli(stimuliData);
       }
 
-      // 프로젝트의 문항 조회 (버전 정보 포함)
-      const { data: itemsData } = await supabase
+      // 프로젝트의 문항 조회
+      const { data: itemsData, error: itemsError } = await supabase
         .from("authoring_items")
-        .select(`
-          draft_item_id,
-          project_id,
-          item_kind,
-          status,
-          current_version_id,
-          created_at,
-          authoring_item_versions!authoring_items_current_version_id_fkey (
-            version_id,
-            content_json,
-            created_at
-          )
-        `)
+        .select("*")
         .eq("project_id", parseInt(id))
         .order("created_at", { ascending: false });
 
-      if (itemsData) {
+      if (itemsError) {
+        console.error("Items fetch error:", itemsError);
+      }
+
+      if (itemsData && itemsData.length > 0) {
+        // 버전 정보를 별도로 조회
+        const itemIds = itemsData.map((item: any) => item.draft_item_id);
+        const versionIds = itemsData
+          .map((item: any) => item.current_version_id)
+          .filter((id: any) => id != null);
+
+        let versionsMap: Record<number, any> = {};
+
+        if (versionIds.length > 0) {
+          const { data: versionsData } = await supabase
+            .from("authoring_item_versions")
+            .select("version_id, content_json, created_at")
+            .in("version_id", versionIds);
+
+          if (versionsData) {
+            versionsMap = versionsData.reduce((acc: Record<number, any>, v: any) => {
+              acc[v.version_id] = v;
+              return acc;
+            }, {});
+          }
+        }
+
         // 조인된 데이터 구조 정리
         const formattedItems = itemsData.map((item: any) => ({
           ...item,
-          current_version: item.authoring_item_versions?.[0] || null,
+          current_version: item.current_version_id ? versionsMap[item.current_version_id] || null : null,
         }));
         setItems(formattedItems);
+      } else {
+        setItems([]);
       }
     } catch (err: any) {
       setError(err.message || "데이터를 불러오는데 실패했습니다.");

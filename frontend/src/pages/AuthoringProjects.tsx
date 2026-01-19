@@ -327,7 +327,7 @@ const AuthoringProjects = () => {
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
                       {project.title}
                     </Typography>
-                    {project.topic_tags.length > 0 && (
+                    {project.topic_tags && project.topic_tags.length > 0 && (
                       <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mb: 2 }}>
                         {project.topic_tags.slice(0, 3).map((tag, idx) => (
                           <Chip key={idx} label={tag} size="small" variant="outlined" />
