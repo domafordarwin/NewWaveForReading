@@ -29,22 +29,42 @@
    - ItemEditData
    - NewStimulusData
 
-3. **`/hooks/useAuthoringProject.ts`**
+3. **`/hooks/useAuthoringProject.ts`** ✅ DONE
    - 프로젝트 데이터 로드
    - 지문 목록 관리
    - 문항 목록 관리
    - 에러/성공 메시지 관리
+   - refreshProject, refreshItems 함수
 
-4. **`/hooks/useStimulusManagement.ts`**
-   - 지문 선택 기능
+4. **`/hooks/useStimulusManagement.ts`** ✅ DONE
+   - 지문 선택 다이얼로그 관리
    - 새 지문 생성
    - 프로젝트에 지문 저장
+   - 지문 검색 기능
+
+5. **`/hooks/useAIGeneration.ts`** ✅ DONE
+   - AI 생성 다이얼로그 상태
+   - 문항 자동 생성 로직
+   - 생성된 문항 저장
+   - 프롬프트 사용 로그 기록
+
+6. **`/hooks/useItemEditing.ts`** ✅ DONE
+   - 문항 편집 다이얼로그
+   - 문항 수정 기능
+   - 문항 삭제 기능
+   - 문항 유효성 검증
+
+7. **`/hooks/usePromptTemplates.ts`** ✅ DONE
+   - DB 템플릿 로드
+   - 프롬프트 조합 로직
+   - 사용자 즐겨찾기 관리
+   - 커스텀 프롬프트 저장
 
 ## 향후 리팩토링 계획
 
-### Phase 2: 나머지 훅 분리
+### ~~Phase 2: 나머지 훅 분리~~ ✅ COMPLETED
 
-#### `/hooks/useAIGeneration.ts`
+#### ~~`/hooks/useAIGeneration.ts`~~ ✅ DONE
 ```typescript
 export const useAIGeneration = (project, selectedStimulus) => {
   // AI 생성 다이얼로그 상태
@@ -274,18 +294,24 @@ export const AuthoringHeader = ({ ... }: Props) => {
 
 ## 리팩토링 체크리스트
 
-### 즉시 가능한 개선사항
+### Phase 2 완료 ✅
 
 - [x] 타입 정의 분리 (`/types/authoring.ts`)
 - [x] 상수 설정 분리 (`/constants/itemConfig.ts`)
 - [x] 프로젝트 데이터 훅 분리 (`/hooks/useAuthoringProject.ts`)
 - [x] 지문 관리 훅 분리 (`/hooks/useStimulusManagement.ts`)
+- [x] AI 생성 훅 분리 (`/hooks/useAIGeneration.ts`)
+- [x] 문항 편집 훅 분리 (`/hooks/useItemEditing.ts`)
+- [x] 프롬프트 템플릿 훅 분리 (`/hooks/usePromptTemplates.ts`)
 
-### 다음 단계 (우선순위 순)
+### Phase 3: 다음 단계 (우선순위 순)
 
-- [ ] AI 생성 훅 분리 (`/hooks/useAIGeneration.ts`)
-- [ ] 문항 편집 훅 분리 (`/hooks/useItemEditing.ts`)
-- [ ] 프롬프트 템플릿 훅 분리 (`/hooks/usePromptTemplates.ts`)
+**메인 컴포넌트 리팩토링 필요**
+- [ ] AuthoringProjectDetail.tsx에서 새 훅들 import 및 사용
+- [ ] 기존 로직을 훅 호출로 교체
+- [ ] 테스트 및 검증
+
+**컴포넌트 분리 (선택사항)**
 - [ ] 다이얼로그 컴포넌트 분리
 - [ ] 패널 컴포넌트 분리
 
