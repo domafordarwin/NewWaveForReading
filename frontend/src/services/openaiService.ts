@@ -20,14 +20,7 @@ export interface GeneratedItem {
   item_type: string;
   options?: { text: string; is_correct: boolean }[];
   explanation?: string;
-  rubric?: {
-    criteria: {
-      name: string;
-      weight: number;
-      levels: string[];
-      descriptions?: string[];
-    }[];
-  };
+  rubric?: string; // 서술형 문항의 평가 루브릭 (문자열 형태)
   keywords?: string[];
   answer_hint?: string;
 }
@@ -105,7 +98,9 @@ ${isMCQ ? `- **정확히 ${numOptions}개의 선택지를 생성**하세요.` : 
 
 ## 서술형 문항 작성 시 주의사항
 - 답안의 핵심 요소를 명확히 하세요.
-- 채점 기준(루브릭)을 함께 제시하세요.
+- **반드시 평가 루브릭(rubric)을 생성**하세요.
+- 루브릭은 200자 이내로 자세하게 작성하되, 평가 기준이 명확해야 합니다.
+- 평가 기준은 해당 문항의 평가 영역과 지문의 특성을 반영해야 합니다.
 - 부분점수 부여가 가능한 구조로 작성하세요.
 
 ## 응답 형식
@@ -123,16 +118,7 @@ ${isMCQ ? `- **정확히 ${numOptions}개의 선택지를 생성**하세요.` : 
       "explanation": "정답 해설 및 오답 해설",
       "keywords": ["핵심", "키워드"],  // 단답형인 경우
       "answer_hint": "예시 답안",  // 서술형인 경우
-      "rubric": {  // 서술형인 경우
-        "criteria": [
-          {
-            "name": "평가 기준명",
-            "weight": 40,
-            "levels": ["불충분", "기초", "보통", "우수", "탁월"],
-            "descriptions": ["각 수준별 설명"]
-          }
-        ]
-      }
+      "rubric": "평가 루브릭 (서술형인 경우 200자 이내로 자세하게 작성. 예: '내용 이해(40%): 지문의 핵심 주제를 정확히 파악하고 설명했는지 평가. 논리적 전개(30%): 주장과 근거가 논리적으로 연결되었는지 평가. 표현력(30%): 명확하고 간결한 문장으로 작성되었는지 평가.')"
     }
   ]
 }`;
@@ -169,7 +155,8 @@ ${request.stimulusText}
 ${customInstruction}
 
 위 지문을 바탕으로 ${request.count}개의 ${getItemTypeDescription(itemType, request.numOptions)} 문항을 JSON 형식으로 생성해주세요.
-${itemType.startsWith("mcq") ? `\n중요: 각 문항은 정확히 ${numOptions}개의 선택지를 포함해야 하며, 그 중 정답은 반드시 1개만 is_correct: true로 설정되어야 합니다.` : ""}`;
+${itemType.startsWith("mcq") ? `\n중요: 각 문항은 정확히 ${numOptions}개의 선택지를 포함해야 하며, 그 중 정답은 반드시 1개만 is_correct: true로 설정되어야 합니다.` : ""}
+${itemType === "essay" ? `\n중요: 서술형 문항의 경우 반드시 rubric 필드에 평가 루브릭을 200자 이내로 자세하게 작성해주세요. 루브릭은 문자열 형태로 작성하며, 평가 기준과 비중을 명확히 제시해야 합니다.` : ""}`;
 };
 
 /**
@@ -296,53 +283,20 @@ const simulateGeneration = async (
         explanation: "지문에서 반복적으로 강조된 핵심 개념입니다.",
       });
     } else if (itemType === "essay") {
+      // 평가 영역에 따라 다른 루브릭 생성 (예시)
+      const rubricExamples = [
+        "내용 이해(40%): 지문의 핵심 주제를 정확히 파악하고 설명했는지 평가. 논리적 전개(30%): 주장과 근거가 논리적으로 연결되었는지 평가. 표현력(30%): 명확하고 간결한 문장으로 작성되었는지 평가.",
+        "사실 파악(35%): 지문에 제시된 정보를 정확히 파악했는지 평가. 추론 능력(35%): 제시된 정보를 바탕으로 타당한 추론을 했는지 평가. 표현 정확성(30%): 문법과 어휘를 적절히 사용했는지 평가.",
+        "비판적 사고(40%): 지문 내용을 비판적으로 분석했는지 평가. 창의성(30%): 독창적인 관점이나 해석을 제시했는지 평가. 논리성(30%): 주장이 논리적으로 타당한지 평가.",
+      ];
+
       items.push({
         stem: `[AI 생성 ${i + 1}] "${request.stimulusTitle}"의 주제와 관련하여 자신의 생각을 논리적으로 서술하시오.`,
         item_type: itemType,
         answer_hint:
           "지문의 주제를 파악하고, 자신의 경험이나 지식과 연결하여 논리적으로 서술합니다.",
-        rubric: {
-          criteria: [
-            {
-              name: "내용 이해",
-              weight: 40,
-              levels: ["불충분", "기초", "보통", "우수", "탁월"],
-              descriptions: [
-                "지문 내용을 이해하지 못함",
-                "지문 내용을 부분적으로 이해",
-                "지문의 핵심 내용을 이해",
-                "지문 내용을 정확히 이해하고 적용",
-                "지문 내용을 심층적으로 분석",
-              ],
-            },
-            {
-              name: "논리적 전개",
-              weight: 30,
-              levels: ["불충분", "기초", "보통", "우수", "탁월"],
-              descriptions: [
-                "논리적 연결이 없음",
-                "단편적인 서술",
-                "기본적인 논리 구조 갖춤",
-                "명확한 논리적 흐름",
-                "정교하고 설득력 있는 논리",
-              ],
-            },
-            {
-              name: "표현력",
-              weight: 30,
-              levels: ["불충분", "기초", "보통", "우수", "탁월"],
-              descriptions: [
-                "문장 구성이 부적절",
-                "기본적인 문장 구성",
-                "적절한 어휘 사용",
-                "다양하고 정확한 표현",
-                "창의적이고 풍부한 표현",
-              ],
-            },
-          ],
-        },
-        explanation:
-          "답안은 지문의 핵심 내용을 정확히 파악하고, 이를 자신의 생각과 연결하여 논리적으로 서술해야 합니다.",
+        rubric: rubricExamples[i % rubricExamples.length],
+        explanation: "서술형 문항은 채점 루브릭에 따라 평가됩니다. 내용의 정확성, 논리적 전개, 표현력을 고루 갖춘 답안을 작성하세요.",
       });
     } else if (request.itemType === "fill_blank") {
       items.push({
@@ -415,12 +369,10 @@ export const validateGeneratedItem = (item: GeneratedItem): string[] => {
 
   // 서술형 검증
   if (item.item_type === "essay") {
-    if (
-      !item.rubric ||
-      !item.rubric.criteria ||
-      item.rubric.criteria.length === 0
-    ) {
+    if (!item.rubric || typeof item.rubric !== 'string' || item.rubric.trim().length === 0) {
       errors.push("서술형 문항에는 채점 기준(루브릭)이 필요합니다.");
+    } else if (item.rubric.length > 300) {
+      errors.push("루브릭은 300자 이내로 작성해주세요.");
     }
   }
 

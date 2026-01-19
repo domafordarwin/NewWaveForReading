@@ -151,8 +151,6 @@ interface UserFavoritePrompt {
 const itemTypeOptions = [
   { value: "mcq", label: "객관식" },
   { value: "essay", label: "서술형" },
-  { value: "composite", label: "복합문항" },
-  { value: "survey", label: "설문" },
 ];
 
 // 상태 설정 (DB 스키마의 status에 맞춤)
@@ -176,41 +174,6 @@ const gradeBandLabels: Record<string, string> = {
   중저: "중등 저학년",
   중고: "중등 고학년",
 };
-
-// 루브릭 템플릿
-const rubricTemplates = [
-  {
-    id: "essay_basic",
-    name: "서술형 기본 루브릭",
-    itemType: "essay",
-    criteria: [
-      {
-        name: "내용 이해",
-        weight: 40,
-        levels: ["불충분", "기초", "보통", "우수", "탁월"],
-      },
-      {
-        name: "논리적 전개",
-        weight: 30,
-        levels: ["불충분", "기초", "보통", "우수", "탁월"],
-      },
-      {
-        name: "표현력",
-        weight: 30,
-        levels: ["불충분", "기초", "보통", "우수", "탁월"],
-      },
-    ],
-  },
-  {
-    id: "short_answer",
-    name: "단답형 기본 루브릭",
-    itemType: "short_text",
-    criteria: [
-      { name: "정확성", weight: 70, levels: ["오답", "부분 정답", "정답"] },
-      { name: "표현", weight: 30, levels: ["부적절", "적절"] },
-    ],
-  },
-];
 
 const AuthoringProjectDetail = () => {
   const navigate = useNavigate();
@@ -247,7 +210,7 @@ const AuthoringProjectDetail = () => {
   // AI 생성 다이얼로그
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
-  const [aiItemType, setAiItemType] = useState("mcq_single");
+  const [aiItemType, setAiItemType] = useState("mcq"); // 문항 유형: mcq 또는 essay
   const [aiNumOptions, setAiNumOptions] = useState(5); // 객관식 보기 개수 (기본값 5개)
   const [aiCustomPrompt, setAiCustomPrompt] = useState("");
   const [aiItemCount, setAiItemCount] = useState(3);
@@ -966,14 +929,17 @@ ${baseTemplate.self_check_text}`;
       console.log("지문 내용 (마지막 200자):", stimulusText.substring(Math.max(0, stimulusText.length - 200)));
 
       // OpenAI 서비스를 통한 문항 생성
+      // 문항 유형을 OpenAI API가 이해할 수 있는 형식으로 변환
+      const itemTypeForAPI = aiItemType === "mcq" ? "mcq_single" : aiItemType;
+
       const response = await generateItems({
         stimulusText: stimulusText,
         stimulusTitle: selectedStimulus.title,
-        itemType: aiItemType || "mcq_single",
+        itemType: itemTypeForAPI,
         gradeBand: project.grade_band,
         difficulty: project.difficulty_target || 3,
         count: aiItemCount,
-        numOptions: aiItemType?.startsWith("mcq") ? aiNumOptions : undefined,
+        numOptions: aiItemType === "mcq" ? aiNumOptions : undefined,
         customPrompt: finalPrompt,
       });
 
@@ -1006,14 +972,10 @@ ${baseTemplate.self_check_text}`;
           .then(); // 비동기로 기록 (에러 무시)
       }
 
-      // 생성된 문항 설정
+      // 생성된 문항 설정 (AI가 생성한 루브릭을 그대로 사용)
       const itemsWithValidation = response.items.map((item) => ({
         ...item,
-        rubric:
-          item.rubric ||
-          (item.item_type === "essay"
-            ? rubricTemplates.find((r) => r.itemType === "essay")
-            : null),
+        // AI가 생성한 rubric을 그대로 사용 (하드코딩 제거)
       }));
 
       console.log("Generated items with validation:", itemsWithValidation);
@@ -1690,6 +1652,16 @@ ${baseTemplate.self_check_text}`;
                           ))}
                         </List>
                       )}
+                      {item.item_type === "essay" && item.rubric && (
+                        <Box sx={{ mt: 2, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
+                          <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                            평가 루브릭
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
+                            {typeof item.rubric === 'string' ? item.rubric : ''}
+                          </Typography>
+                        </Box>
+                      )}
                       {validationErrors.length > 0 && (
                         <Alert severity="warning" sx={{ mt: 1 }}>
                           {validationErrors.map((err, i) => (
@@ -2271,7 +2243,7 @@ ${baseTemplate.self_check_text}`;
               </FormControl>
 
               {/* 객관식일 때만 보기 개수 표시 */}
-              {aiItemType?.startsWith("mcq") && (
+              {aiItemType === "mcq" && (
                 <>
                   <Typography
                     variant="subtitle2"
@@ -2721,70 +2693,38 @@ ${baseTemplate.self_check_text}`;
           )}
 
           {editingItemData.item_type === "essay" && (
-            <Accordion>
-              <AccordionSummary expandIcon={<ExpandMore />}>
-                <Typography fontWeight="bold">루브릭 (채점 기준)</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 2 }}
-                >
-                  서술형 문항의 채점 기준을 설정합니다.
-                </Typography>
-                <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                  <InputLabel>루브릭 템플릿</InputLabel>
-                  <Select
-                    value=""
-                    label="루브릭 템플릿"
-                    onChange={(e) => {
-                      const template = rubricTemplates.find(
-                        (r) => r.id === e.target.value,
-                      );
-                      if (template) {
-                        setEditingItemData({
-                          ...editingItemData,
-                          rubric: template,
-                        });
-                      }
-                    }}
-                  >
-                    {rubricTemplates
-                      .filter((r) => r.itemType === "essay")
-                      .map((template) => (
-                        <MenuItem key={template.id} value={template.id}>
-                          {template.name}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
-                {editingItemData.rubric && (
-                  <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>평가 기준</TableCell>
-                          <TableCell>배점</TableCell>
-                          <TableCell>수준</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {editingItemData.rubric.criteria?.map(
-                          (c: any, idx: number) => (
-                            <TableRow key={idx}>
-                              <TableCell>{c.name}</TableCell>
-                              <TableCell>{c.weight}%</TableCell>
-                              <TableCell>{c.levels?.join(" / ")}</TableCell>
-                            </TableRow>
-                          ),
-                        )}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                )}
-              </AccordionDetails>
-            </Accordion>
+            <Box sx={{ mt: 2 }}>
+              <Typography fontWeight="bold" gutterBottom>
+                루브릭 (채점 기준)
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 2 }}
+              >
+                서술형 문항의 채점 기준입니다.
+              </Typography>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                value={typeof editingItemData.rubric === 'string' ? editingItemData.rubric : ''}
+                onChange={(e) => {
+                  setEditingItemData({
+                    ...editingItemData,
+                    rubric: e.target.value,
+                  });
+                }}
+                placeholder="평가 루브릭을 입력하세요. (예: 내용 이해(40%): 지문의 핵심 주제를 정확히 파악하고 설명했는지 평가. 논리적 전개(30%): 주장과 근거가 논리적으로 연결되었는지 평가. 표현력(30%): 명확하고 간결한 문장으로 작성되었는지 평가.)"
+                variant="outlined"
+                sx={{
+                  "& .MuiInputBase-root": {
+                    fontFamily: "monospace",
+                    fontSize: "0.875rem",
+                  },
+                }}
+              />
+            </Box>
           )}
 
           {validateItem(editingItemData).length > 0 && (
