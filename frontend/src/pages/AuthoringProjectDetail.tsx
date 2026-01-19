@@ -92,6 +92,7 @@ interface AuthoringItem {
   status: string;
   current_version_id: number | null;
   created_at: string;
+  stimulus_id?: number | null; // 연결된 지문 ID
   // 조인된 버전 정보
   current_version?: {
     version_id: number;
@@ -217,7 +218,7 @@ const AuthoringProjectDetail = () => {
 
   // 상태
   const [project, setProject] = useState<AuthoringProject | null>(null);
-  const [_stimuli, setStimuli] = useState<Stimulus[]>([]);
+  const [stimuli, setStimuli] = useState<Stimulus[]>([]);
   const [items, setItems] = useState<AuthoringItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -233,6 +234,15 @@ const AuthoringProjectDetail = () => {
   const [selectedStimulus, setSelectedStimulus] = useState<Stimulus | null>(
     null,
   );
+
+  // 지문 편집 상태
+  const [isEditingStimulus, setIsEditingStimulus] = useState(false);
+  const [editingStimulusData, setEditingStimulusData] = useState({
+    title: "",
+    content_text: "",
+    genre: "",
+  });
+  const [stimulusUpdateSaving, setStimulusUpdateSaving] = useState(false);
 
   // AI 생성 다이얼로그
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
@@ -326,9 +336,20 @@ const AuthoringProjectDetail = () => {
 
       setProject(projectData);
 
-      // 프로젝트에 저장된 지문 ID 설정
+      // 프로젝트에 저장된 지문 ID 설정 및 지문 자동 로드
       if (projectData.primary_stimulus_id) {
         setProjectStimulusId(projectData.primary_stimulus_id);
+
+        // 연결된 지문 자동 로드
+        const { data: linkedStimulus } = await supabase
+          .from("stimuli")
+          .select("*")
+          .eq("stimulus_id", projectData.primary_stimulus_id)
+          .single();
+
+        if (linkedStimulus) {
+          setSelectedStimulus(linkedStimulus);
+        }
       }
 
       // 연결된 지문 조회
@@ -796,9 +817,65 @@ ${baseTemplate.self_check_text}`;
   const handleSelectStimulus = (stimulus: Stimulus) => {
     setSelectedStimulus(stimulus);
     setStimulusDialogOpen(false);
+    setIsEditingStimulus(false); // 편집 모드 해제
     // 선택한 지문이 이미 프로젝트에 저장된 것인지 확인
     if (projectStimulusId !== stimulus.stimulus_id) {
       // 다른 지문 선택됨 - 저장 필요 상태로 변경하지 않음 (버튼으로 명시적 저장)
+    }
+  };
+
+  // 지문 편집 시작
+  const handleStartEditStimulus = () => {
+    if (selectedStimulus) {
+      setEditingStimulusData({
+        title: selectedStimulus.title,
+        content_text: selectedStimulus.content_text || "",
+        genre: selectedStimulus.genre || "",
+      });
+      setIsEditingStimulus(true);
+    }
+  };
+
+  // 지문 편집 취소
+  const handleCancelEditStimulus = () => {
+    setIsEditingStimulus(false);
+    setEditingStimulusData({ title: "", content_text: "", genre: "" });
+  };
+
+  // 지문 편집 저장
+  const handleSaveEditStimulus = async () => {
+    if (!supabase || !selectedStimulus) return;
+
+    setStimulusUpdateSaving(true);
+    try {
+      const wordCount = editingStimulusData.content_text.replace(
+        /\s/g,
+        "",
+      ).length;
+
+      const { data, error } = await supabase
+        .from("stimuli")
+        .update({
+          title: editingStimulusData.title,
+          content_text: editingStimulusData.content_text,
+          genre: editingStimulusData.genre || null,
+          word_count: wordCount > 0 ? wordCount : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("stimulus_id", selectedStimulus.stimulus_id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // 업데이트된 지문으로 상태 갱신
+      setSelectedStimulus(data);
+      setIsEditingStimulus(false);
+      setSuccess("지문이 수정되었습니다.");
+    } catch (err: any) {
+      setError(err.message || "지문 수정에 실패했습니다.");
+    } finally {
+      setStimulusUpdateSaving(false);
     }
   };
 
@@ -817,9 +894,18 @@ ${baseTemplate.self_check_text}`;
     setStimulusSaving(true);
 
     try {
-      // TODO: project_stimuli 테이블을 통한 복사본 생성 방식으로 변경 필요
-      // 현재는 useStimulusManagement 훅의 linkStimulusToProject 사용 권장
-      // 레거시 직접 연결 방식은 더 이상 사용하지 않음
+      // 프로젝트에 지문 연결 (primary_stimulus_id 업데이트)
+      const { error: updateError } = await supabase
+        .from("authoring_projects")
+        .update({
+          primary_stimulus_id: selectedStimulus.stimulus_id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("project_id", project.project_id);
+
+      if (updateError) {
+        console.warn("프로젝트 지문 연결 업데이트:", updateError);
+      }
 
       setProjectStimulusId(selectedStimulus.stimulus_id);
       setSuccess(
@@ -930,7 +1016,7 @@ ${baseTemplate.self_check_text}`;
           ? "mcq"
           : itemType;
 
-      // 1. 먼저 authoring_items에 문항 생성
+      // 1. 먼저 authoring_items에 문항 생성 (stimulus_id 포함)
       const { data: itemData, error: itemError } = await supabase
         .from("authoring_items")
         .insert([
@@ -938,6 +1024,7 @@ ${baseTemplate.self_check_text}`;
             project_id: project.project_id,
             item_kind: itemKind,
             status: "ai_draft",
+            stimulus_id: selectedStimulus.stimulus_id,
           },
         ])
         .select()
@@ -1355,55 +1442,147 @@ ${baseTemplate.self_check_text}`;
                     </Button>
                     <IconButton
                       size="small"
+                      onClick={handleStartEditStimulus}
+                      title="지문 편집"
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
                       onClick={() =>
                         navigate(
                           `/question-dev/stimuli/${selectedStimulus.stimulus_id}`,
                         )
                       }
+                      title="상세 보기"
                     >
                       <Visibility fontSize="small" />
                     </IconButton>
                   </Box>
                 </Box>
-                <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-                  <Chip label={selectedStimulus.content_type} size="small" />
-                  <Chip
-                    label={
-                      gradeBandLabels[selectedStimulus.grade_band] ||
-                      selectedStimulus.grade_band
-                    }
-                    size="small"
-                    variant="outlined"
-                  />
-                  {selectedStimulus.genre && (
-                    <Chip
-                      label={selectedStimulus.genre}
+
+                {/* 지문 편집 모드 */}
+                {isEditingStimulus ? (
+                  <Box>
+                    <TextField
+                      fullWidth
+                      label="제목"
+                      value={editingStimulusData.title}
+                      onChange={(e) =>
+                        setEditingStimulusData({
+                          ...editingStimulusData,
+                          title: e.target.value,
+                        })
+                      }
+                      sx={{ mb: 2 }}
                       size="small"
-                      variant="outlined"
                     />
-                  )}
-                  {selectedStimulus.word_count && (
-                    <Chip
-                      label={`${selectedStimulus.word_count}자`}
+                    <TextField
+                      fullWidth
+                      label="장르"
+                      value={editingStimulusData.genre}
+                      onChange={(e) =>
+                        setEditingStimulusData({
+                          ...editingStimulusData,
+                          genre: e.target.value,
+                        })
+                      }
+                      sx={{ mb: 2 }}
                       size="small"
-                      variant="outlined"
                     />
-                  )}
-                </Box>
-                <Box
-                  sx={{
-                    p: 2,
-                    bgcolor: "#f9fafb",
-                    borderRadius: 2,
-                    maxHeight: 300,
-                    overflow: "auto",
-                    whiteSpace: "pre-wrap",
-                    lineHeight: 1.8,
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  {selectedStimulus.content_text || "내용이 없습니다."}
-                </Box>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={10}
+                      label="본문"
+                      value={editingStimulusData.content_text}
+                      onChange={(e) =>
+                        setEditingStimulusData({
+                          ...editingStimulusData,
+                          content_text: e.target.value,
+                        })
+                      }
+                      sx={{ mb: 2 }}
+                    />
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <Button
+                        variant="outlined"
+                        onClick={handleCancelEditStimulus}
+                        disabled={stimulusUpdateSaving}
+                      >
+                        취소
+                      </Button>
+                      <Button
+                        variant="contained"
+                        startIcon={
+                          stimulusUpdateSaving ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <Save />
+                          )
+                        }
+                        onClick={handleSaveEditStimulus}
+                        disabled={
+                          stimulusUpdateSaving ||
+                          !editingStimulusData.title.trim()
+                        }
+                      >
+                        저장
+                      </Button>
+                    </Box>
+                  </Box>
+                ) : (
+                  <>
+                    <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                      <Chip
+                        label={selectedStimulus.content_type}
+                        size="small"
+                      />
+                      <Chip
+                        label={
+                          gradeBandLabels[selectedStimulus.grade_band] ||
+                          selectedStimulus.grade_band
+                        }
+                        size="small"
+                        variant="outlined"
+                      />
+                      {selectedStimulus.genre && (
+                        <Chip
+                          label={selectedStimulus.genre}
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
+                      {selectedStimulus.word_count && (
+                        <Chip
+                          label={`${selectedStimulus.word_count}자`}
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
+                    <Box
+                      sx={{
+                        p: 2,
+                        bgcolor: "#f9fafb",
+                        borderRadius: 2,
+                        maxHeight: 300,
+                        overflow: "auto",
+                        whiteSpace: "pre-wrap",
+                        lineHeight: 1.8,
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      {selectedStimulus.content_text || "내용이 없습니다."}
+                    </Box>
+                  </>
+                )}
               </Box>
             ) : (
               <Box sx={{ textAlign: "center", py: 4 }}>
@@ -1582,6 +1761,7 @@ ${baseTemplate.self_check_text}`;
                       <TableCell>번호</TableCell>
                       <TableCell>유형</TableCell>
                       <TableCell>발문</TableCell>
+                      <TableCell>지문</TableCell>
                       <TableCell>상태</TableCell>
                       <TableCell>버전</TableCell>
                       <TableCell align="center">관리</TableCell>
@@ -1591,6 +1771,14 @@ ${baseTemplate.self_check_text}`;
                     {items.map((item, idx) => {
                       const content = item.current_version?.content_json || {};
                       const versionCount = item.current_version_id ? 1 : 0;
+                      // 연결된 지문 정보 (stimulus_id 또는 content_json에서)
+                      const linkedStimulusId =
+                        item.stimulus_id || content.stimulus_id;
+                      const linkedStimulus = linkedStimulusId
+                        ? stimuli.find(
+                            (s: Stimulus) => s.stimulus_id === linkedStimulusId,
+                          )
+                        : null;
                       return (
                         <TableRow key={item.draft_item_id} hover>
                           <TableCell>{idx + 1}</TableCell>
@@ -1608,7 +1796,7 @@ ${baseTemplate.self_check_text}`;
                             <Typography
                               variant="body2"
                               sx={{
-                                maxWidth: 250,
+                                maxWidth: 200,
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
@@ -1623,6 +1811,34 @@ ${baseTemplate.self_check_text}`;
                                 sx={{ ml: 1 }}
                                 icon={<SmartToy />}
                               />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {linkedStimulus ? (
+                              <Tooltip title={linkedStimulus.title}>
+                                <Chip
+                                  label={
+                                    linkedStimulus.title?.substring(0, 10) +
+                                    (linkedStimulus.title?.length > 10
+                                      ? "..."
+                                      : "")
+                                  }
+                                  size="small"
+                                  variant="outlined"
+                                  icon={<Article />}
+                                  onClick={() =>
+                                    setSelectedStimulus(linkedStimulus)
+                                  }
+                                  sx={{ cursor: "pointer" }}
+                                />
+                              </Tooltip>
+                            ) : (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                -
+                              </Typography>
                             )}
                           </TableCell>
                           <TableCell>
