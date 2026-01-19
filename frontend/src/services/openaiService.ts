@@ -10,6 +10,7 @@ export interface GenerateItemsRequest {
   gradeBand: string;
   difficulty: number;
   count: number;
+  numOptions?: number; // 객관식 보기 개수 (기본값: 4)
   promptTemplate?: string;
   customPrompt?: string;
 }
@@ -50,14 +51,18 @@ const gradeBandDescriptions: Record<string, string> = {
   중고: "중학교 3학년-고등학교 1학년 수준으로, 고차원적 사고와 비판적 분석을 요구합니다.",
 };
 
-// 문항 유형별 설명
-const itemTypeDescriptions: Record<string, string> = {
-  mcq_single: "단일 정답 선택형 객관식 문항 (4-5개 선택지 중 1개 정답)",
-  mcq_multi: "복수 정답 선택형 객관식 문항 (여러 개 정답 가능)",
-  short_text: "단답형 문항 (1-2문장 이내의 짧은 답변)",
-  essay: "서술형 문항 (3-5문장 이상의 논리적 서술 요구)",
-  fill_blank: "빈칸 채우기 문항 (지문 내 핵심 어휘나 개념 완성)",
-  composite: "복합문항 (여러 하위 문항으로 구성)",
+// 문항 유형별 설명 (동적으로 생성)
+const getItemTypeDescription = (itemType: string, numOptions?: number): string => {
+  const optionsText = numOptions ? `${numOptions}개 선택지` : "4-5개 선택지";
+  const descriptions: Record<string, string> = {
+    mcq_single: `단일 정답 선택형 객관식 문항 (${optionsText} 중 1개 정답)`,
+    mcq_multi: `복수 정답 선택형 객관식 문항 (${optionsText}, 여러 개 정답 가능)`,
+    short_text: "단답형 문항 (1-2문장 이내의 짧은 답변)",
+    essay: "서술형 문항 (3-5문장 이상의 논리적 서술 요구)",
+    fill_blank: "빈칸 채우기 문항 (지문 내 핵심 어휘나 개념 완성)",
+    composite: "복합문항 (여러 하위 문항으로 구성)",
+  };
+  return descriptions[itemType] || itemType;
 };
 
 // 난이도별 설명
@@ -73,6 +78,9 @@ const difficultyDescriptions: Record<number, string> = {
  * 문항 생성 시스템 프롬프트
  */
 const getSystemPrompt = (request: GenerateItemsRequest): string => {
+  const numOptions = request.numOptions || 4;
+  const isMCQ = request.itemType.startsWith("mcq");
+
   return `당신은 한국어 독서 평가 문항을 제작하는 전문가입니다.
 다음 지침을 철저히 따라 고품질의 평가 문항을 생성해주세요.
 
@@ -81,13 +89,15 @@ const getSystemPrompt = (request: GenerateItemsRequest): string => {
 2. **명확한 발문**: 무엇을 물어보는지 모호함 없이 명확하게 작성하세요.
 3. **적절한 난이도**: ${difficultyDescriptions[request.difficulty] || "보통 수준"}
 4. **학년군 적합성**: ${gradeBandDescriptions[request.gradeBand] || "적절한 수준"}
-5. **문항 유형 준수**: ${itemTypeDescriptions[request.itemType] || "해당 유형의 특성 준수"}
+5. **문항 유형 준수**: ${getItemTypeDescription(request.itemType, request.numOptions)}
 
 ## 객관식 문항 작성 시 주의사항
+${isMCQ ? `- **정확히 ${numOptions}개의 선택지를 생성**하세요.` : ""}
 - 선택지는 동질적이고 유사한 길이를 유지하세요.
 - 명확한 오답과 매력적인 오답(오개념 기반)을 적절히 배치하세요.
 - "모두 정답" 또는 "정답 없음" 선택지는 피하세요.
 - 부정적 표현("~이 아닌 것")은 강조 표시하세요.
+- **정답은 반드시 1개만 is_correct: true로 설정**하고, 나머지는 모두 is_correct: false로 설정하세요.
 
 ## 서술형 문항 작성 시 주의사항
 - 답안의 핵심 요소를 명확히 하세요.
@@ -132,19 +142,25 @@ const getUserPrompt = (request: GenerateItemsRequest): string => {
     ? `\n추가 요청사항: ${request.customPrompt}`
     : "";
 
+  const numOptions = request.numOptions || 4;
+  const optionsInfo = request.itemType.startsWith("mcq")
+    ? `\n- 객관식 보기 개수: ${numOptions}개 (정답 1개 포함)`
+    : "";
+
   return `## 지문 정보
 제목: ${request.stimulusTitle}
 내용:
 ${request.stimulusText}
 
 ## 생성 요청
-- 문항 유형: ${itemTypeDescriptions[request.itemType] || request.itemType}
+- 문항 유형: ${getItemTypeDescription(request.itemType, request.numOptions)}
 - 학년군: ${gradeBandDescriptions[request.gradeBand] || request.gradeBand}
 - 난이도: ${request.difficulty}/5 (${difficultyDescriptions[request.difficulty] || ""})
-- 생성 개수: ${request.count}개
+- 생성 개수: ${request.count}개${optionsInfo}
 ${customInstruction}
 
-위 지문을 바탕으로 ${request.count}개의 ${itemTypeDescriptions[request.itemType] || request.itemType} 문항을 JSON 형식으로 생성해주세요.`;
+위 지문을 바탕으로 ${request.count}개의 ${getItemTypeDescription(request.itemType, request.numOptions)} 문항을 JSON 형식으로 생성해주세요.
+${request.itemType.startsWith("mcq") ? `\n중요: 각 문항은 정확히 ${numOptions}개의 선택지를 포함해야 하며, 그 중 정답은 반드시 1개만 is_correct: true로 설정되어야 합니다.` : ""}`;
 };
 
 /**
@@ -226,19 +242,40 @@ const simulateGeneration = async (
   await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000));
 
   const items: GeneratedItem[] = [];
+  const numOptions = request.numOptions || 4;
 
   for (let i = 0; i < request.count; i++) {
     if (request.itemType === "mcq_single" || request.itemType === "mcq_multi") {
+      // 지정된 개수만큼 선택지 생성
+      const options = [];
+      const correctIndex = Math.floor(Math.random() * numOptions); // 랜덤 위치에 정답 배치
+
+      for (let j = 0; j < numOptions; j++) {
+        if (j === correctIndex) {
+          options.push({
+            text: "지문의 핵심 내용과 관련된 정답 선택지입니다.",
+            is_correct: true
+          });
+        } else {
+          const distractorTypes = [
+            "그럴듯하지만 지문과 맞지 않는 오답 선택지입니다.",
+            "일반적인 오개념을 기반으로 한 오답입니다.",
+            "지문의 세부 내용을 왜곡한 오답입니다.",
+            "부분적으로만 맞는 불완전한 오답입니다.",
+            "관련 없는 내용으로 혼란을 주는 오답입니다."
+          ];
+          options.push({
+            text: distractorTypes[j % distractorTypes.length],
+            is_correct: false
+          });
+        }
+      }
+
       items.push({
         stem: `[AI 생성 ${i + 1}] "${request.stimulusTitle}"의 내용을 바탕으로, 다음 중 올바른 것을 고르시오.`,
         item_type: request.itemType,
-        options: [
-          { text: "지문의 핵심 내용과 관련된 정답 선택지입니다.", is_correct: true },
-          { text: "그럴듯하지만 지문과 맞지 않는 오답 선택지입니다.", is_correct: false },
-          { text: "일반적인 오개념을 기반으로 한 오답입니다.", is_correct: false },
-          { text: "지문의 세부 내용을 왜곡한 오답입니다.", is_correct: false },
-        ],
-        explanation: "정답은 1번입니다. 지문에서 해당 내용을 명시적으로 언급하고 있습니다.",
+        options,
+        explanation: `정답은 ${correctIndex + 1}번입니다. 지문에서 해당 내용을 명시적으로 언급하고 있습니다.`,
       });
     } else if (request.itemType === "short_text") {
       items.push({

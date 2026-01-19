@@ -212,6 +212,7 @@ const AuthoringProjectDetail = () => {
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiItemType, setAiItemType] = useState("mcq_single");
+  const [aiNumOptions, setAiNumOptions] = useState(4); // 객관식 보기 개수
   const [aiPromptTemplate, setAiPromptTemplate] = useState(aiPromptTemplates[0]);
   const [aiCustomPrompt, setAiCustomPrompt] = useState("");
   const [aiItemCount, setAiItemCount] = useState(3);
@@ -379,6 +380,7 @@ const AuthoringProjectDetail = () => {
         gradeBand: project.grade_band,
         difficulty: project.difficulty_target || 3,
         count: aiItemCount,
+        numOptions: aiItemType.startsWith("mcq") ? aiNumOptions : undefined, // 객관식일 때만 보기 개수 전달
         customPrompt: aiCustomPrompt || undefined,
       });
 
@@ -1075,6 +1077,27 @@ const AuthoringProjectDetail = () => {
                   ))}
                 </Select>
               </FormControl>
+
+              {/* 객관식일 때만 보기 개수 표시 */}
+              {aiItemType.startsWith("mcq") && (
+                <>
+                  <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                    객관식 보기 개수
+                  </Typography>
+                  <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                    <Select
+                      value={aiNumOptions}
+                      onChange={(e) => setAiNumOptions(e.target.value as number)}
+                    >
+                      {[2, 3, 4, 5, 6].map((num) => (
+                        <MenuItem key={num} value={num}>
+                          {num}개 (정답 1개 포함)
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </>
+              )}
 
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                 프롬프트 템플릿
