@@ -15,20 +15,12 @@ const itemTypeLabels: Record<string, string> = {
   survey: "설문",
 };
 
-const statusLabels: Record<string, string> = {
-  draft: "작성중",
-  review: "검토중",
-  active: "활성",
-  inactive: "비활성",
-  archived: "보관됨",
-};
-
 interface RecentQuestion {
   item_id: number;
   stimulus_title: string;
   stem: string;
   item_type: string;
-  status: string;
+  is_active: boolean;
 }
 
 const QuestionDeveloperDashboard = () => {
@@ -54,15 +46,15 @@ const QuestionDeveloperDashboard = () => {
 
         // 개발된 문항 수
         const { count: itemsCount } = await supabase
-          .from("items")
+          .from("item_bank")
           .select("*", { count: "exact", head: true });
         setItemCount(itemsCount || 0);
 
-        // 검토 대기 문항 수 (status가 'draft' 또는 'review'인 항목)
+        // 검토 대기 문항 수 (is_active가 false인 항목으로 추정)
         const { count: reviewCount } = await supabase
-          .from("items")
+          .from("item_bank")
           .select("*", { count: "exact", head: true })
-          .in("status", ["draft", "review"]);
+          .eq("is_active", false);
         setReviewPendingCount(reviewCount || 0);
 
         // 이번 달 신규 문항 수
@@ -71,19 +63,19 @@ const QuestionDeveloperDashboard = () => {
         startOfMonth.setHours(0, 0, 0, 0);
 
         const { count: monthlyCount } = await supabase
-          .from("items")
+          .from("item_bank")
           .select("*", { count: "exact", head: true })
           .gte("created_at", startOfMonth.toISOString());
         setMonthlyNewCount(monthlyCount || 0);
 
         // 최근 개발 문항 (최근 3개)
         const { data: recentItems } = await supabase
-          .from("items")
+          .from("item_bank")
           .select(`
             item_id,
             stem,
             item_type,
-            status,
+            is_active,
             stimuli:stimulus_id (
               title
             )
@@ -97,7 +89,7 @@ const QuestionDeveloperDashboard = () => {
             stimulus_title: item.stimuli?.title || "지문 없음",
             stem: item.stem,
             item_type: item.item_type,
-            status: item.status,
+            is_active: item.is_active,
           }));
           setRecentQuestions(formattedQuestions);
         }
@@ -271,9 +263,9 @@ const QuestionDeveloperDashboard = () => {
                         <TableCell>{itemTypeLabels[row.item_type] || row.item_type}</TableCell>
                         <TableCell>
                           <Chip
-                            label={statusLabels[row.status] || row.status}
+                            label={row.is_active ? "활성" : "비활성"}
                             size="small"
-                            color={row.status === "active" ? "success" : row.status === "review" ? "warning" : "default"}
+                            color={row.is_active ? "success" : "default"}
                           />
                         </TableCell>
                         <TableCell align="right">
