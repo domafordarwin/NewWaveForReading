@@ -52,7 +52,10 @@ const gradeBandDescriptions: Record<string, string> = {
 };
 
 // 문항 유형별 설명 (동적으로 생성)
-const getItemTypeDescription = (itemType: string, numOptions?: number): string => {
+const getItemTypeDescription = (
+  itemType: string,
+  numOptions?: number,
+): string => {
   const optionsText = numOptions ? `${numOptions}개 선택지` : "5개 선택지";
   const descriptions: Record<string, string> = {
     mcq_single: `단일 정답 선택형 객관식 문항 (${optionsText} 중 1개 정답)`,
@@ -167,7 +170,7 @@ ${request.itemType.startsWith("mcq") ? `\n중요: 각 문항은 정확히 ${numO
  * OpenAI API를 통한 문항 생성
  */
 export const generateItems = async (
-  request: GenerateItemsRequest
+  request: GenerateItemsRequest,
 ): Promise<GenerateItemsResponse> => {
   // 환경 변수에서 API 키 가져오기
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
@@ -235,10 +238,12 @@ export const generateItems = async (
  * 시뮬레이션 모드 - API 키가 없을 때 테스트용
  */
 const simulateGeneration = async (
-  request: GenerateItemsRequest
+  request: GenerateItemsRequest,
 ): Promise<GenerateItemsResponse> => {
   // 실제 API 호출을 시뮬레이션하기 위한 지연
-  await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000));
+  await new Promise((resolve) =>
+    setTimeout(resolve, 1500 + Math.random() * 1000),
+  );
 
   const items: GeneratedItem[] = [];
   const numOptions = request.numOptions || 5;
@@ -253,7 +258,7 @@ const simulateGeneration = async (
         if (j === correctIndex) {
           options.push({
             text: "지문의 핵심 내용과 관련된 정답 선택지입니다.",
-            is_correct: true
+            is_correct: true,
           });
         } else {
           const distractorTypes = [
@@ -261,11 +266,11 @@ const simulateGeneration = async (
             "일반적인 오개념을 기반으로 한 오답입니다.",
             "지문의 세부 내용을 왜곡한 오답입니다.",
             "부분적으로만 맞는 불완전한 오답입니다.",
-            "관련 없는 내용으로 혼란을 주는 오답입니다."
+            "관련 없는 내용으로 혼란을 주는 오답입니다.",
           ];
           options.push({
             text: distractorTypes[j % distractorTypes.length],
-            is_correct: false
+            is_correct: false,
           });
         }
       }
@@ -287,7 +292,8 @@ const simulateGeneration = async (
       items.push({
         stem: `[AI 생성 ${i + 1}] "${request.stimulusTitle}"의 주제와 관련하여 자신의 생각을 논리적으로 서술하시오.`,
         item_type: request.itemType,
-        answer_hint: "지문의 주제를 파악하고, 자신의 경험이나 지식과 연결하여 논리적으로 서술합니다.",
+        answer_hint:
+          "지문의 주제를 파악하고, 자신의 경험이나 지식과 연결하여 논리적으로 서술합니다.",
         rubric: {
           criteria: [
             {
@@ -328,7 +334,8 @@ const simulateGeneration = async (
             },
           ],
         },
-        explanation: "답안은 지문의 핵심 내용을 정확히 파악하고, 이를 자신의 생각과 연결하여 논리적으로 서술해야 합니다.",
+        explanation:
+          "답안은 지문의 핵심 내용을 정확히 파악하고, 이를 자신의 생각과 연결하여 논리적으로 서술해야 합니다.",
       });
     } else if (request.itemType === "fill_blank") {
       items.push({
@@ -378,7 +385,11 @@ export const validateGeneratedItem = (item: GeneratedItem): string[] => {
       errors.push("정답이 지정되지 않았습니다.");
     }
 
-    if (item.options && item.options.filter((o) => o.is_correct).length > 1 && item.item_type === "mcq_single") {
+    if (
+      item.options &&
+      item.options.filter((o) => o.is_correct).length > 1 &&
+      item.item_type === "mcq_single"
+    ) {
       errors.push("단일 선택 문항에 정답이 2개 이상입니다.");
     }
 
@@ -386,7 +397,9 @@ export const validateGeneratedItem = (item: GeneratedItem): string[] => {
     if (item.options && item.options.length >= 4) {
       const lengths = item.options.map((o) => o.text.length);
       const avgLength = lengths.reduce((a, b) => a + b, 0) / lengths.length;
-      const maxDeviation = Math.max(...lengths.map((l) => Math.abs(l - avgLength)));
+      const maxDeviation = Math.max(
+        ...lengths.map((l) => Math.abs(l - avgLength)),
+      );
       if (maxDeviation > avgLength * 0.5) {
         errors.push("선택지 길이가 불균형합니다. 유사한 길이로 조정하세요.");
       }
@@ -395,7 +408,11 @@ export const validateGeneratedItem = (item: GeneratedItem): string[] => {
 
   // 서술형 검증
   if (item.item_type === "essay") {
-    if (!item.rubric || !item.rubric.criteria || item.rubric.criteria.length === 0) {
+    if (
+      !item.rubric ||
+      !item.rubric.criteria ||
+      item.rubric.criteria.length === 0
+    ) {
       errors.push("서술형 문항에는 채점 기준(루브릭)이 필요합니다.");
     }
   }

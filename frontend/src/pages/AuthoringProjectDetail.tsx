@@ -69,6 +69,7 @@ interface AuthoringProject {
   topic_tags: string[];
   difficulty_target: number | null;
   status: string;
+  primary_stimulus_id: number | null; // 프로젝트에 연결된 주요 지문 ID
   created_at: string;
   updated_at: string;
 }
