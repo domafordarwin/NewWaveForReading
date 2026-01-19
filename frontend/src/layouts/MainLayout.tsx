@@ -48,6 +48,8 @@ interface MainLayoutProps {
   children?: React.ReactNode;
 }
 
+// Menu configuration updated: 2025-01-19
+
 // 사용자 타입별 메뉴 구성
 const menusByUserType: Record<UserType, { label: string; icon: React.ReactNode; path: string }[]> = {
   STUDENT: [
