@@ -2039,9 +2039,18 @@ ${baseTemplate.self_check_text}`;
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        sx={{ display: "block", mt: 1 }}
+                        sx={{
+                          display: "block",
+                          mt: 1,
+                          whiteSpace: "pre-wrap",
+                          maxHeight: 400,
+                          overflow: "auto",
+                          p: 1,
+                          bgcolor: "grey.50",
+                          borderRadius: 1,
+                        }}
                       >
-                        {stimulus.content_text?.substring(0, 100)}...
+                        {stimulus.content_text || "내용 없음"}
                       </Typography>
                     </Box>
                   }
