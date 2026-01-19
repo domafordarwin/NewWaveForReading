@@ -15,12 +15,20 @@ export interface GenerateItemsRequest {
   customPrompt?: string;
 }
 
+export interface RubricCriterion {
+  area: string;           // 평가 영역 (예: 내용 이해, 논리적 전개, 표현력)
+  weight: number;         // 반영 비율 (%) (예: 40)
+  high: string;           // 상 수준 설명
+  middle: string;         // 중 수준 설명
+  low: string;            // 하 수준 설명
+}
+
 export interface GeneratedItem {
   stem: string;
   item_type: string;
   options?: { text: string; is_correct: boolean }[];
   explanation?: string;
-  rubric?: string; // 서술형 문항의 평가 루브릭 (문자열 형태)
+  rubric?: RubricCriterion[]; // 서술형 문항의 평가 루브릭 (구조화된 형태)
   keywords?: string[];
   answer_hint?: string;
 }
@@ -99,9 +107,9 @@ ${isMCQ ? `- **정확히 ${numOptions}개의 선택지를 생성**하세요.` : 
 ## 서술형 문항 작성 시 주의사항
 - 답안의 핵심 요소를 명확히 하세요.
 - **반드시 평가 루브릭(rubric)을 생성**하세요.
-- 루브릭은 200자 이내로 자세하게 작성하되, 평가 기준이 명확해야 합니다.
+- 루브릭은 2-3개의 평가 영역으로 구성하되, 각 영역마다 반영 비율과 상/중/하 수준을 명확히 제시하세요.
 - 평가 기준은 해당 문항의 평가 영역과 지문의 특성을 반영해야 합니다.
-- 부분점수 부여가 가능한 구조로 작성하세요.
+- 상/중/하 각 수준은 20-30자 이내로 간결하게 작성하세요.
 
 ## 응답 형식
 반드시 다음 JSON 형식으로 응답하세요:
@@ -118,7 +126,29 @@ ${isMCQ ? `- **정확히 ${numOptions}개의 선택지를 생성**하세요.` : 
       "explanation": "정답 해설 및 오답 해설",
       "keywords": ["핵심", "키워드"],  // 단답형인 경우
       "answer_hint": "예시 답안",  // 서술형인 경우
-      "rubric": "평가 루브릭 (서술형인 경우 200자 이내로 자세하게 작성. 예: '내용 이해(40%): 지문의 핵심 주제를 정확히 파악하고 설명했는지 평가. 논리적 전개(30%): 주장과 근거가 논리적으로 연결되었는지 평가. 표현력(30%): 명확하고 간결한 문장으로 작성되었는지 평가.')"
+      "rubric": [  // 서술형인 경우 반드시 포함
+        {
+          "area": "내용 이해",
+          "weight": 40,
+          "high": "지문의 핵심 주제를 정확히 파악하고 심층적으로 설명함",
+          "middle": "지문의 주요 내용을 파악하고 기본적으로 설명함",
+          "low": "지문 내용의 이해가 부족하거나 부정확함"
+        },
+        {
+          "area": "논리적 전개",
+          "weight": 30,
+          "high": "주장과 근거가 명확하고 논리적으로 연결됨",
+          "middle": "주장과 근거가 있으나 연결이 다소 부족함",
+          "low": "논리적 흐름이 부족하거나 주장이 불명확함"
+        },
+        {
+          "area": "표현력",
+          "weight": 30,
+          "high": "정확하고 다양한 어휘로 명료하게 표현함",
+          "middle": "기본적인 어휘로 의미를 전달함",
+          "low": "표현이 부적절하거나 의미 전달이 어려움"
+        }
+      ]
     }
   ]
 }`;
@@ -156,7 +186,7 @@ ${customInstruction}
 
 위 지문을 바탕으로 ${request.count}개의 ${getItemTypeDescription(itemType, request.numOptions)} 문항을 JSON 형식으로 생성해주세요.
 ${itemType.startsWith("mcq") ? `\n중요: 각 문항은 정확히 ${numOptions}개의 선택지를 포함해야 하며, 그 중 정답은 반드시 1개만 is_correct: true로 설정되어야 합니다.` : ""}
-${itemType === "essay" ? `\n중요: 서술형 문항의 경우 반드시 rubric 필드에 평가 루브릭을 200자 이내로 자세하게 작성해주세요. 루브릭은 문자열 형태로 작성하며, 평가 기준과 비중을 명확히 제시해야 합니다.` : ""}`;
+${itemType === "essay" ? `\n중요: 서술형 문항의 경우 반드시 rubric 필드에 평가 루브릭을 배열 형태로 작성해주세요. 각 평가 영역(area)마다 반영 비율(weight)과 상/중/하 수준(high/middle/low)을 명확히 제시하세요. 2-3개의 평가 영역을 포함하고, 각 수준 설명은 20-30자 이내로 간결하게 작성하세요.` : ""}`;
 };
 
 /**
@@ -285,9 +315,21 @@ const simulateGeneration = async (
     } else if (itemType === "essay") {
       // 평가 영역에 따라 다른 루브릭 생성 (예시)
       const rubricExamples = [
-        "내용 이해(40%): 지문의 핵심 주제를 정확히 파악하고 설명했는지 평가. 논리적 전개(30%): 주장과 근거가 논리적으로 연결되었는지 평가. 표현력(30%): 명확하고 간결한 문장으로 작성되었는지 평가.",
-        "사실 파악(35%): 지문에 제시된 정보를 정확히 파악했는지 평가. 추론 능력(35%): 제시된 정보를 바탕으로 타당한 추론을 했는지 평가. 표현 정확성(30%): 문법과 어휘를 적절히 사용했는지 평가.",
-        "비판적 사고(40%): 지문 내용을 비판적으로 분석했는지 평가. 창의성(30%): 독창적인 관점이나 해석을 제시했는지 평가. 논리성(30%): 주장이 논리적으로 타당한지 평가.",
+        [
+          { area: "내용 이해", weight: 40, high: "지문의 핵심 주제를 정확히 파악하고 심층적으로 설명함", middle: "지문의 주요 내용을 파악하고 기본적으로 설명함", low: "지문 내용의 이해가 부족하거나 부정확함" },
+          { area: "논리적 전개", weight: 30, high: "주장과 근거가 명확하고 논리적으로 연결됨", middle: "주장과 근거가 있으나 연결이 다소 부족함", low: "논리적 흐름이 부족하거나 주장이 불명확함" },
+          { area: "표현력", weight: 30, high: "정확하고 다양한 어휘로 명료하게 표현함", middle: "기본적인 어휘로 의미를 전달함", low: "표현이 부적절하거나 의미 전달이 어려움" },
+        ],
+        [
+          { area: "사실 파악", weight: 35, high: "지문의 정보를 정확하고 완전하게 파악함", middle: "지문의 주요 정보를 대체로 파악함", low: "사실 파악이 부족하거나 오류가 있음" },
+          { area: "추론 능력", weight: 35, high: "제시된 정보를 바탕으로 타당한 추론을 제시함", middle: "기본적인 추론을 하나 근거가 다소 부족함", low: "추론이 부족하거나 논리적 비약이 있음" },
+          { area: "표현 정확성", weight: 30, high: "문법과 어휘를 정확하게 사용함", middle: "의미 전달에 큰 문제는 없으나 일부 오류 있음", low: "문법·어휘 오류로 의미 전달이 어려움" },
+        ],
+        [
+          { area: "비판적 사고", weight: 40, high: "지문 내용을 다각도로 분석하고 비판적으로 평가함", middle: "지문에 대한 기본적인 비판적 관점을 제시함", low: "비판적 분석이 부족하거나 피상적임" },
+          { area: "창의성", weight: 30, high: "독창적이고 참신한 관점이나 해석을 제시함", middle: "나름의 관점을 제시하나 독창성은 다소 부족함", low: "일반적이거나 지문의 반복에 그침" },
+          { area: "논리성", weight: 30, high: "주장이 명확하고 논리적으로 타당함", middle: "주장은 있으나 논리적 연결이 다소 약함", low: "주장이 불명확하거나 논리적 오류가 있음" },
+        ],
       ];
 
       items.push({
@@ -369,10 +411,27 @@ export const validateGeneratedItem = (item: GeneratedItem): string[] => {
 
   // 서술형 검증
   if (item.item_type === "essay") {
-    if (!item.rubric || typeof item.rubric !== 'string' || item.rubric.trim().length === 0) {
+    if (!item.rubric || !Array.isArray(item.rubric) || item.rubric.length === 0) {
       errors.push("서술형 문항에는 채점 기준(루브릭)이 필요합니다.");
-    } else if (item.rubric.length > 300) {
-      errors.push("루브릭은 300자 이내로 작성해주세요.");
+    } else {
+      // 각 루브릭 항목 검증
+      item.rubric.forEach((criterion, idx) => {
+        if (!criterion.area || !criterion.area.trim()) {
+          errors.push(`루브릭 ${idx + 1}번째 항목: 평가 영역이 누락되었습니다.`);
+        }
+        if (!criterion.weight || criterion.weight <= 0) {
+          errors.push(`루브릭 ${idx + 1}번째 항목: 반영 비율이 잘못되었습니다.`);
+        }
+        if (!criterion.high || !criterion.middle || !criterion.low) {
+          errors.push(`루브릭 ${idx + 1}번째 항목: 상/중/하 수준 설명이 누락되었습니다.`);
+        }
+      });
+
+      // 반영 비율 합계 검증
+      const totalWeight = item.rubric.reduce((sum, c) => sum + (c.weight || 0), 0);
+      if (Math.abs(totalWeight - 100) > 1) {
+        errors.push(`루브릭 반영 비율의 합이 ${totalWeight}%입니다. 100%가 되어야 합니다.`);
+      }
     }
   }
 

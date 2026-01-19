@@ -1652,14 +1652,35 @@ ${baseTemplate.self_check_text}`;
                           ))}
                         </List>
                       )}
-                      {item.item_type === "essay" && item.rubric && (
-                        <Box sx={{ mt: 2, p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
+                      {item.item_type === "essay" && item.rubric && Array.isArray(item.rubric) && (
+                        <Box sx={{ mt: 2 }}>
                           <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                             평가 루브릭
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
-                            {typeof item.rubric === 'string' ? item.rubric : ''}
-                          </Typography>
+                          <TableContainer component={Paper} variant="outlined">
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow sx={{ bgcolor: "grey.100" }}>
+                                  <TableCell sx={{ fontWeight: "bold", width: "20%" }}>평가 영역</TableCell>
+                                  <TableCell sx={{ fontWeight: "bold", width: "10%", textAlign: "center" }}>반영 비율</TableCell>
+                                  <TableCell sx={{ fontWeight: "bold", width: "23%" }}>상</TableCell>
+                                  <TableCell sx={{ fontWeight: "bold", width: "23%" }}>중</TableCell>
+                                  <TableCell sx={{ fontWeight: "bold", width: "23%" }}>하</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {item.rubric.map((criterion: any, idx: number) => (
+                                  <TableRow key={idx}>
+                                    <TableCell sx={{ fontWeight: "medium" }}>{criterion.area}</TableCell>
+                                    <TableCell sx={{ textAlign: "center" }}>{criterion.weight}%</TableCell>
+                                    <TableCell sx={{ fontSize: "0.813rem", color: "success.dark" }}>{criterion.high}</TableCell>
+                                    <TableCell sx={{ fontSize: "0.813rem", color: "info.dark" }}>{criterion.middle}</TableCell>
+                                    <TableCell sx={{ fontSize: "0.813rem", color: "warning.dark" }}>{criterion.low}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
                         </Box>
                       )}
                       {validationErrors.length > 0 && (
@@ -2704,26 +2725,99 @@ ${baseTemplate.self_check_text}`;
               >
                 서술형 문항의 채점 기준입니다.
               </Typography>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                value={typeof editingItemData.rubric === 'string' ? editingItemData.rubric : ''}
-                onChange={(e) => {
-                  setEditingItemData({
-                    ...editingItemData,
-                    rubric: e.target.value,
-                  });
-                }}
-                placeholder="평가 루브릭을 입력하세요. (예: 내용 이해(40%): 지문의 핵심 주제를 정확히 파악하고 설명했는지 평가. 논리적 전개(30%): 주장과 근거가 논리적으로 연결되었는지 평가. 표현력(30%): 명확하고 간결한 문장으로 작성되었는지 평가.)"
-                variant="outlined"
-                sx={{
-                  "& .MuiInputBase-root": {
-                    fontFamily: "monospace",
-                    fontSize: "0.875rem",
-                  },
-                }}
-              />
+              {editingItemData.rubric && Array.isArray(editingItemData.rubric) ? (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: "grey.100" }}>
+                        <TableCell sx={{ fontWeight: "bold", width: "20%" }}>평가 영역</TableCell>
+                        <TableCell sx={{ fontWeight: "bold", width: "10%", textAlign: "center" }}>반영 비율</TableCell>
+                        <TableCell sx={{ fontWeight: "bold", width: "23%" }}>상</TableCell>
+                        <TableCell sx={{ fontWeight: "bold", width: "23%" }}>중</TableCell>
+                        <TableCell sx={{ fontWeight: "bold", width: "23%" }}>하</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {editingItemData.rubric.map((criterion: any, idx: number) => (
+                        <TableRow key={idx}>
+                          <TableCell>
+                            <TextField
+                              size="small"
+                              fullWidth
+                              value={criterion.area}
+                              onChange={(e) => {
+                                const newRubric = [...(editingItemData.rubric as any[])];
+                                newRubric[idx] = { ...newRubric[idx], area: e.target.value };
+                                setEditingItemData({ ...editingItemData, rubric: newRubric });
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <TextField
+                              size="small"
+                              type="number"
+                              value={criterion.weight}
+                              onChange={(e) => {
+                                const newRubric = [...(editingItemData.rubric as any[])];
+                                newRubric[idx] = { ...newRubric[idx], weight: parseInt(e.target.value) || 0 };
+                                setEditingItemData({ ...editingItemData, rubric: newRubric });
+                              }}
+                              InputProps={{ endAdornment: '%' }}
+                              sx={{ width: 80 }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <TextField
+                              size="small"
+                              fullWidth
+                              multiline
+                              rows={2}
+                              value={criterion.high}
+                              onChange={(e) => {
+                                const newRubric = [...(editingItemData.rubric as any[])];
+                                newRubric[idx] = { ...newRubric[idx], high: e.target.value };
+                                setEditingItemData({ ...editingItemData, rubric: newRubric });
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <TextField
+                              size="small"
+                              fullWidth
+                              multiline
+                              rows={2}
+                              value={criterion.middle}
+                              onChange={(e) => {
+                                const newRubric = [...(editingItemData.rubric as any[])];
+                                newRubric[idx] = { ...newRubric[idx], middle: e.target.value };
+                                setEditingItemData({ ...editingItemData, rubric: newRubric });
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <TextField
+                              size="small"
+                              fullWidth
+                              multiline
+                              rows={2}
+                              value={criterion.low}
+                              onChange={(e) => {
+                                const newRubric = [...(editingItemData.rubric as any[])];
+                                newRubric[idx] = { ...newRubric[idx], low: e.target.value };
+                                setEditingItemData({ ...editingItemData, rubric: newRubric });
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Alert severity="info">
+                  루브릭 정보가 없습니다. AI로 생성된 서술형 문항을 불러오면 자동으로 채점 기준이 표시됩니다.
+                </Alert>
+              )}
             </Box>
           )}
 
