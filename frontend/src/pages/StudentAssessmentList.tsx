@@ -16,7 +16,6 @@ import {
 import {
   Assessment,
   PlayArrow,
-  CheckCircle,
   Schedule,
 } from '@mui/icons-material';
 import { getDiagnosticAssessments } from '../services/diagnosticAssessmentService';

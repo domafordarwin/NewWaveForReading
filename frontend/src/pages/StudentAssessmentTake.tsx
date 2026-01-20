@@ -16,9 +16,6 @@ import {
   FormControlLabel,
   TextField,
   Chip,
-  Stepper,
-  Step,
-  StepLabel,
 } from '@mui/material';
 import {
   ArrowBack,
