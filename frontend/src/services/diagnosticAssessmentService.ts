@@ -55,7 +55,7 @@ export async function getDiagnosticAssessments(filters?: {
       *,
       assessment_items (
         assessment_item_id,
-        item_id,
+        draft_item_id,
         sequence_number,
         points
       )
@@ -107,10 +107,10 @@ export async function getDiagnosticAssessmentById(
     .from('assessment_items')
     .select(`
       *,
-      items (
-        item_id,
+      authoring_items (
+        draft_item_id,
         item_kind,
-        evaluation_area,
+        status,
         stimulus_id,
         current_version_id,
         stimuli (
@@ -128,12 +128,14 @@ export async function getDiagnosticAssessmentById(
   // 각 문항의 최신 버전 내용 조회
   const itemsWithContent: AssessmentItemWithDetails[] = await Promise.all(
     (items || []).map(async (item: any) => {
-      if (!item.items?.current_version_id) {
+      if (!item.authoring_items?.current_version_id) {
         return {
           ...item,
-          item: {
-            ...item.items,
-            content_json: {},
+          authoring_items: {
+            ...item.authoring_items,
+            current_version: {
+              content_json: {},
+            },
           },
         };
       }
@@ -141,15 +143,16 @@ export async function getDiagnosticAssessmentById(
       const { data: version } = await supabase!
         .from('authoring_item_versions')
         .select('content_json')
-        .eq('version_id', item.items.current_version_id)
+        .eq('version_id', item.authoring_items.current_version_id)
         .single();
 
       return {
         ...item,
-        item: {
-          ...item.items,
-          content_json: version?.content_json || {},
-          stimulus: item.items.stimuli,
+        authoring_items: {
+          ...item.authoring_items,
+          current_version: {
+            content_json: version?.content_json || {},
+          },
         },
       };
     })
@@ -228,7 +231,7 @@ export async function addItemsToAssessment(
   // 새 문항 추가
   const itemsToInsert = request.items.map(item => ({
     assessment_id: request.assessment_id,
-    item_id: item.item_id,
+    draft_item_id: item.draft_item_id,
     sequence_number: item.sequence_number,
     points: item.points,
   }));

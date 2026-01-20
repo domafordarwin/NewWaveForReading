@@ -24,7 +24,7 @@ COMMENT ON COLUMN public.diagnostic_assessments.status IS '상태: draft(초안)
 CREATE TABLE IF NOT EXISTS public.assessment_items (
   assessment_item_id SERIAL PRIMARY KEY,
   assessment_id INTEGER NOT NULL REFERENCES public.diagnostic_assessments(assessment_id) ON DELETE CASCADE,
-  item_id INTEGER NOT NULL REFERENCES public.items(item_id) ON DELETE CASCADE,
+  draft_item_id INTEGER NOT NULL REFERENCES public.authoring_items(draft_item_id) ON DELETE CASCADE,
   sequence_number INTEGER NOT NULL,
   points DECIMAL(5,2) NOT NULL DEFAULT 10.00,
   UNIQUE(assessment_id, sequence_number),
@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS public.assessment_items (
 );
 
 COMMENT ON TABLE public.assessment_items IS '진단 평가에 포함된 문항 목록';
+COMMENT ON COLUMN public.assessment_items.draft_item_id IS 'authoring_items 테이블의 문항 ID';
 COMMENT ON COLUMN public.assessment_items.sequence_number IS '문항 순서 (1부터 시작)';
 COMMENT ON COLUMN public.assessment_items.points IS '문항별 배점';
 
@@ -202,7 +203,7 @@ CREATE INDEX IF NOT EXISTS idx_diagnostic_assessments_grade_band ON public.diagn
 CREATE INDEX IF NOT EXISTS idx_diagnostic_assessments_created_by ON public.diagnostic_assessments(created_by_user_id);
 
 CREATE INDEX IF NOT EXISTS idx_assessment_items_assessment ON public.assessment_items(assessment_id);
-CREATE INDEX IF NOT EXISTS idx_assessment_items_item ON public.assessment_items(item_id);
+CREATE INDEX IF NOT EXISTS idx_assessment_items_draft_item ON public.assessment_items(draft_item_id);
 
 CREATE INDEX IF NOT EXISTS idx_assessment_attempts_student ON public.assessment_attempts(student_id);
 CREATE INDEX IF NOT EXISTS idx_assessment_attempts_assessment ON public.assessment_attempts(assessment_id);

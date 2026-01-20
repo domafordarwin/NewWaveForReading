@@ -24,7 +24,7 @@ export interface DiagnosticAssessment {
 export interface AssessmentItem {
   assessment_item_id: number;
   assessment_id: number;
-  item_id: number;
+  draft_item_id: number;  // authoring_items 테이블 참조
   sequence_number: number;
   points: number;
 }
@@ -119,18 +119,22 @@ export interface DiagnosticReport {
 // ============================================
 
 export interface AssessmentItemWithDetails extends AssessmentItem {
-  item?: {
-    item_id: number;
+  authoring_items?: {
+    draft_item_id: number;
     item_kind: string;
-    content_json: {
-      stem: string;
-      options?: { text: string; is_correct: boolean }[];
-      rubric?: RubricCriterion[];
-      keywords?: string[];
-    };
-    evaluation_area?: string;
+    current_version_id?: number;
+    status: string;
     stimulus_id?: number;
-    stimulus?: {
+    current_version?: {
+      content_json: {
+        stem: string;
+        options?: { text: string; is_correct: boolean }[];
+        rubric?: RubricCriterion[];
+        keywords?: string[];
+      };
+    };
+    stimuli?: {
+      stimulus_id: number;
       title: string;
       content_text: string;
     };
@@ -181,7 +185,7 @@ export interface UpdateAssessmentRequest {
 export interface AddItemsToAssessmentRequest {
   assessment_id: number;
   items: {
-    item_id: number;
+    draft_item_id: number;
     sequence_number: number;
     points: number;
   }[];
