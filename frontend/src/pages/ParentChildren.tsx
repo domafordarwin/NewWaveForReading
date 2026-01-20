@@ -564,7 +564,9 @@ const ParentChildren = () => {
                             <ListItemText
                               primary={
                                 <Typography fontWeight="bold">
-                                  {(Array.isArray(session.stimulus) ? session.stimulus[0]?.title : session.stimulus?.title) ||
+                                  {(Array.isArray(session.stimulus)
+                                    ? session.stimulus[0]?.title
+                                    : session.stimulus?.title) ||
                                     `진단 #${session.session_id}`}
                                 </Typography>
                               }

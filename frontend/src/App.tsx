@@ -56,6 +56,8 @@ import MidHighDiagnosticAssessment from "./pages/MidHighDiagnosticAssessment";
 import MidLowDiagnosticAssessment from "./pages/MidLowDiagnosticAssessment";
 import ElemHighDiagnosticAssessment from "./pages/ElemHighDiagnosticAssessment";
 import ElemLowDiagnosticAssessment from "./pages/ElemLowDiagnosticAssessment";
+import SchoolAdminStudents from "./pages/SchoolAdminStudents";
+import SchoolAdminClasses from "./pages/SchoolAdminClasses";
 
 const theme = createTheme({
   palette: {
@@ -212,6 +214,8 @@ function App() {
             }
           >
             <Route path="dashboard" element={<SchoolAdminDashboard />} />
+            <Route path="students" element={<SchoolAdminStudents />} />
+            <Route path="classes" element={<SchoolAdminClasses />} />
             <Route
               path="report-sample"
               element={<ReportSample type="school" />}
