@@ -91,6 +91,7 @@ const ParentDashboardNew = () => {
   const [children, setChildren] = useState<ChildInfo[]>([]);
   const [selectedChild, setSelectedChild] = useState<ChildInfo | null>(null);
   const [evaluations, setEvaluations] = useState<EvaluationData[]>([]);
+  const [evaluationLoading, setEvaluationLoading] = useState(false);
   const [aiReport, setAiReport] = useState<{
     summary: string;
     progressAnalysis: string;
@@ -103,44 +104,6 @@ const ParentDashboardNew = () => {
   const [newPostContent, setNewPostContent] = useState("");
   // const [posting, setPosting] = useState(false);
   const [counselError, setCounselError] = useState<string | null>(null);
-
-  const demoEvaluations = useMemo<Record<number, EvaluationData[]>>(
-    () => ({
-      1: [
-        {
-          evaluation_id: 9001,
-          session_id: 101,
-          comprehension_score: 18,
-          inference_score: 17,
-          critical_score: 16,
-          expression_score: 19,
-          total_score: 70,
-          grade_level: "B",
-          percentile: 62,
-          strengths: ["논리적인 흐름", "주제 이해"],
-          weaknesses: ["근거 보강 필요"],
-          evaluated_at: "2025-01-11T10:00:00Z",
-        },
-      ],
-      2: [
-        {
-          evaluation_id: 9101,
-          session_id: 201,
-          comprehension_score: 20,
-          inference_score: 19,
-          critical_score: 18,
-          expression_score: 20,
-          total_score: 77,
-          grade_level: "B",
-          percentile: 70,
-          strengths: ["표현력", "구체성"],
-          weaknesses: ["핵심 요약 보완"],
-          evaluated_at: "2025-01-13T10:00:00Z",
-        },
-      ],
-    }),
-    [],
-  );
 
   useEffect(() => {
     const loadChildren = async () => {
@@ -221,9 +184,61 @@ const ParentDashboardNew = () => {
 
   const selectedChildId = selectedChild?.user_id ?? null;
   useEffect(() => {
-    if (!selectedChildId) return;
-    setEvaluations(demoEvaluations[selectedChildId] || []);
-  }, [selectedChildId, demoEvaluations]);
+    const loadEvaluations = async () => {
+      if (!supabase || !selectedChildId) {
+        setEvaluations([]);
+        return;
+      }
+
+      try {
+        setEvaluationLoading(true);
+
+        const { data: sessionData, error: sessionError } = await supabase
+          .from("assessment_sessions")
+          .select("session_id")
+          .eq("student_id", selectedChildId)
+          .order("created_at", { ascending: false });
+
+        if (sessionError) {
+          console.warn("학부모 대시보드 세션 로드 실패:", sessionError);
+          setEvaluations([]);
+          return;
+        }
+
+        const sessionIds = (sessionData || []).map(
+          (session: { session_id: number }) => session.session_id,
+        );
+
+        if (sessionIds.length === 0) {
+          setEvaluations([]);
+          return;
+        }
+
+        const { data: evalData, error: evalError } = await supabase
+          .from("ai_evaluations")
+          .select(
+            "evaluation_id, session_id, comprehension_score, inference_score, critical_score, expression_score, total_score, grade_level, percentile, strengths, weaknesses, evaluated_at",
+          )
+          .in("session_id", sessionIds)
+          .order("evaluated_at", { ascending: false });
+
+        if (evalError) {
+          console.warn("학부모 대시보드 평가 로드 실패:", evalError);
+          setEvaluations([]);
+          return;
+        }
+
+        setEvaluations((evalData || []) as EvaluationData[]);
+      } catch (err) {
+        console.error("학부모 대시보드 평가 로드 실패:", err);
+        setEvaluations([]);
+      } finally {
+        setEvaluationLoading(false);
+      }
+    };
+
+    loadEvaluations();
+  }, [selectedChildId, supabase]);
 
   // AI 리포트 생성
   const handleGenerateReport = async () => {
@@ -520,12 +535,16 @@ const ParentDashboardNew = () => {
             )}
 
             {/* 영역별 분석 */}
-            {radarChartData.length > 0 && (
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  영역별 분석 (최근)
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                영역별 분석 (최근)
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              {evaluationLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+                  <CircularProgress />
+                </Box>
+              ) : radarChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <RadarChart data={radarChartData}>
                     <PolarGrid />
@@ -541,8 +560,12 @@ const ParentDashboardNew = () => {
                     <Legend />
                   </RadarChart>
                 </ResponsiveContainer>
-              </Paper>
-            )}
+              ) : (
+                <Typography color="text.secondary">
+                  아직 표시할 진단 결과가 없습니다.
+                </Typography>
+              )}
+            </Paper>
           </Box>
         </Grid>
 
@@ -560,7 +583,10 @@ const ParentDashboardNew = () => {
                 color="primary"
                 onClick={handleGenerateReport}
                 disabled={
-                  reportLoading || !selectedChild || evaluations.length === 0
+                  reportLoading ||
+                  evaluationLoading ||
+                  !selectedChild ||
+                  evaluations.length === 0
                 }
                 sx={{ mb: 2 }}
               >
@@ -620,7 +646,9 @@ const ParentDashboardNew = () => {
               )}
               {!aiReport && !reportLoading && (
                 <Typography color="text.secondary">
-                  AI 리포트는 자녀의 진단 결과를 바탕으로 생성됩니다.
+                  {evaluationLoading
+                    ? "진단 결과를 불러오는 중입니다."
+                    : "AI 리포트는 자녀의 진단 결과를 바탕으로 생성됩니다."}
                 </Typography>
               )}
             </Paper>
