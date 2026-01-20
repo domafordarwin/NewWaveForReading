@@ -65,6 +65,7 @@ interface ChildInfo {
   grade: number;
   school_name: string;
   student_grade_level: string;
+  student_code?: string;
 }
 
 interface EvaluationData {
@@ -154,6 +155,7 @@ const ParentDashboardNew = () => {
           .select(
             `
             student_id,
+            student_code,
             student:users!student_parent_relations_student_id_fkey(
               user_id,
               name,
@@ -172,12 +174,32 @@ const ParentDashboardNew = () => {
           return;
         }
 
-        const childList = (relationsData || [])
-          .map((r: { student: ChildInfo[] | ChildInfo }) =>
-            Array.isArray(r.student) ? r.student[0] : r.student,
-          )
-          .filter(Boolean) as ChildInfo[];
+        const relationCodes = (relationsData || [])
+          .map((r: { student_code?: string | null }) => r.student_code || "")
+          .filter((code) => Boolean(code));
 
+        if (relationCodes.length === 0) {
+          setChildren([]);
+          setSelectedChild(null);
+          return;
+        }
+
+        const { data: studentsData, error: studentsError } = await supabase
+          .from("users")
+          .select(
+            "user_id, name, grade, school_name, student_grade_level, student_code",
+          )
+          .in("student_code", relationCodes)
+          .order("name");
+
+        if (studentsError) {
+          setError(studentsError.message);
+          setChildren([]);
+          setSelectedChild(null);
+          return;
+        }
+
+        const childList = (studentsData || []) as ChildInfo[];
         setChildren(childList);
         setSelectedChild(childList[0] ?? null);
       } catch (err) {
