@@ -1,15 +1,113 @@
-import { Box, Paper, Typography, Grid, Card, CardContent, Button, Table, TableBody, TableCell, TableHead, TableRow, Chip, Avatar } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Chip,
+  Avatar,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
 import { People, Assignment, Grading, Schedule } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/session";
+import { useSupabase } from "../services/supabaseClient";
 
 const TeacherDashboard = () => {
   const user = getCurrentUser();
+  const supabase = useSupabase();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [studentsCount, setStudentsCount] = useState(0);
+  const [sessions, setSessions] = useState<
+    {
+      session_id: number;
+      status: string;
+      submitted_at: string | null;
+      created_at: string;
+      student?: { name: string };
+      stimulus?: { title: string };
+    }[]
+  >([]);
 
-  const pendingEvaluations = [
-    { id: 1, student: "김민준", assessment: "동물농장", submittedAt: "2024.12.20", status: "대기중" },
-    { id: 2, student: "이서연", assessment: "어린왕자", submittedAt: "2024.12.19", status: "대기중" },
-    { id: 3, student: "박지훈", assessment: "사피엔스", submittedAt: "2024.12.18", status: "진행중" },
-  ];
+  useEffect(() => {
+    const loadDashboard = async () => {
+      if (!supabase || !user) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        if (!user.schoolId) {
+          setStudentsCount(0);
+        } else {
+          const { count, error: studentsError } = await supabase
+            .from("users")
+            .select("user_id", { count: "exact", head: true })
+            .eq("user_type", "STUDENT")
+            .eq("school_id", user.schoolId);
+
+          if (studentsError) {
+            throw studentsError;
+          }
+
+          setStudentsCount(count ?? 0);
+        }
+
+        const { data: sessionsData, error: sessionsError } = await supabase
+          .from("assessment_sessions")
+          .select(
+            `
+            session_id,
+            status,
+            submitted_at,
+            created_at,
+            student:users!assessment_sessions_student_id_fkey(name),
+            stimulus:stimuli(title)
+          `,
+          )
+          .eq("assigned_by", user.userId)
+          .order("created_at", { ascending: false });
+
+        if (sessionsError) {
+          throw sessionsError;
+        }
+
+        setSessions(sessionsData || []);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "대시보드를 불러오는데 실패했습니다.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, [supabase, user]);
+
+  const pendingEvaluations = useMemo(
+    () =>
+      sessions.filter((session) =>
+        ["submitted", "ai_evaluated"].includes(session.status),
+      ),
+    [sessions],
+  );
 
   return (
     <Box>
@@ -19,6 +117,11 @@ const TeacherDashboard = () => {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
         안녕하세요, {user?.name || "선생님"}! 학생들의 진단 현황을 확인하세요.
       </Typography>
+      {error && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       <Grid container spacing={3}>
         {/* 요약 카드 */}
@@ -28,7 +131,9 @@ const TeacherDashboard = () => {
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Box>
                   <Typography variant="body2" sx={{ opacity: 0.8 }}>담당 학생</Typography>
-                  <Typography variant="h4" fontWeight="bold">24</Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    {studentsCount}
+                  </Typography>
                 </Box>
                 <People sx={{ fontSize: 48, opacity: 0.8 }} />
               </Box>
@@ -42,7 +147,9 @@ const TeacherDashboard = () => {
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Box>
                   <Typography variant="body2" sx={{ opacity: 0.8 }}>평가 대기</Typography>
-                  <Typography variant="h4" fontWeight="bold">8</Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    {pendingEvaluations.length}
+                  </Typography>
                 </Box>
                 <Grading sx={{ fontSize: 48, opacity: 0.8 }} />
               </Box>
@@ -56,7 +163,9 @@ const TeacherDashboard = () => {
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Box>
                   <Typography variant="body2" sx={{ opacity: 0.8 }}>배정된 진단</Typography>
-                  <Typography variant="h4" fontWeight="bold">15</Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    {sessions.length}
+                  </Typography>
                 </Box>
                 <Assignment sx={{ fontSize: 48, opacity: 0.8 }} />
               </Box>
@@ -70,7 +179,7 @@ const TeacherDashboard = () => {
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Box>
                   <Typography variant="body2" sx={{ opacity: 0.8 }}>상담 예정</Typography>
-                  <Typography variant="h4" fontWeight="bold">3</Typography>
+                  <Typography variant="h4" fontWeight="bold">0</Typography>
                 </Box>
                 <Schedule sx={{ fontSize: 48, opacity: 0.8 }} />
               </Box>
@@ -100,32 +209,60 @@ const TeacherDashboard = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {pendingEvaluations.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Avatar sx={{ width: 32, height: 32, fontSize: 14 }}>
-                          {row.student[0]}
-                        </Avatar>
-                        {row.student}
-                      </Box>
-                    </TableCell>
-                    <TableCell>{row.assessment}</TableCell>
-                    <TableCell>{row.submittedAt}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={row.status}
-                        size="small"
-                        color={row.status === "대기중" ? "warning" : "info"}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Button variant="outlined" size="small">
-                        평가하기
-                      </Button>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <CircularProgress size={24} />
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : pendingEvaluations.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      평가 대기 항목이 없습니다.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  pendingEvaluations.map((row) => {
+                    const submittedAt = row.submitted_at || row.created_at;
+                    const statusLabel =
+                      row.status === "ai_evaluated" ? "AI 평가 완료" : "대기중";
+
+                    return (
+                      <TableRow key={row.session_id}>
+                        <TableCell>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Avatar sx={{ width: 32, height: 32, fontSize: 14 }}>
+                              {(row.student?.name || "?")[0]}
+                            </Avatar>
+                            {row.student?.name || "알 수 없음"}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{row.stimulus?.title || "-"}</TableCell>
+                        <TableCell>
+                          {new Date(submittedAt).toLocaleDateString("ko-KR")}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={statusLabel}
+                            size="small"
+                            color={
+                              row.status === "ai_evaluated" ? "info" : "warning"
+                            }
+                          />
+                        </TableCell>
+                        <TableCell align="right">
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => navigate("/teacher/dashboard-new")}
+                          >
+                            평가하기
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           </Paper>
