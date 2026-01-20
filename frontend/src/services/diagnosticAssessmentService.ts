@@ -2,7 +2,7 @@
  * 진단 평가 시스템 서비스
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from "./supabaseClient";
 import type {
   DiagnosticAssessment,
   DiagnosticAssessmentWithItems,
@@ -15,7 +15,7 @@ import type {
   StartAssessmentResponse,
   SaveResponseRequest,
   StudentResponse,
-} from '../types/diagnosticAssessment';
+} from "../types/diagnosticAssessment";
 
 // ============================================
 // 진단 평가 관리
@@ -25,12 +25,12 @@ import type {
  * 진단 평가 생성
  */
 export async function createDiagnosticAssessment(
-  data: CreateAssessmentRequest
+  data: CreateAssessmentRequest,
 ): Promise<DiagnosticAssessment> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   const { data: assessment, error } = await supabase
-    .from('diagnostic_assessments')
+    .from("diagnostic_assessments")
     .insert([data])
     .select()
     .single();
@@ -43,15 +43,16 @@ export async function createDiagnosticAssessment(
  * 진단 평가 목록 조회
  */
 export async function getDiagnosticAssessments(filters?: {
-  status?: 'draft' | 'published' | 'archived';
+  status?: "draft" | "published" | "archived";
   grade_band?: string;
   created_by_user_id?: number;
 }): Promise<DiagnosticAssessmentWithItems[]> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   let query = supabase
-    .from('diagnostic_assessments')
-    .select(`
+    .from("diagnostic_assessments")
+    .select(
+      `
       *,
       assessment_items (
         assessment_item_id,
@@ -59,27 +60,32 @@ export async function getDiagnosticAssessments(filters?: {
         sequence_number,
         points
       )
-    `)
-    .order('created_at', { ascending: false });
+    `,
+    )
+    .order("created_at", { ascending: false });
 
   if (filters?.status) {
-    query = query.eq('status', filters.status);
+    query = query.eq("status", filters.status);
   }
 
   if (filters?.grade_band) {
-    query = query.eq('grade_band', filters.grade_band);
+    query = query.eq("grade_band", filters.grade_band);
   }
 
   if (filters?.created_by_user_id) {
-    query = query.eq('created_by_user_id', filters.created_by_user_id);
+    query = query.eq("created_by_user_id", filters.created_by_user_id);
   }
 
   const { data, error } = await query;
 
-  if (error) throw error;
+  if (error) {
+    console.error("진단 평가 목록 조회 오류:", error);
+    // 테이블이 없거나 오류 시 빈 배열 반환
+    return [];
+  }
 
   // 문항 수 추가
-  return (data || []).map(assessment => ({
+  return (data || []).map((assessment) => ({
     ...assessment,
     item_count: assessment.assessment_items?.length || 0,
     items: assessment.assessment_items,
@@ -90,22 +96,23 @@ export async function getDiagnosticAssessments(filters?: {
  * 진단 평가 상세 조회
  */
 export async function getDiagnosticAssessmentById(
-  assessmentId: number
+  assessmentId: number,
 ): Promise<DiagnosticAssessmentWithItems> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   const { data: assessment, error: assessmentError } = await supabase
-    .from('diagnostic_assessments')
-    .select('*')
-    .eq('assessment_id', assessmentId)
+    .from("diagnostic_assessments")
+    .select("*")
+    .eq("assessment_id", assessmentId)
     .single();
 
   if (assessmentError) throw assessmentError;
 
   // 평가에 포함된 문항 조회 (문항 상세 정보 포함)
   const { data: items, error: itemsError } = await supabase
-    .from('assessment_items')
-    .select(`
+    .from("assessment_items")
+    .select(
+      `
       *,
       authoring_items (
         draft_item_id,
@@ -119,9 +126,10 @@ export async function getDiagnosticAssessmentById(
           content_text
         )
       )
-    `)
-    .eq('assessment_id', assessmentId)
-    .order('sequence_number', { ascending: true });
+    `,
+    )
+    .eq("assessment_id", assessmentId)
+    .order("sequence_number", { ascending: true });
 
   if (itemsError) throw itemsError;
 
@@ -141,9 +149,9 @@ export async function getDiagnosticAssessmentById(
       }
 
       const { data: version } = await supabase!
-        .from('authoring_item_versions')
-        .select('content_json')
-        .eq('version_id', item.authoring_items.current_version_id)
+        .from("authoring_item_versions")
+        .select("content_json")
+        .eq("version_id", item.authoring_items.current_version_id)
         .single();
 
       return {
@@ -155,7 +163,7 @@ export async function getDiagnosticAssessmentById(
           },
         },
       };
-    })
+    }),
   );
 
   return {
@@ -170,14 +178,14 @@ export async function getDiagnosticAssessmentById(
  */
 export async function updateDiagnosticAssessment(
   assessmentId: number,
-  data: UpdateAssessmentRequest
+  data: UpdateAssessmentRequest,
 ): Promise<DiagnosticAssessment> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   const { data: assessment, error } = await supabase
-    .from('diagnostic_assessments')
+    .from("diagnostic_assessments")
     .update(data)
-    .eq('assessment_id', assessmentId)
+    .eq("assessment_id", assessmentId)
     .select()
     .single();
 
@@ -189,14 +197,14 @@ export async function updateDiagnosticAssessment(
  * 진단 평가 삭제
  */
 export async function deleteDiagnosticAssessment(
-  assessmentId: number
+  assessmentId: number,
 ): Promise<void> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   const { error } = await supabase
-    .from('diagnostic_assessments')
+    .from("diagnostic_assessments")
     .delete()
-    .eq('assessment_id', assessmentId);
+    .eq("assessment_id", assessmentId);
 
   if (error) throw error;
 }
@@ -205,9 +213,9 @@ export async function deleteDiagnosticAssessment(
  * 평가 배포 (상태 변경: draft → published)
  */
 export async function publishAssessment(
-  assessmentId: number
+  assessmentId: number,
 ): Promise<DiagnosticAssessment> {
-  return updateDiagnosticAssessment(assessmentId, { status: 'published' });
+  return updateDiagnosticAssessment(assessmentId, { status: "published" });
 }
 
 // ============================================
@@ -218,18 +226,18 @@ export async function publishAssessment(
  * 평가에 문항 추가
  */
 export async function addItemsToAssessment(
-  request: AddItemsToAssessmentRequest
+  request: AddItemsToAssessmentRequest,
 ): Promise<AssessmentItem[]> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   // 기존 문항 삭제 (전체 교체 방식)
   await supabase
-    .from('assessment_items')
+    .from("assessment_items")
     .delete()
-    .eq('assessment_id', request.assessment_id);
+    .eq("assessment_id", request.assessment_id);
 
   // 새 문항 추가
-  const itemsToInsert = request.items.map(item => ({
+  const itemsToInsert = request.items.map((item) => ({
     assessment_id: request.assessment_id,
     draft_item_id: item.draft_item_id,
     sequence_number: item.sequence_number,
@@ -237,7 +245,7 @@ export async function addItemsToAssessment(
   }));
 
   const { data, error } = await supabase
-    .from('assessment_items')
+    .from("assessment_items")
     .insert(itemsToInsert)
     .select();
 
@@ -249,14 +257,14 @@ export async function addItemsToAssessment(
  * 평가에서 문항 제거
  */
 export async function removeItemFromAssessment(
-  assessmentItemId: number
+  assessmentItemId: number,
 ): Promise<void> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   const { error } = await supabase
-    .from('assessment_items')
+    .from("assessment_items")
     .delete()
-    .eq('assessment_item_id', assessmentItemId);
+    .eq("assessment_item_id", assessmentItemId);
 
   if (error) throw error;
 }
@@ -266,17 +274,17 @@ export async function removeItemFromAssessment(
  */
 export async function updateItemSequence(
   assessmentId: number,
-  items: { assessment_item_id: number; sequence_number: number }[]
+  items: { assessment_item_id: number; sequence_number: number }[],
 ): Promise<void> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   // 각 문항의 순서를 개별적으로 업데이트
-  const updates = items.map(item =>
+  const updates = items.map((item) =>
     supabase!
-      .from('assessment_items')
+      .from("assessment_items")
       .update({ sequence_number: item.sequence_number })
-      .eq('assessment_item_id', item.assessment_item_id)
-      .eq('assessment_id', assessmentId)
+      .eq("assessment_item_id", item.assessment_item_id)
+      .eq("assessment_id", assessmentId),
   );
 
   await Promise.all(updates);
@@ -291,29 +299,29 @@ export async function updateItemSequence(
  */
 export async function startAssessment(
   assessmentId: number,
-  studentId: number
+  studentId: number,
 ): Promise<StartAssessmentResponse> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   // 평가 상세 정보 조회
   const assessment = await getDiagnosticAssessmentById(assessmentId);
 
-  if (assessment.status !== 'published') {
-    throw new Error('This assessment is not published');
+  if (assessment.status !== "published") {
+    throw new Error("This assessment is not published");
   }
 
   // 총점 계산
   const maxScore = (assessment.items || []).reduce(
     (sum, item) => sum + item.points,
-    0
+    0,
   );
 
   // 기존 attempt 확인
   const { data: existingAttempt } = await supabase
-    .from('assessment_attempts')
-    .select('*')
-    .eq('assessment_id', assessmentId)
-    .eq('student_id', studentId)
+    .from("assessment_attempts")
+    .select("*")
+    .eq("assessment_id", assessmentId)
+    .eq("student_id", studentId)
     .maybeSingle();
 
   if (existingAttempt) {
@@ -326,13 +334,13 @@ export async function startAssessment(
 
   // 새 attempt 생성
   const { data: attempt, error } = await supabase
-    .from('assessment_attempts')
+    .from("assessment_attempts")
     .insert([
       {
         assessment_id: assessmentId,
         student_id: studentId,
         max_score: maxScore,
-        status: 'in_progress',
+        status: "in_progress",
       },
     ])
     .select()
@@ -350,16 +358,16 @@ export async function startAssessment(
  * 답안 저장 (임시 저장 또는 제출)
  */
 export async function saveResponse(
-  request: SaveResponseRequest
+  request: SaveResponseRequest,
 ): Promise<StudentResponse> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   // 기존 응답 확인
   const { data: existingResponse } = await supabase
-    .from('student_responses')
-    .select('*')
-    .eq('attempt_id', request.attempt_id)
-    .eq('assessment_item_id', request.assessment_item_id)
+    .from("student_responses")
+    .select("*")
+    .eq("attempt_id", request.attempt_id)
+    .eq("assessment_item_id", request.assessment_item_id)
     .maybeSingle();
 
   const responseData = {
@@ -373,9 +381,9 @@ export async function saveResponse(
   if (existingResponse) {
     // 기존 응답 업데이트
     const { data, error } = await supabase
-      .from('student_responses')
+      .from("student_responses")
       .update(responseData)
-      .eq('response_id', existingResponse.response_id)
+      .eq("response_id", existingResponse.response_id)
       .select()
       .single();
 
@@ -384,7 +392,7 @@ export async function saveResponse(
   } else {
     // 새 응답 생성
     const { data, error } = await supabase
-      .from('student_responses')
+      .from("student_responses")
       .insert([responseData])
       .select()
       .single();
@@ -397,16 +405,18 @@ export async function saveResponse(
 /**
  * 평가 제출
  */
-export async function submitAssessment(attemptId: number): Promise<AssessmentAttempt> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+export async function submitAssessment(
+  attemptId: number,
+): Promise<AssessmentAttempt> {
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   const { data, error } = await supabase
-    .from('assessment_attempts')
+    .from("assessment_attempts")
     .update({
       submitted_at: new Date().toISOString(),
-      status: 'submitted',
+      status: "submitted",
     })
-    .eq('attempt_id', attemptId)
+    .eq("attempt_id", attemptId)
     .select()
     .single();
 
@@ -417,13 +427,15 @@ export async function submitAssessment(attemptId: number): Promise<AssessmentAtt
 /**
  * 응시 현황 조회
  */
-export async function getAssessmentAttempt(attemptId: number): Promise<AssessmentAttempt> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+export async function getAssessmentAttempt(
+  attemptId: number,
+): Promise<AssessmentAttempt> {
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   const { data, error } = await supabase
-    .from('assessment_attempts')
-    .select('*')
-    .eq('attempt_id', attemptId)
+    .from("assessment_attempts")
+    .select("*")
+    .eq("attempt_id", attemptId)
     .single();
 
   if (error) throw error;
@@ -433,14 +445,16 @@ export async function getAssessmentAttempt(attemptId: number): Promise<Assessmen
 /**
  * 학생의 응답 목록 조회
  */
-export async function getStudentResponses(attemptId: number): Promise<StudentResponse[]> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+export async function getStudentResponses(
+  attemptId: number,
+): Promise<StudentResponse[]> {
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   const { data, error } = await supabase
-    .from('student_responses')
-    .select('*')
-    .eq('attempt_id', attemptId)
-    .order('assessment_item_id', { ascending: true });
+    .from("student_responses")
+    .select("*")
+    .eq("attempt_id", attemptId)
+    .order("assessment_item_id", { ascending: true });
 
   if (error) throw error;
   return data || [];
@@ -450,13 +464,14 @@ export async function getStudentResponses(attemptId: number): Promise<StudentRes
  * 학생의 평가 목록 조회
  */
 export async function getStudentAssessments(
-  studentId: number
+  studentId: number,
 ): Promise<AssessmentAttempt[]> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   const { data, error } = await supabase
-    .from('assessment_attempts')
-    .select(`
+    .from("assessment_attempts")
+    .select(
+      `
       *,
       diagnostic_assessments (
         assessment_id,
@@ -465,9 +480,10 @@ export async function getStudentAssessments(
         grade_band,
         assessment_type
       )
-    `)
-    .eq('student_id', studentId)
-    .order('started_at', { ascending: false });
+    `,
+    )
+    .eq("student_id", studentId)
+    .order("started_at", { ascending: false });
 
   if (error) throw error;
   return data || [];
@@ -485,11 +501,12 @@ export async function getAvailableItems(filters?: {
   item_kind?: string;
   status?: string;
 }): Promise<any[]> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabase) throw new Error("Supabase client not initialized");
 
   let query = supabase
-    .from('authoring_items')
-    .select(`
+    .from("authoring_items")
+    .select(
+      `
       draft_item_id,
       item_kind,
       status,
@@ -502,17 +519,18 @@ export async function getAvailableItems(filters?: {
         content_text,
         grade_band
       )
-    `)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false });
+    `,
+    )
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
 
   if (filters?.grade_band) {
     // stimuli의 grade_band로 필터링 (관계 필터링)
-    query = query.eq('stimuli.grade_band', filters.grade_band);
+    query = query.eq("stimuli.grade_band", filters.grade_band);
   }
 
   if (filters?.item_kind) {
-    query = query.eq('item_kind', filters.item_kind);
+    query = query.eq("item_kind", filters.item_kind);
   }
 
   const { data, error } = await query;
@@ -532,9 +550,9 @@ export async function getAvailableItems(filters?: {
       }
 
       const { data: version } = await supabase!
-        .from('authoring_item_versions')
-        .select('content_json')
-        .eq('version_id', item.current_version_id)
+        .from("authoring_item_versions")
+        .select("content_json")
+        .eq("version_id", item.current_version_id)
         .single();
 
       return {
@@ -543,7 +561,7 @@ export async function getAvailableItems(filters?: {
           content_json: version?.content_json || {},
         },
       };
-    })
+    }),
   );
 
   return itemsWithContent;

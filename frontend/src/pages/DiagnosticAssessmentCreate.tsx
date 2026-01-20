@@ -113,7 +113,7 @@ export default function DiagnosticAssessmentCreate() {
   };
 
   const handleComplete = () => {
-    navigate(`/diagnostic-assessments/${assessmentId}`);
+    navigate(`/question-dev/diagnostic-assessments/${assessmentId}`);
   };
 
   const renderStepContent = () => {
@@ -233,7 +233,7 @@ export default function DiagnosticAssessmentCreate() {
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate('/diagnostic-assessments')}
+          onClick={() => navigate('/question-dev/diagnostic-assessments')}
           sx={{ mr: 2 }}
         >
           목록으로

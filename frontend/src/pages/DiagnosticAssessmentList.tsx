@@ -134,7 +134,7 @@ export default function DiagnosticAssessmentList() {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => navigate('/diagnostic-assessments/create')}
+          onClick={() => navigate('/question-dev/diagnostic-assessments/create')}
         >
           새 평가 생성
         </Button>
@@ -202,14 +202,14 @@ export default function DiagnosticAssessmentList() {
                   <TableCell align="center">
                     <IconButton
                       size="small"
-                      onClick={() => navigate(`/diagnostic-assessments/${assessment.assessment_id}`)}
+                      onClick={() => navigate(`/question-dev/diagnostic-assessments/${assessment.assessment_id}`)}
                       title="상세 보기"
                     >
                       <Visibility />
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => navigate(`/diagnostic-assessments/${assessment.assessment_id}/edit`)}
+                      onClick={() => navigate(`/question-dev/diagnostic-assessments/${assessment.assessment_id}/edit`)}
                       title="수정"
                       disabled={assessment.status === 'published'}
                     >

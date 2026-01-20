@@ -10,7 +10,23 @@
       "Bash(ls:*)",
       "Bash(npm run dev:*)",
       "Bash(tee:*)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(ren:*)",
+      "Bash(node test-openai.js:*)",
+      "Bash(npx vercel:*)",
+      "Bash(grep:*)",
+      "Bash(node check-vercel-env.js:*)",
+      "Bash(git reset:*)",
+      "Bash(pgrep:*)",
+      "Bash(git restore:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill /F /PID 16328)",
+      "Bash(taskkill //F //PID 16328)",
+      "Bash(where supabase)",
+      "Bash(git pull:*)",
+      "Bash(git rm:*)"
     ]
   }
 }

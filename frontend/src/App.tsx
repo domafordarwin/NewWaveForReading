@@ -45,6 +45,9 @@ import PastExamDetail from "./pages/PastExamDetail";
 import DiagnosticAssessmentList from "./pages/DiagnosticAssessmentList";
 import DiagnosticAssessmentCreate from "./pages/DiagnosticAssessmentCreate";
 import DiagnosticAssessmentDetail from "./pages/DiagnosticAssessmentDetail";
+import StudentAssessmentList from "./pages/StudentAssessmentList";
+import StudentAssessmentTake from "./pages/StudentAssessmentTake";
+import StudentAssessmentComplete from "./pages/StudentAssessmentComplete";
 
 const theme = createTheme({
   palette: {
@@ -107,6 +110,10 @@ function App() {
               path="report-sample"
               element={<ReportSample type="student" />}
             />
+            {/* 진단 평가 */}
+            <Route path="assessments" element={<StudentAssessmentList />} />
+            <Route path="assessments/:assessmentId/take" element={<StudentAssessmentTake />} />
+            <Route path="assessments/:assessmentId/complete" element={<StudentAssessmentComplete />} />
           </Route>
 
           {/* 학부모 라우트 */}

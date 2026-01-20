@@ -121,7 +121,7 @@ export default function DiagnosticAssessmentDetail() {
           <Button
             variant="contained"
             startIcon={<Edit />}
-            onClick={() => navigate(`/diagnostic-assessments/${assessmentId}/edit`)}
+            onClick={() => navigate(`/question-dev/diagnostic-assessments/${assessmentId}/edit`)}
           >
             수정
           </Button>
