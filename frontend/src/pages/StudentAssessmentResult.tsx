@@ -88,9 +88,6 @@ export default function StudentAssessmentResult() {
                 stimuli (
                   title,
                   content_text
-                ),
-                authoring_item_versions (
-                  content_json
                 )
               )
             )
@@ -100,6 +97,56 @@ export default function StudentAssessmentResult() {
         .single();
 
       if (attemptError) throw attemptError;
+
+      // 문항 버전 내용 조회 (관계 없는 스키마에서도 동작하도록 별도 로드)
+      const items = (attemptData as AttemptWithDetails)?.diagnostic_assessments?.items || [];
+      const versionIds = Array.from(
+        new Set(
+          items
+            .map((item) => item.authoring_items?.current_version_id)
+            .filter((id): id is number => typeof id === 'number')
+        )
+      );
+
+      let versionMap: Record<number, any> = {};
+      if (versionIds.length > 0) {
+        const { data: versions, error: versionsError } = await supabase
+          .from('authoring_item_versions')
+          .select('version_id, content_json')
+          .in('version_id', versionIds);
+
+        if (versionsError) {
+          console.warn('Failed to load authoring item versions:', versionsError);
+        } else {
+          versionMap = (versions || []).reduce((acc, version) => {
+            acc[version.version_id] = version.content_json;
+            return acc;
+          }, {} as Record<number, any>);
+        }
+      }
+
+      const attemptWithVersions = {
+        ...attemptData,
+        diagnostic_assessments: {
+          ...attemptData?.diagnostic_assessments,
+          items: items.map((item) => {
+            const currentVersionId = item.authoring_items?.current_version_id;
+            return {
+              ...item,
+              authoring_items: item.authoring_items
+                ? {
+                    ...item.authoring_items,
+                    current_version: {
+                      content_json: currentVersionId
+                        ? versionMap[currentVersionId] || {}
+                        : {},
+                    },
+                  }
+                : item.authoring_items,
+            };
+          }),
+        },
+      } as AttemptWithDetails;
 
       // 응답 조회 (essay_gradings 포함)
       const { data: responsesData, error: responsesError } = await supabase
@@ -116,7 +163,7 @@ export default function StudentAssessmentResult() {
 
       if (responsesError) throw responsesError;
 
-      setAttempt(attemptData as AttemptWithDetails);
+      setAttempt(attemptWithVersions);
       setResponses(responsesData || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : '결과 로드 실패');

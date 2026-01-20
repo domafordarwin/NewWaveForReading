@@ -16,6 +16,7 @@ import StudentDashboardNew from "./pages/StudentDashboardNew";
 import StudentFeedback from "./pages/StudentFeedback";
 import ParentDashboard from "./pages/ParentDashboard";
 import ParentDashboardNew from "./pages/ParentDashboardNew";
+import ParentChildren from "./pages/ParentChildren";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import TeacherDashboardNew from "./pages/TeacherDashboardNew";
 import SchoolAdminDashboard from "./pages/SchoolAdminDashboard";
@@ -170,8 +171,9 @@ function App() {
               </PrivateRoute>
             }
           >
-            <Route path="dashboard" element={<ParentDashboard />} />
-            <Route path="dashboard-new" element={<ParentDashboardNew />} />
+            <Route path="dashboard" element={<ParentDashboardNew />} />
+            <Route path="dashboard-old" element={<ParentDashboard />} />
+            <Route path="children" element={<ParentChildren />} />
             <Route
               path="report-sample"
               element={<ReportSample type="parent" />}
