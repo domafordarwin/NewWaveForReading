@@ -50,6 +50,7 @@ import StudentAssessmentList from "./pages/StudentAssessmentList";
 import StudentAssessmentTake from "./pages/StudentAssessmentTake";
 import StudentAssessmentComplete from "./pages/StudentAssessmentComplete";
 import StudentAssessmentResult from "./pages/StudentAssessmentResult";
+import StudentResults from "./pages/StudentResults";
 import MidHighDiagnosticAssessment from "./pages/MidHighDiagnosticAssessment";
 import MidLowDiagnosticAssessment from "./pages/MidLowDiagnosticAssessment";
 import ElemHighDiagnosticAssessment from "./pages/ElemHighDiagnosticAssessment";
@@ -137,6 +138,7 @@ function App() {
               path="assessments/results/:attemptId"
               element={<StudentAssessmentResult />}
             />
+            <Route path="results" element={<StudentResults />} />
             {/* 중등 고학년 진단 평가 */}
             <Route
               path="midhigh-diagnostic"
