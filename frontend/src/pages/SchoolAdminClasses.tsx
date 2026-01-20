@@ -21,7 +21,7 @@ interface ClassInfo {
   class_id: number;
   class_name: string;
   grade: number;
-  teacher_name: string;
+  teacher?: { name: string } | null;
 }
 
 const SchoolAdminClasses = () => {
@@ -34,13 +34,19 @@ const SchoolAdminClasses = () => {
   useEffect(() => {
     const loadClasses = async () => {
       if (!supabase) return;
+      if (!user?.schoolId) {
+        setError("학교 정보를 확인할 수 없습니다.");
+        setClasses([]);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
         const { data, error } = await supabase
           .from("classes")
-          .select("class_id, class_name, grade, teacher_name")
-          .eq("school_id", user?.schoolId || 0);
+          .select("class_id, class_name, grade, teacher:users!classes_teacher_id_fkey(name)")
+          .eq("school_id", user.schoolId);
         if (error) setError(error.message);
         else setClasses(data || []);
       } catch {
@@ -50,7 +56,7 @@ const SchoolAdminClasses = () => {
       }
     };
     loadClasses();
-  }, [supabase]);
+  }, [supabase, user]);
 
   return (
     <Box>
@@ -91,7 +97,7 @@ const SchoolAdminClasses = () => {
                       <Chip icon={<School />} label={cls.class_name} />
                     </TableCell>
                     <TableCell>{cls.grade}</TableCell>
-                    <TableCell>{cls.teacher_name || "-"}</TableCell>
+                    <TableCell>{cls.teacher?.name || "-"}</TableCell>
                   </TableRow>
                 ))
               )}
