@@ -288,38 +288,22 @@ function App() {
             <Route index element={<DiagnosticsPage />} />
           </Route>
 
-          {/* 진단 평가 직접 접근 (로그인 필요) */}
+          {/* 진단 평가 직접 접근 (로그인 없이 접근 가능) */}
           <Route
             path="/diagnostic/midhigh"
-            element={
-              <PrivateRoute>
-                <MidHighDiagnosticAssessment />
-              </PrivateRoute>
-            }
+            element={<MidHighDiagnosticAssessment />}
           />
           <Route
             path="/diagnostic/midlow"
-            element={
-              <PrivateRoute>
-                <MidLowDiagnosticAssessment />
-              </PrivateRoute>
-            }
+            element={<MidLowDiagnosticAssessment />}
           />
           <Route
             path="/diagnostic/elemhigh"
-            element={
-              <PrivateRoute>
-                <ElemHighDiagnosticAssessment />
-              </PrivateRoute>
-            }
+            element={<ElemHighDiagnosticAssessment />}
           />
           <Route
             path="/diagnostic/elemlow"
-            element={
-              <PrivateRoute>
-                <ElemLowDiagnosticAssessment />
-              </PrivateRoute>
-            }
+            element={<ElemLowDiagnosticAssessment />}
           />
         </Routes>
       </Router>
