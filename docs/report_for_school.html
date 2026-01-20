@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리딩 PRO 문해력 진단 심층 보고서 - 신명중학교</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4A6FA5;
+            --primary-dark: #2E4A6F;
+            --primary-light: #6B8FC7;
+            --secondary: #7B68EE;
+            --accent-green: #2ECC71;
+            --accent-yellow: #F1C40F;
+            --accent-orange: #E67E22;
+            --accent-red: #E74C3C;
+            --accent-purple: #9B59B6;
+            --text-dark: #2C3E50;
+            --text-medium: #5D6D7E;
+            --text-light: #95A5A6;
+            --bg-light: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --border: #E8ECF0;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.7;
+        }
+
+        /* ===== 헤더 ===== */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-brand .logo {
+            font-size: 2.5rem;
+        }
+
+        .header-brand .text h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .header-brand .text span {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .header-info {
+            text-align: right;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* 네비게이션 */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            padding: 15px 40px;
+            background: rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 10px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: rgba(255,255,255,0.8);
+            border: none;
+        }
+
+        .nav-tab:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* ===== 메인 컨테이너 ===== */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 40px;
+        }
+
+        /* 섹션 */
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 카드 스타일 */
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 20px 28px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-header.green {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+        .card-header.orange {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+        }
+
+        .card-header.red {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+        }
+
+        .card-header.purple {
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+        }
+
+        .card-body {
+            padding: 28px;
+        }
+
+        /* ===== 대시보드 카드 ===== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .stat-card.blue::before { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+        .stat-card.green::before { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .stat-card.orange::before { background: linear-gradient(90deg, #e67e22, #f39c12); }
+        .stat-card.red::before { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+        .stat-card.purple::before { background: linear-gradient(90deg, #8e44ad, #9b59b6); }
+
+        .stat-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .stat-card .value {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .stat-card .value span {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: var(--text-medium);
+        }
+
+        .stat-card .label {
+            font-size: 0.95rem;
+            color: var(--text-medium);
+            margin-top: 8px;
+        }
+
+        .stat-card .change {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .stat-card .change.warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .stat-card .change.danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .stat-card .change.success {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        /* ===== 차트 영역 ===== */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 280px;
+        }
+
+        /* ===== 테이블 ===== */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            background: var(--primary);
+            color: white;
+        }
+
+        .data-table th {
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f1f5f9;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        /* 상태 배지 */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .badge-success { background: #d1fae5; color: #059669; }
+        .badge-warning { background: #fef3c7; color: #d97706; }
+        .badge-danger { background: #fee2e2; color: #dc2626; }
+        .badge-info { background: #dbeafe; color: #2563eb; }
+
+        /* ===== 프로그레스 바 ===== */
+        .progress-item {
+            margin-bottom: 20px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .progress-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+
+        .progress-fill.blue { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+        .progress-fill.green { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .progress-fill.yellow { background: linear-gradient(90deg, #f1c40f, #f39c12); }
+        .progress-fill.orange { background: linear-gradient(90deg, #e67e22, #f39c12); }
+        .progress-fill.red { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+
+        /* ===== 독자 유형 카드 ===== */
+        .reader-type-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .reader-type-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .reader-type-header {
+            padding: 20px 24px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .reader-type-header.type-a { background: linear-gradient(135deg, #3498db, #5dade2); }
+        .reader-type-header.type-b { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+        .reader-type-header.type-c { background: linear-gradient(135deg, #9b59b6, #af7ac5); }
+        .reader-type-header.type-d { background: linear-gradient(135deg, #e67e22, #f39c12); }
+
+        .reader-type-header .icon {
+            font-size: 2.5rem;
+        }
+
+        .reader-type-header .info h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .reader-type-header .info .percent {
+            font-size: 1.8rem;
+            font-weight: 900;
+        }
+
+        .reader-type-body {
+            padding: 20px 24px;
+        }
+
+        .reader-type-body h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .reader-type-body p {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        .reader-type-body ul {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .reader-type-body ul li {
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 0.9rem;
+            color: var(--text-medium);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .reader-type-body ul li:last-child {
+            border-bottom: none;
+        }
+
+        /* ===== 지도방향 카드 ===== */
+        .guidance-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .guidance-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .guidance-card-header {
+            padding: 18px 24px;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .guidance-card-header.understanding {
+            background: linear-gradient(135deg, #3498db, #5dade2);
+        }
+
+        .guidance-card-header.communication {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .guidance-card-header.aesthetic {
+            background: linear-gradient(135deg, #9b59b6, #af7ac5);
+        }
+
+        .guidance-card-body {
+            padding: 20px 24px;
+        }
+
+        .guidance-card-body .sub-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            margin: 15px 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .guidance-card-body .sub-title:first-child {
+            margin-top: 0;
+        }
+
+        .guidance-card-body p {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        /* ===== 개선방안 리스트 ===== */
+        .improvement-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .improvement-item {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--primary);
+        }
+
+        .improvement-item h4 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .improvement-item p {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+            line-height: 1.7;
+        }
+
+        /* ===== 요약 박스 ===== */
+        .summary-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 16px;
+            padding: 30px;
+            border-left: 5px solid var(--primary);
+            margin-bottom: 24px;
+        }
+
+        .summary-box h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .summary-box p {
+            font-size: 0.95rem;
+            color: var(--text-medium);
+            line-height: 1.8;
+        }
+
+        .summary-box .highlight {
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        /* ===== 푸터 ===== */
+        .footer {
+            background: var(--primary-dark);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .footer p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .footer .org-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        /* ===== 인쇄 스타일 ===== */
+        @media print {
+            .header { position: relative; }
+            .nav-tabs { display: none; }
+            .section { display: block !important; page-break-before: always; }
+            .section:first-child { page-break-before: avoid; }
+            .card { box-shadow: none; border: 1px solid var(--border); }
+        }
+
+        /* ===== 반응형 ===== */
+        @media (max-width: 1200px) {
+            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+            .guidance-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .header-top { 
+                flex-direction: column; 
+                gap: 15px; 
+                padding: 15px 20px;
+            }
+            .main-container { padding: 20px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .reader-type-grid { grid-template-columns: 1fr; }
+            .improvement-list { grid-template-columns: 1fr; }
+            .nav-tabs { padding: 10px 15px; }
+            .nav-tab { padding: 8px 16px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== 헤더 ===== -->
+    <header class="header">
+        <div class="header-top">
+            <div class="header-brand">
+                <span class="logo">📚</span>
+                <div class="text">
+                    <h1>리딩 PRO 문해력 진단 심층 보고서</h1>
+                    <span>충주 신명중학교</span>
+                </div>
+            </div>
+            <div class="header-info">
+                <div>📖 (사)전국독서새물결모임</div>
+                <div>☎️ 070-4226-0244</div>
+            </div>
+        </div>
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-section="overview">📊 결과 개요</button>
+            <button class="nav-tab" data-section="analysis">🔍 영역별 분석</button>
+            <button class="nav-tab" data-section="reader-type">📖 독자성향 분석</button>
+            <button class="nav-tab" data-section="guidance">🎯 지도 방향</button>
+            <button class="nav-tab" data-section="improvement">💡 개선 방안</button>
+        </nav>
+    </header>
+
+    <!-- ===== 메인 컨테이너 ===== -->
+    <main class="main-container">
+
+        <!-- ===== 섹션 1: 결과 개요 ===== -->
+        <section id="overview" class="section active">
+            <div class="summary-box">
+                <h3>📋 조사 개요</h3>
+                <p>
+                    본 보고서는 <span class="highlight">충주 신명중학교 전체 학생</span>을 대상으로 실시한 
+                    <span class="highlight">리딩 PRO 문해력 진단 평가</span> 결과에 대한 심층 분석 보고서입니다.
+                    <span class="highlight">이해력, 의사소통능력, 심미적 감수성</span> 세 가지 주요 영역에 걸쳐 학생들의 읽기 능력을 진단하였으며,
+                    <span class="highlight">선택형 18문항 + 서술형 7문항</span>으로 구성되었습니다.
+                    독자 성향 유형(A·B·C·D) 진단 결과를 함께 고려하여, 종합적인 문해력 향상 방안을 제시합니다.
+                </p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="stat-card blue">
+                    <div class="icon">📘</div>
+                    <div class="value">36.7<span>%</span></div>
+                    <div class="label">이해력 정답률</div>
+                    <div class="change warning">상대적 양호</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="icon">💬</div>
+                    <div class="value">27.8<span>%</span></div>
+                    <div class="label">의사소통능력 정답률</div>
+                    <div class="change danger">개선 필요</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="icon">🎨</div>
+                    <div class="value">~10<span>%</span></div>
+                    <div class="label">심미적 감수성 정답률</div>
+                    <div class="change danger">매우 취약</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="icon">📝</div>
+                    <div class="value">25<span>문항</span></div>
+                    <div class="label">총 문항 수</div>
+                    <div class="change success">선택18+서술7</div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-container">
+                    <div class="chart-title">📊 영역별 정답률 비교</div>
+                    <div class="chart-wrapper">
+                        <canvas id="areaChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">📈 서술형 문항 응답률 추이</div>
+                    <div class="chart-wrapper">
+                        <canvas id="responseChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">📋 주요 발견 사항</div>
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>구분</th>
+                                <th>내용</th>
+                                <th>수준</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>상대적 강점</strong></td>
+                                <td>사실적 이해 (명시적 정보 파악), 단순 추론 능력</td>
+                                <td><span class="badge badge-success">양호</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>취약 영역 1</strong></td>
+                                <td>비판적 이해 (글의 함축 의미, 논리적 평가)</td>
+                                <td><span class="badge badge-danger">취약</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>취약 영역 2</strong></td>
+                                <td>문학적 감상 및 정서적 공감 능력</td>
+                                <td><span class="badge badge-danger">매우 취약</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>취약 영역 3</strong></td>
+                                <td>창의적 문제해결, 사회적 상호작용 독해</td>
+                                <td><span class="badge badge-warning">개선 필요</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>서술형 특이사항</strong></td>
+                                <td>후반부 문항(7번)으로 갈수록 무응답률 급증 (약 50%)</td>
+                                <td><span class="badge badge-danger">주의</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 섹션 2: 영역별 분석 ===== -->
+        <section id="analysis" class="section">
+            <div class="card">
+                <div class="card-header">📘 이해력 영역 분석</div>
+                <div class="card-body">
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">사실적 이해</span>
+                            <span class="progress-value">45%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill blue" style="width: 45%;"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">추론적 이해</span>
+                            <span class="progress-value">35%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill yellow" style="width: 35%;"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">비판적 이해</span>
+                            <span class="progress-value">20%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill red" style="width: 20%;"></div>
+                        </div>
+                    </div>
+                    <p style="margin-top:20px; color:var(--text-medium); font-size:0.95rem;">
+                        <strong>분석:</strong> 글에서 명시적으로 주어진 정보를 묻는 사실적 이해 문항에서는 상대적으로 높은 정답률을 보였으나,
+                        글의 함축 의미를 추론하거나 비판적으로 평가하는 문항에서는 정답률이 매우 낮았습니다.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header orange">💬 의사소통능력 영역 분석</div>
+                <div class="card-body">
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">사회적 상호작용</span>
+                            <span class="progress-value">30%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill orange" style="width: 30%;"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">창의적 문제해결</span>
+                            <span class="progress-value">25%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill orange" style="width: 25%;"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">표현과 전달능력</span>
+                            <span class="progress-value">28%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill orange" style="width: 28%;"></div>
+                        </div>
+                    </div>
+                    <p style="margin-top:20px; color:var(--text-medium); font-size:0.95rem;">
+                        <strong>분석:</strong> 대화형 지문이나 상황 제시형 문제에서 상대의 의도를 파악하고 적절히 대응하는 능력이 부족했고,
+                        독서를 통해 새로운 문제 해결 아이디어를 창출해내는 문항에서도 대부분 학생이 정답을 찾지 못했습니다.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header red">🎨 심미적 감수성 영역 분석</div>
+                <div class="card-body">
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">문학적 감상</span>
+                            <span class="progress-value">12%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill red" style="width: 12%;"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">정서적 공감</span>
+                            <span class="progress-value">8%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill red" style="width: 8%;"></div>
+                        </div>
+                    </div>
+                    <p style="margin-top:20px; color:var(--text-medium); font-size:0.95rem;">
+                        <strong>분석:</strong> 세 영역 중 가장 취약한 부분입니다. 문학 작품에 대한 이해와 감상, 정서적 공감 능력이 낮아서,
+                        작품의 주제나 아름다움을 느끼고 표현하는 문항들에 오답이 집중되었습니다. 
+                        이는 최근 학생들의 문학 작품 접촉 기회 감소나 깊이 있는 읽기 경험 부족과 연관된 것으로 보입니다.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header purple">📝 서술형 문항 상세 분석</div>
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>문항</th>
+                                <th>측정 역량</th>
+                                <th>응답률</th>
+                                <th>답변 수준</th>
+                                <th>특이사항</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1~3번</td>
+                                <td>기초 표현력</td>
+                                <td><span class="badge badge-success">70~90%</span></td>
+                                <td>보통</td>
+                                <td>문장 서술 시도 양호</td>
+                            </tr>
+                            <tr>
+                                <td>4~5번</td>
+                                <td>사회적 상호작용</td>
+                                <td><span class="badge badge-warning">50~60%</span></td>
+                                <td>미흡</td>
+                                <td>피상적 답변 다수</td>
+                            </tr>
+                            <tr>
+                                <td>6번</td>
+                                <td>창의적 문제해결</td>
+                                <td><span class="badge badge-warning">40~50%</span></td>
+                                <td>부족</td>
+                                <td>질문 의도 이탈 답변</td>
+                            </tr>
+                            <tr>
+                                <td>7번</td>
+                                <td>종합적 사고력</td>
+                                <td><span class="badge badge-danger">~50%</span></td>
+                                <td>매우 부족</td>
+                                <td>절반 이상 무응답</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 섹션 3: 독자성향 분석 ===== -->
+        <section id="reader-type" class="section">
+            <div class="chart-grid">
+                <div class="chart-container">
+                    <div class="chart-title">📊 독자 성향 유형 분포</div>
+                    <div class="chart-wrapper">
+                        <canvas id="readerTypeChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">📈 유형별 특성 비교</div>
+                    <div class="chart-wrapper">
+                        <canvas id="typeCompareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reader-type-grid">
+                <div class="reader-type-card">
+                    <div class="reader-type-header type-a">
+                        <div class="icon">🔍</div>
+                        <div class="info">
+                            <h3>A형: 능동적 탐구형</h3>
+                            <div class="percent">약 40%</div>
+                        </div>
+                    </div>
+                    <div class="reader-type-body">
+                        <h4>📚 특징</h4>
+                        <p>책에 대한 흥미와 호기심이 높고, 다양한 분야의 독서를 즐기는 능동적 독서형입니다. 
+                        정보 탐구에 적극적이며 문학적인 이야기에도 관심을 보이는 균형 잡힌 독자입니다.</p>
+                        <ul>
+                            <li>✅ 혼자서도 꾸준히 독서하는 경향</li>
+                            <li>✅ 스스로 자료를 찾거나 독서와 학습을 연결</li>
+                            <li>📌 심화 독서 기회 제공으로 지적 도전감 부여</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="reader-type-card">
+                    <div class="reader-type-header type-b">
+                        <div class="icon">🤝</div>
+                        <div class="info">
+                            <h3>B형: 사회적 상호작용형</h3>
+                            <div class="percent">약 30%</div>
+                        </div>
+                    </div>
+                    <div class="reader-type-body">
+                        <h4>📚 특징</h4>
+                        <p>함께 읽고 이야기하는 것을 좋아하는 경향이 있습니다. 
+                        친구나 가족과 책 이야기를 나누고 토론하는 것을 즐기며, 실용적인 내용의 책에 관심이 높습니다.</p>
+                        <ul>
+                            <li>✅ 독서 모임이나 발표 활동에 적극적</li>
+                            <li>✅ 실제 사례가 담긴 책 선호</li>
+                            <li>📌 토론 진행자 역할 부여로 자기주도성 강화</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="reader-type-card">
+                    <div class="reader-type-header type-c">
+                        <div class="icon">🎭</div>
+                        <div class="info">
+                            <h3>C형: 심미적 감성형</h3>
+                            <div class="percent">약 15%</div>
+                        </div>
+                    </div>
+                    <div class="reader-type-body">
+                        <h4>📚 특징</h4>
+                        <p>문학적 상상력이 풍부하고 이야기의 세계에 몰입하는 것을 좋아합니다. 
+                        소설, 판타지 등 상상력이 자극되는 장르를 선호하며, 등장인물에 감정이입을 잘합니다.</p>
+                        <ul>
+                            <li>✅ 책을 통해 새로운 세계를 접하는 것에 흥미</li>
+                            <li>⚠️ 현실 정보에는 관심이 적을 수 있음</li>
+                            <li>📌 감상 일기, 독서 카드 등 창의적 독후 활동</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="reader-type-card">
+                    <div class="reader-type-header type-d">
+                        <div class="icon">📖</div>
+                        <div class="info">
+                            <h3>D형: 소극적 저독서형</h3>
+                            <div class="percent">약 15%</div>
+                        </div>
+                    </div>
+                    <div class="reader-type-body">
+                        <h4>📚 특징</h4>
+                        <p>독서 흥미가 낮거나 습관이 부족한 소극적 독서형입니다. 
+                        책 읽는 빈도가 낮고, 새로운 책이나 어려운 책에 대한 거부감이 있을 수 있습니다.</p>
+                        <ul>
+                            <li>⚠️ 스스로 책을 찾거나 읽는 동기 부족</li>
+                            <li>⚠️ 주변 권유가 있어야 독서에 나섬</li>
+                            <li>📌 쉽고 재미있는 책부터 시작, 작은 목표 설정</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-box" style="margin-top:24px;">
+                <h3>📌 독자 성향 분석 시사점</h3>
+                <p>
+                    신명중학교 학생들 중 <span class="highlight">약 70%(A+B형)</span>는 어느 정도 독서에 관심을 보이고 있으나,
+                    <span class="highlight">나머지 30%(C+D형)</span>의 학생들은 독서 흥미가 충분히 높지 않거나 편중된 독서 성향을 보입니다.
+                    특히 <span class="highlight">D형(15%)</span>으로 분류된 학생들은 책과 거리가 다소 먼 생활을 하고 있어 
+                    <span class="highlight">집중적인 독서 활성화 지원</span>이 필요합니다.
+                </p>
+            </div>
+        </section>
+
+        <!-- ===== 섹션 4: 지도 방향 ===== -->
+        <section id="guidance" class="section">
+            <div class="guidance-grid">
+                <div class="guidance-card">
+                    <div class="guidance-card-header understanding">📘 이해력 영역</div>
+                    <div class="guidance-card-body">
+                        <div class="sub-title">📝 사실적 이해</div>
+                        <p>5하 원칙(누가, 언제, 어디서, 무엇을, 어떻게)에 따른 정보 추출 연습. 질의응답으로 정확한 해석 확인.</p>
+                        
+                        <div class="sub-title">🔍 추론적 이해</div>
+                        <p>"다음에 이어질 내용은?", "숨은 의도는?" 등 추론 질문 활용. 짝토의를 통한 추론 공유.</p>
+                        
+                        <div class="sub-title">⚖️ 비판적 이해</div>
+                        <p>사실과 의견 구별하기, 자료의 출처·신뢰성 판단 활동. 시사 자료 활용 비판적 읽기 연습.</p>
+                    </div>
+                </div>
+
+                <div class="guidance-card">
+                    <div class="guidance-card-header communication">💬 의사소통 영역</div>
+                    <div class="guidance-card-body">
+                        <div class="sub-title">🤝 사회적 상호작용</div>
+                        <p>독서 토론 활성화, 역할극을 통한 상황 맥락 이해 연습. 협력적 읽기 활동 확대.</p>
+                        
+                        <div class="sub-title">💡 창의적 문제해결</div>
+                        <p>읽은 내용을 현실 문제에 적용하는 프로젝트 학습. 다양한 해결책 제시 훈련.</p>
+                        
+                        <div class="sub-title">🎤 표현과 전달</div>
+                        <p>독후감 발표, 북리포트 작성. 자신의 생각을 논리적으로 정리하는 글쓰기 훈련.</p>
+                    </div>
+                </div>
+
+                <div class="guidance-card">
+                    <div class="guidance-card-header" style="background: linear-gradient(135deg, #c0392b, #e74c3c);">🎨 심미적 감수성 영역</div>
+                    <div class="guidance-card-body">
+                        <div class="sub-title">📖 문학적 감상</div>
+                        <p>양질의 문학 작품 읽기 프로그램 운영. 작품의 주제와 아름다움 탐구 활동.</p>
+                        
+                        <div class="sub-title">❤️ 정서적 공감</div>
+                        <p>등장인물 감정이입 활동, 감상문 쓰기. 영화/연극 감상 후 원작 읽기 연계.</p>
+                        
+                        <div class="sub-title">✍️ 창의적 표현</div>
+                        <p>마인드맵, 그림일기 형식의 자유로운 감상 표현. 인상 깊은 문장 따라 쓰기·암송.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:24px;">
+                <div class="card-header purple">📖 독자 유형별 맞춤 지도 전략</div>
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>유형</th>
+                                <th>흥미 유발</th>
+                                <th>자기주도성 강화</th>
+                                <th>가정 연계</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>A형</strong><br>(능동적 탐구형)</td>
+                                <td>심화 독서 기회 제공<br>새로운 주제·고수준 도서</td>
+                                <td>프로젝트형 독서 활동<br>독서 보고서 작성</td>
+                                <td>풍부한 독서 환경 조성<br>부모와 함께 토론</td>
+                            </tr>
+                            <tr>
+                                <td><strong>B형</strong><br>(사회적 상호작용형)</td>
+                                <td>독서 모임·토론 동아리<br>함께 하는 독서 활동</td>
+                                <td>토론 진행자·발표자 역할<br>스스로 준비하는 경험</td>
+                                <td>가족 독서 시간<br>부모가 책 읽어주기</td>
+                            </tr>
+                            <tr>
+                                <td><strong>C형</strong><br>(심미적 감성형)</td>
+                                <td>판타지, SF, 성장소설<br>상상력 자극 도서 추천</td>
+                                <td>감상 일기·독서 카드<br>마인드맵 활동</td>
+                                <td>영화/연극 후 원작 읽기<br>역할극 활동</td>
+                            </tr>
+                            <tr>
+                                <td><strong>D형</strong><br>(소극적 저독서형)</td>
+                                <td>쉽고 재미있는 책<br>만화형 학습도서 활용</td>
+                                <td>작은 목표(월 1권)<br>하루 10~15분 습관화</td>
+                                <td>부모가 먼저 독서 모범<br>칭찬과 격려</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 섹션 5: 개선 방안 ===== -->
+        <section id="improvement" class="section">
+            <div class="summary-box">
+                <h3>🎯 종합 분석 결론</h3>
+                <p>
+                    신명중학교 학생들의 전반적인 문해력 수준은 <span class="highlight">개선의 여지가 큰 것</span>으로 나타났습니다.
+                    <span class="highlight">이해력(36.7%)</span>은 상대적으로 양호하나 여전히 절대적인 정답률은 낮은 수준이며,
+                    <span class="highlight">의사소통능력(27.8%)</span>과 <span class="highlight">심미적 감수성(~10%)</span> 영역은 전반적으로 취약합니다.
+                    학교-가정이 협력하는 체계적인 문해력 지원 체계 구축이 필요합니다.
+                </p>
+            </div>
+
+            <div class="improvement-list">
+                <div class="improvement-item">
+                    <h4>📚 1. 교과 수업 연계 독서 지도</h4>
+                    <p>
+                        현재 학생들이 상대적으로 강점을 보이는 사실적 이해에만 머무르지 않고, 
+                        <strong>추론 및 비판적 읽기 전략을 각 교과 시간에 통합</strong>해야 합니다.
+                        사회나 과학 시간에 짧은 글을 읽고 숨은 의미나 근거의 타당성을 함께 토의하는 활동을 정례화합니다.
+                    </p>
+                </div>
+
+                <div class="improvement-item">
+                    <h4>📖 2. 다양한 독서 경험 제공</h4>
+                    <p>
+                        학생들이 편중된 독서에서 벗어나 <strong>여러 장르와 수준의 글을 접해야</strong> 종합적인 문해력이 향상됩니다.
+                        특히 문학적 감수성을 기르기 위해 양질의 문학 작품을 읽는 프로그램을 가동하고, 
+                        그 감상을 나눌 수 있는 장을 마련합니다.
+                    </p>
+                </div>
+
+                <div class="improvement-item">
+                    <h4>💬 3. 독서 후 활동 활성화</h4>
+                    <p>
+                        단순히 책을 읽고 끝내는 것이 아니라, <strong>읽은 것을 표현하고 적용하는 활동</strong>이 필요합니다.
+                        독서 토론, 북리포트, 독후 감상 발표회 등을 정기적으로 열어 학생들이 적극적으로 
+                        사고를 펼치고 의사소통 능력을 기르도록 합니다.
+                    </p>
+                </div>
+
+                <div class="improvement-item">
+                    <h4>🏫 4. 체계적 독서 프로그램 구축</h4>
+                    <p>
+                        학년별 필독서 프로그램을 운영하되, 학생들의 수준과 흥미를 고려하여 유연하게 선택하도록 합니다.
+                        <strong>방과후 독서클럽이나 도서관 활용 수업</strong>을 통해 문해력 향상을 지속 지원합니다.
+                    </p>
+                </div>
+
+                <div class="improvement-item">
+                    <h4>🏠 5. 학교-가정 협력 체계</h4>
+                    <p>
+                        <strong>학부모 연수</strong>를 통해 가정에서도 독서 지도 전략을 실천할 수 있도록 안내합니다.
+                        부모가 먼저 책 읽는 모습을 보이고, 자녀에게 책을 읽어주는 활동, 
+                        가족 독서 시간 운영 등을 권장합니다.
+                    </p>
+                </div>
+
+                <div class="improvement-item">
+                    <h4>🎯 6. D형 학생 집중 지원</h4>
+                    <p>
+                        독서 흥미가 낮은 <strong>D형 학생(약 15%)에 대한 집중 지원</strong>이 필요합니다.
+                        쉽고 재미있는 책부터 시작하여 긍정적인 독서 경험을 심어주고, 
+                        작은 목표 달성 시 칭찬과 보상으로 성취감을 느끼게 합니다.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:24px;">
+                <div class="card-header green">✅ 단계별 실행 로드맵</div>
+                <div class="card-body">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>단계</th>
+                                <th>기간</th>
+                                <th>주요 활동</th>
+                                <th>목표</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1단계</strong></td>
+                                <td>1~2개월</td>
+                                <td>현황 파악, 독서 환경 점검, D형 학생 개별 상담</td>
+                                <td>기초 독서 습관 형성</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2단계</strong></td>
+                                <td>3~4개월</td>
+                                <td>독서 동아리 운영, 교과 연계 독서 활동 시작</td>
+                                <td>독서 흥미 향상</td>
+                            </tr>
+                            <tr>
+                                <td><strong>3단계</strong></td>
+                                <td>5~6개월</td>
+                                <td>독서 토론·발표회, 학부모 연수, 가정 연계 활동</td>
+                                <td>의사소통능력 강화</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4단계</strong></td>
+                                <td>7~12개월</td>
+                                <td>문학 작품 심화 프로그램, 창의적 독후 활동</td>
+                                <td>심미적 감수성 향상</td>
+                            </tr>
+                            <tr>
+                                <td><strong>평가</strong></td>
+                                <td>12개월 후</td>
+                                <td>문해력 재진단, 성과 분석, 차년도 계획 수립</td>
+                                <td>전체 정답률 20% 향상</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ===== 푸터 ===== -->
+    <footer class="footer">
+        <p class="org-name">📚 (사)전국독서새물결모임</p>
+        <p>☎️ 070-4226-0244 | 리딩 PRO 문해력 진단</p>
+        <p style="margin-top:10px; font-size:0.85rem; opacity:0.8;">
+            본 보고서는 충주 신명중학교의 문해력 향상을 위한 교육 자료로 활용됩니다.
+        </p>
+    </footer>
+
+    <script>
+        // ===== 네비게이션 탭 전환 =====
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 탭 활성화
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 섹션 전환
+                const sectionId = this.dataset.section;
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+                
+                // 스크롤 위치
+                window.scrollTo({ top: 150, behavior: 'smooth' });
+            });
+        });
+
+        // ===== 차트 1: 영역별 정답률 =====
+        const areaCtx = document.getElementById('areaChart').getContext('2d');
+        new Chart(areaCtx, {
+            type: 'bar',
+            data: {
+                labels: ['이해력', '의사소통능력', '심미적 감수성'],
+                datasets: [{
+                    label: '정답률 (%)',
+                    data: [36.7, 27.8, 10],
+                    backgroundColor: [
+                        'rgba(74, 111, 165, 0.8)',
+                        'rgba(230, 126, 34, 0.8)',
+                        'rgba(231, 76, 60, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(74, 111, 165, 1)',
+                        'rgba(230, 126, 34, 1)',
+                        'rgba(231, 76, 60, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) { return value + '%'; }
+                        }
+                    }
+                }
+            }
+        });
+
+        // ===== 차트 2: 서술형 응답률 =====
+        const responseCtx = document.getElementById('responseChart').getContext('2d');
+        new Chart(responseCtx, {
+            type: 'line',
+            data: {
+                labels: ['1번', '2번', '3번', '4번', '5번', '6번', '7번'],
+                datasets: [{
+                    label: '응답률 (%)',
+                    data: [90, 85, 70, 60, 55, 45, 50],
+                    borderColor: 'rgba(74, 111, 165, 1)',
+                    backgroundColor: 'rgba(74, 111, 165, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    pointBackgroundColor: 'white',
+                    pointBorderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) { return value + '%'; }
+                        }
+                    }
+                }
+            }
+        });
+
+        // ===== 차트 3: 독자 유형 분포 =====
+        const readerTypeCtx = document.getElementById('readerTypeChart').getContext('2d');
+        new Chart(readerTypeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['A형 (능동적 탐구형)', 'B형 (사회적 상호작용형)', 'C형 (심미적 감성형)', 'D형 (소극적 저독서형)'],
+                datasets: [{
+                    data: [40, 30, 15, 15],
+                    backgroundColor: [
+                        'rgba(52, 152, 219, 0.8)',
+                        'rgba(39, 174, 96, 0.8)',
+                        'rgba(155, 89, 182, 0.8)',
+                        'rgba(230, 126, 34, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(52, 152, 219, 1)',
+                        'rgba(39, 174, 96, 1)',
+                        'rgba(155, 89, 182, 1)',
+                        'rgba(230, 126, 34, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 15 }
+                    }
+                }
+            }
+        });
+
+        // ===== 차트 4: 유형별 특성 비교 =====
+        const typeCompareCtx = document.getElementById('typeCompareChart').getContext('2d');
+        new Chart(typeCompareCtx, {
+            type: 'radar',
+            data: {
+                labels: ['독서 흥미', '자기주도성', '사회적 독서', '문학 감수성', '독서 습관'],
+                datasets: [
+                    {
+                        label: 'A형',
+                        data: [90, 85, 70, 75, 88],
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        pointBackgroundColor: 'rgba(52, 152, 219, 1)'
+                    },
+                    {
+                        label: 'B형',
+                        data: [75, 60, 95, 60, 70],
+                        borderColor: 'rgba(39, 174, 96, 1)',
+                        backgroundColor: 'rgba(39, 174, 96, 0.2)',
+                        pointBackgroundColor: 'rgba(39, 174, 96, 1)'
+                    },
+                    {
+                        label: 'C형',
+                        data: [65, 50, 40, 95, 55],
+                        borderColor: 'rgba(155, 89, 182, 1)',
+                        backgroundColor: 'rgba(155, 89, 182, 0.2)',
+                        pointBackgroundColor: 'rgba(155, 89, 182, 1)'
+                    },
+                    {
+                        label: 'D형',
+                        data: [30, 25, 35, 30, 20],
+                        borderColor: 'rgba(230, 126, 34, 1)',
+                        backgroundColor: 'rgba(230, 126, 34, 0.2)',
+                        pointBackgroundColor: 'rgba(230, 126, 34, 1)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 15 }
+                    }
+                }
+            }
+        });
+
+        // ===== 프로그레스 바 애니메이션 =====
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                document.querySelectorAll('.progress-fill').forEach(bar => {
+                    const width = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 100);
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>
