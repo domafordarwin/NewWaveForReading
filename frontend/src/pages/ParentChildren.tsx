@@ -48,7 +48,6 @@ import {
   ChildCare,
 } from "@mui/icons-material";
 import { getCurrentUser } from "../utils/session";
-import { useSupabase } from "../services/supabaseClient";
 
 interface ChildInfo {
   user_id: number;
@@ -108,8 +107,6 @@ const getGradeBandLabel = (band: string): string => {
 const ParentChildren = () => {
   const user = useMemo(() => getCurrentUser(), []);
   const userId = user?.userId ?? null;
-  const supabase = useSupabase();
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [children, setChildren] = useState<ChildInfo[]>([]);
@@ -125,147 +122,102 @@ const ParentChildren = () => {
   const [linking, setLinking] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
 
-  // 자녀 목록 로드
+  const demoChildren: ChildInfo[] = [
+    {
+      user_id: 1,
+      name: "김민준",
+      grade: 2,
+      school_name: "신명중학교",
+      student_grade_level: "중저",
+      email: "student1@example.com",
+      student_code: "SMJ_123456",
+    },
+    {
+      user_id: 2,
+      name: "이서연",
+      grade: 3,
+      school_name: "신명중학교",
+      student_grade_level: "중저",
+      email: "student2@example.com",
+      student_code: "SMJ_654321",
+    },
+  ];
+
+  const demoSessions: Record<number, SessionData[]> = {
+    1: [
+      {
+        session_id: 101,
+        grade_band: "중저",
+        status: "completed",
+        created_at: "2025-01-10T09:00:00Z",
+        stimulus: { title: "동물농장" },
+      },
+      {
+        session_id: 102,
+        grade_band: "중저",
+        status: "in_progress",
+        created_at: "2025-01-15T09:00:00Z",
+        stimulus: { title: "어린왕자" },
+      },
+    ],
+    2: [
+      {
+        session_id: 201,
+        grade_band: "중저",
+        status: "completed",
+        created_at: "2025-01-12T09:00:00Z",
+        stimulus: { title: "사피엔스" },
+      },
+    ],
+  };
+
+  const demoEvaluations: Record<number, EvaluationData[]> = {
+    1: [
+      {
+        evaluation_id: 9001,
+        session_id: 101,
+        comprehension_score: 18,
+        inference_score: 17,
+        critical_score: 16,
+        expression_score: 19,
+        total_score: 70,
+        grade_level: "B",
+        percentile: 62,
+        evaluated_at: "2025-01-11T10:00:00Z",
+      },
+    ],
+    2: [
+      {
+        evaluation_id: 9101,
+        session_id: 201,
+        comprehension_score: 20,
+        inference_score: 19,
+        critical_score: 18,
+        expression_score: 20,
+        total_score: 77,
+        grade_level: "B",
+        percentile: 70,
+        evaluated_at: "2025-01-13T10:00:00Z",
+      },
+    ],
+  };
+
   useEffect(() => {
-    const loadChildren = async () => {
-      if (!supabase || !userId) {
-        setLoading(false);
-        return;
-      }
+    setLoading(true);
+    setError(null);
+    setChildren(demoChildren);
+    setSelectedChild(demoChildren[0] ?? null);
+    setLoading(false);
+  }, [userId]);
 
-      try {
-        setLoading(true);
-        setError(null);
-
-        // 학부모-학생 관계에서 자녀 찾기
-        const { data: relationsData, error: relationsError } = await supabase
-          .from("student_parent_relations")
-          .select(
-            `
-            student_id,
-            student:users!student_parent_relations_student_id_fkey(
-              user_id,
-              name,
-              grade,
-              school_name,
-              student_grade_level,
-              email,
-              student_code
-            )
-          `,
-          )
-          .eq("parent_id", userId);
-
-        if (relationsError) {
-          if (relationsError.message?.includes("Failed to fetch")) {
-            setError("네트워크 오류로 자녀 정보를 불러오지 못했습니다.");
-            setChildren([]);
-            setSelectedChild(null);
-            return;
-          }
-
-          console.warn("자녀 관계 로드 에러:", relationsError);
-
-          // 관계 테이블이 없으면 이메일 패턴으로 찾기 (레거시 호환)
-          const emailMatch = user.email?.match(/parent_student(\d+)@/);
-          if (emailMatch) {
-            const { data: studentData } = await supabase
-              .from("users")
-              .select("*")
-              .eq("user_type", "STUDENT")
-              .eq("email", `student${emailMatch[1]}@example.com`)
-              .single();
-
-            if (studentData) {
-              setChildren([studentData]);
-              setSelectedChild(studentData);
-            }
-          }
-        } else if (relationsData && relationsData.length > 0) {
-          const childList = relationsData
-            .map((r: RelationData) => {
-              return Array.isArray(r.student) ? r.student[0] : r.student;
-            })
-            .filter(Boolean);
-          setChildren(childList);
-          if (childList.length > 0) {
-            setSelectedChild(childList[0]);
-          }
-        } else {
-          // 데모 데이터
-          const demoChild: ChildInfo = {
-            user_id: 1,
-            name: "김민준",
-            grade: 2,
-            school_name: "서울중학교",
-            student_grade_level: "중저",
-            email: "student1@example.com",
-            student_code: "SCH_000000",
-          };
-          setChildren([demoChild]);
-          setSelectedChild(demoChild);
-        }
-      } catch (err: unknown) {
-        console.error("자녀 로드 실패:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "데이터를 불러오는데 실패했습니다.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadChildren();
-  }, [supabase, userId]);
-
-  // 선택된 자녀의 진단 세션 및 평가 결과 로드
   const selectedChildId = selectedChild?.user_id ?? null;
   useEffect(() => {
-    const loadChildData = async () => {
-      if (!supabase || !selectedChildId) return;
-      setChildDataLoading(true);
-      try {
-        // 진단 세션 조회
-        const { data: sessionsData } = await supabase
-          .from("assessment_sessions")
-          .select(
-            `
-            session_id,
-            grade_band,
-            status,
-            created_at,
-            stimulus:stimuli(title)
-          `,
-          )
-          .eq("student_id", selectedChildId)
-          .order("created_at", { ascending: false });
-
-        setSessions(sessionsData || []);
-
-        if (sessionsData && sessionsData.length > 0) {
-          const sessionIds = sessionsData.map((s: SessionData) => s.session_id);
-
-          // 평가 결과 조회
-          const { data: evalData } = await supabase
-            .from("ai_evaluations")
-            .select("*")
-            .in("session_id", sessionIds)
-            .order("evaluated_at", { ascending: false });
-
-          setEvaluations(evalData || []);
-        } else {
-          setEvaluations([]);
-        }
-      } catch (err) {
-        console.error("자녀 데이터 로드 실패:", err);
-      } finally {
-        setChildDataLoading(false);
-      }
-    };
-    loadChildData();
-  }, [supabase, selectedChildId]);
+    if (!selectedChildId) return;
+    setChildDataLoading(true);
+    setSessions(demoSessions[selectedChildId] || []);
+    setEvaluations(demoEvaluations[selectedChildId] || []);
+    setChildDataLoading(false);
+  }, [selectedChildId]);
 
   // 통계 계산
   const stats = {
@@ -282,7 +234,6 @@ const ParentChildren = () => {
   };
 
   const handleSearchStudents = async () => {
-    if (!supabase) return;
     const keyword = searchName.trim();
     if (!keyword) {
       setSearchResults([]);
@@ -292,21 +243,10 @@ const ParentChildren = () => {
     setSearchLoading(true);
     setLinkError(null);
     try {
-      const { data, error: searchError } = await supabase
-        .from("users")
-        .select(
-          "user_id, name, grade, school_name, student_grade_level, email, student_code",
-        )
-        .eq("user_type", "STUDENT")
-        .ilike("name", `%${keyword}%`)
-        .order("name")
-        .limit(20);
-
-      if (searchError) {
-        setLinkError(searchError.message);
-      } else {
-        setSearchResults(data || []);
-      }
+      const results = demoChildren.filter((child) =>
+        child.name.includes(keyword),
+      );
+      setSearchResults(results);
     } catch (err) {
       setLinkError(
         err instanceof Error ? err.message : "학생 검색에 실패했습니다.",
@@ -317,64 +257,27 @@ const ParentChildren = () => {
   };
 
   const handleLinkStudent = async (student: ChildInfo) => {
-    if (!supabase || !userId) return;
-    if (!student.student_code) {
-      setLinkError("학생 고유 코드가 없어 연결할 수 없습니다.");
+    if (!userId) return;
+    setLinking(true);
+    setLinkError(null);
+    const alreadyLinked = children.some(
+      (child) => child.user_id === student.user_id,
+    );
+    if (alreadyLinked) {
+      setLinkError("이미 연결된 자녀입니다.");
+      setLinking(false);
       return;
     }
 
-    setLinking(true);
-    setLinkError(null);
-    try {
-      const { data: matchedStudent, error: matchError } = await supabase
-        .from("users")
-        .select("user_id, student_code")
-        .eq("student_code", student.student_code)
-        .single();
-
-      if (matchError || !matchedStudent) {
-        setLinkError("학생 고유 코드를 확인할 수 없습니다.");
-        return;
-      }
-
-      const { error: linkError } = await supabase
-        .from("student_parent_relations")
-        .insert({
-          parent_id: userId,
-          student_id: matchedStudent.user_id,
-          student_code: matchedStudent.student_code,
-        });
-
-      if (linkError) {
-        if (linkError.code === "23505") {
-          setLinkError("이미 연결된 자녀입니다.");
-        } else {
-          setLinkError(linkError.message);
-        }
-        return;
-      }
-
-      const alreadyLinked = children.some(
-        (child) => child.user_id === matchedStudent.user_id,
-      );
-      if (!alreadyLinked) {
-        const nextChildren = [...children, student];
-        setChildren(nextChildren);
-        if (!selectedChild) {
-          setSelectedChild(student);
-        }
-      }
-
-      setLinkDialogOpen(false);
-      setSearchName("");
-      setSearchResults([]);
-    } catch (err) {
-      setLinkError(
-        err instanceof Error ? err.message : "자녀 연결에 실패했습니다.",
-      );
-    } finally {
-      setLinking(false);
+    const nextChildren = [...children, student];
+    setChildren(nextChildren);
+    if (!selectedChild) {
+      setSelectedChild(student);
     }
+    setLinkDialogOpen(false);
+    setSearchName("");
+    setSearchResults([]);
+    setLinking(false);
   };
 
   if (loading) {

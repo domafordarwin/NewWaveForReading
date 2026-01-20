@@ -53,7 +53,6 @@ import {
   Legend,
 } from "recharts";
 import { getCurrentUser } from "../utils/session";
-import { useSupabase } from "../services/supabaseClient";
 import {
   generateParentReport,
   type AIEvaluationResult,
@@ -82,19 +81,9 @@ interface EvaluationData {
   evaluated_at: string;
 }
 
-interface RelationData {
-  student_id: number;
-  student: ChildInfo[] | ChildInfo;
-}
-
-interface SessionData {
-  session_id: number;
-}
-
 const ParentDashboardNew = () => {
   const user = useMemo(() => getCurrentUser(), []);
   const userId = user?.userId ?? null;
-  const supabase = useSupabase();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,128 +98,71 @@ const ParentDashboardNew = () => {
   } | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
 
-  // 자녀 목록 로드
+  const demoChildren: ChildInfo[] = [
+    {
+      user_id: 1,
+      name: "김민준",
+      grade: 2,
+      school_name: "신명중학교",
+      student_grade_level: "중저",
+    },
+    {
+      user_id: 2,
+      name: "이서연",
+      grade: 3,
+      school_name: "신명중학교",
+      student_grade_level: "중저",
+    },
+  ];
+
+  const demoEvaluations: Record<number, EvaluationData[]> = {
+    1: [
+      {
+        evaluation_id: 9001,
+        session_id: 101,
+        comprehension_score: 18,
+        inference_score: 17,
+        critical_score: 16,
+        expression_score: 19,
+        total_score: 70,
+        grade_level: "B",
+        percentile: 62,
+        strengths: ["논리적인 흐름", "주제 이해"],
+        weaknesses: ["근거 보강 필요"],
+        evaluated_at: "2025-01-11T10:00:00Z",
+      },
+    ],
+    2: [
+      {
+        evaluation_id: 9101,
+        session_id: 201,
+        comprehension_score: 20,
+        inference_score: 19,
+        critical_score: 18,
+        expression_score: 20,
+        total_score: 77,
+        grade_level: "B",
+        percentile: 70,
+        strengths: ["표현력", "구체성"],
+        weaknesses: ["핵심 요약 보완"],
+        evaluated_at: "2025-01-13T10:00:00Z",
+      },
+    ],
+  };
+
   useEffect(() => {
-    const loadChildren = async () => {
-      if (!supabase || !userId) {
-        setLoading(false);
-        return;
-      }
+    setLoading(true);
+    setError(null);
+    setChildren(demoChildren);
+    setSelectedChild(demoChildren[0] ?? null);
+    setLoading(false);
+  }, [userId]);
 
-      try {
-        setLoading(true);
-        setError(null);
-
-        // 학부모-학생 관계에서 자녀 찾기
-        const { data: relationsData, error: relationsError } = await supabase
-          .from("student_parent_relations")
-          .select(
-            `
-            student_id,
-            student:users!student_parent_relations_student_id_fkey(
-              user_id,
-              name,
-              grade,
-              school_name,
-              student_grade_level
-            )
-          `,
-          )
-          .eq("parent_id", userId);
-
-        if (relationsError) {
-          if (relationsError.message?.includes("Failed to fetch")) {
-            setError("네트워크 오류로 자녀 정보를 불러오지 못했습니다.");
-            setChildren([]);
-            setSelectedChild(null);
-            return;
-          }
-
-          console.warn("자녀 관계 로드 에러:", relationsError);
-
-          // 관계 테이블이 없으면 이메일 패턴으로 찾기 (레거시 호환)
-          const emailMatch = user.email?.match(/parent_student(\d+)@/);
-          if (emailMatch) {
-            const { data: studentData } = await supabase
-              .from("users")
-              .select("*")
-              .eq("user_type", "STUDENT")
-              .eq("email", `student${emailMatch[1]}@example.com`)
-              .single();
-
-            if (studentData) {
-              setChildren([studentData]);
-              setSelectedChild(studentData);
-            }
-          }
-        } else if (relationsData && relationsData.length > 0) {
-          const childList = relationsData
-            .map((r: RelationData) => {
-              // student가 배열인 경우 첫 번째 요소 사용
-              return Array.isArray(r.student) ? r.student[0] : r.student;
-            })
-            .filter(Boolean);
-          setChildren(childList);
-          if (childList.length > 0) {
-            setSelectedChild(childList[0]);
-          }
-        } else {
-          setError("연결된 자녀 정보를 찾을 수 없습니다.");
-        }
-      } catch (err: unknown) {
-        console.error("자녀 로드 실패:", err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "데이터를 불러오는데 실패했습니다.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadChildren();
-  }, [supabase, userId]);
-
-  // 선택된 자녀의 평가 결과 로드
   const selectedChildId = selectedChild?.user_id ?? null;
   useEffect(() => {
-    const loadEvaluations = async () => {
-      if (!supabase || !selectedChildId) return;
-
-      try {
-        // 자녀의 세션 ID 조회
-        const { data: sessions } = await supabase
-          .from("assessment_sessions")
-          .select("session_id")
-          .eq("student_id", selectedChildId);
-
-        if (!sessions || sessions.length === 0) {
-          setEvaluations([]);
-          return;
-        }
-
-        const sessionIds = sessions.map((s: SessionData) => s.session_id);
-
-        // 평가 결과 조회
-        const { data: evalData, error: evalError } = await supabase
-          .from("ai_evaluations")
-          .select("*")
-          .in("session_id", sessionIds)
-          .order("evaluated_at", { ascending: false });
-
-        if (evalError) {
-          console.warn("평가 결과 로드 에러:", evalError);
-        } else {
-          setEvaluations(evalData || []);
-        }
-      } catch (err) {
-        console.error("평가 결과 로드 실패:", err);
-      }
-    };
-
-    loadEvaluations();
-  }, [supabase, selectedChildId]);
+    if (!selectedChildId) return;
+    setEvaluations(demoEvaluations[selectedChildId] || []);
+  }, [selectedChildId]);
 
   // AI 리포트 생성
   const handleGenerateReport = async () => {
