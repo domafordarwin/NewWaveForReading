@@ -49,7 +49,12 @@ const SchoolAdminClasses = () => {
           .eq("school_id", user.schoolId);
         if (error) setError(error.message);
         else setClasses(
-          (data || []).map((item: any) => ({
+          (data || []).map((item: {
+            class_id: number;
+            class_name: string;
+            grade: number;
+            teacher?: { name: string }[] | null;
+          }) => ({
             class_id: item.class_id,
             class_name: item.class_name,
             grade: item.grade,

@@ -73,9 +73,6 @@ interface EvaluationData {
   evaluated_at: string;
 }
 
-interface RelationData {
-  student: ChildInfo[] | ChildInfo;
-}
 
 interface SessionData {
   session_id: number;

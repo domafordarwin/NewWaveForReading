@@ -680,26 +680,24 @@ const ParentDashboardNew = () => {
               {/* 게시글 목록 렌더링 자리 (생략 가능) */}
             </Paper>
             {/* 추천 도서 섹션 */}
-            <Grid item xs={12}>
-              <Paper sx={{ p: 3, bgcolor: "info.50" }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  📚 추천 도서
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Typography color="text.secondary" sx={{ mb: 2 }}>
-                  자녀의 독서 수준에 맞는 추천 도서를 확인하세요.
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="info"
-                  href="/parent/recommended-books"
-                  fullWidth
-                  sx={{ mt: 1 }}
-                >
-                  추천 도서 전체 보기
-                </Button>
-              </Paper>
-            </Grid>
+            <Paper sx={{ p: 3, bgcolor: "info.50" }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                📚 추천 도서
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Typography color="text.secondary" sx={{ mb: 2 }}>
+                자녀의 독서 수준에 맞는 추천 도서를 확인하세요.
+              </Typography>
+              <Button
+                variant="contained"
+                color="info"
+                href="/parent/recommended-books"
+                fullWidth
+                sx={{ mt: 1 }}
+              >
+                추천 도서 전체 보기
+              </Button>
+            </Paper>
           </Box>
         </Grid>
       </Grid>
