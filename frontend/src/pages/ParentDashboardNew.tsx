@@ -58,6 +58,7 @@ import {
 import { useSupabase } from "../services/supabaseClient";
 import {
   type CounselComment,
+  fetchComments,
 } from "../services/counselCommentService";
 
 interface ChildInfo {
@@ -105,7 +106,6 @@ const ParentDashboardNew = () => {
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
   // const [posting, setPosting] = useState(false);
-  const [counselPosts, setCounselPosts] = useState<CounselPost[]>([]);
   const [counselLoading, setCounselLoading] = useState(false);
   const [counselError, setCounselError] = useState<string | null>(null);
 
@@ -321,10 +321,14 @@ const ParentDashboardNew = () => {
   // 상담 게시판: 게시글 작성
   const handleAddPost = async () => {
     if (!newPostTitle.trim() || !newPostContent.trim()) return;
+    if (!supabase) {
+      setCounselError("데이터베이스 연결에 실패했습니다.");
+      return;
+    }
     // setPosting(true);
     setCounselError(null);
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("counsel_posts")
         .insert([
           {
@@ -338,10 +342,10 @@ const ParentDashboardNew = () => {
 
       if (error) throw error;
 
-      setCounselPosts((prev) => [...prev, data]);
+      // setCounselPosts((prev) => [...prev, data]);
       setNewPostTitle("");
       setNewPostContent("");
-    } catch (err) {
+    } catch {
       setCounselError("게시글 작성에 실패했습니다. 다시 시도해주세요.");
     } finally {
       // setPosting(false);
@@ -349,50 +353,29 @@ const ParentDashboardNew = () => {
   };
 
   // 댓글 상태
-  const [commentMap, setCommentMap] = useState<
-    Record<number, CounselComment[]>
-  >({});
-  const [commentInput, setCommentInput] = useState<Record<number, string>>({});
-  const [commentLoading, setCommentLoading] = useState<Record<number, boolean>>(
-    {},
-  );
-  const [commentError, setCommentError] = useState<
-    Record<number, string | null>
-  >({});
+  // const [, setCommentError] = useState<
+  //   Record<number, string | null>
+  // >({});
   // 게시글별 댓글 불러오기
-  const loadComments = async (postId: number) => {
-    setCommentLoading((prev) => ({ ...prev, [postId]: true }));
-    setCommentError((prev) => ({ ...prev, [postId]: null }));
-    try {
-      const comments = await fetchComments(postId);
-      setCommentMap((prev) => ({ ...prev, [postId]: comments }));
-    } catch (e: any) {
-      setCommentError((prev) => ({
-        ...prev,
-        [postId]: e.message || "댓글을 불러오지 못했습니다.",
-      }));
-    } finally {
-      setCommentLoading((prev) => ({ ...prev, [postId]: false }));
-    }
-  };
+  // (미사용 함수: loadComments 제거)
   // 댓글 작성
-  const handleAddComment = async (postId: number) => {
-    if (!userId || !commentInput[postId]?.trim()) return;
-    setCommentLoading((prev) => ({ ...prev, [postId]: true }));
-    setCommentError((prev) => ({ ...prev, [postId]: null }));
-    try {
-      await addComment(postId, userId, commentInput[postId]);
-      setCommentInput((prev) => ({ ...prev, [postId]: "" }));
-      await loadComments(postId);
-    } catch (e: any) {
-      setCommentError((prev) => ({
-        ...prev,
-        [postId]: e.message || "댓글 작성에 실패했습니다.",
-      }));
-    } finally {
-      setCommentLoading((prev) => ({ ...prev, [postId]: false }));
-    }
-  };
+  // const handleAddComment = async (postId: number) => {
+  //   if (!userId || !commentInput[postId]?.trim()) return;
+  //   setCommentLoading((prev) => ({ ...prev, [postId]: true }));
+  //   setCommentError((prev) => ({ ...prev, [postId]: null }));
+  //   try {
+  //     await addComment(postId, userId, commentInput[postId]);
+  //     setCommentInput((prev) => ({ ...prev, [postId]: "" }));
+  //     await loadComments(postId);
+  //   } catch (e: any) {
+  //     setCommentError((prev) => ({
+  //       ...prev,
+  //       [postId]: e.message || "댓글 작성에 실패했습니다.",
+  //     }));
+  //   } finally {
+  //     setCommentLoading((prev) => ({ ...prev, [postId]: false }));
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -581,26 +564,40 @@ const ParentDashboardNew = () => {
                 variant="contained"
                 color="primary"
                 onClick={handleGenerateReport}
-                disabled={reportLoading || !selectedChild || evaluations.length === 0}
+                disabled={
+                  reportLoading || !selectedChild || evaluations.length === 0
+                }
                 sx={{ mb: 2 }}
               >
                 {reportLoading ? <CircularProgress size={20} /> : "리포트 생성"}
               </Button>
               {aiReport && (
                 <Box>
-                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    sx={{ mt: 2 }}
+                  >
                     요약
                   </Typography>
                   <Typography variant="body2" sx={{ mb: 1 }}>
                     {aiReport.summary}
                   </Typography>
-                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    sx={{ mt: 2 }}
+                  >
                     성장 분석
                   </Typography>
                   <Typography variant="body2" sx={{ mb: 1 }}>
                     {aiReport.progressAnalysis}
                   </Typography>
-                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    sx={{ mt: 2 }}
+                  >
                     추천 사항
                   </Typography>
                   <ul>
@@ -610,7 +607,11 @@ const ParentDashboardNew = () => {
                       </li>
                     ))}
                   </ul>
-                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    sx={{ mt: 2 }}
+                  >
                     가정 지도 팁
                   </Typography>
                   <ul>
@@ -628,26 +629,78 @@ const ParentDashboardNew = () => {
                 </Typography>
               )}
             </Paper>
+            {/* 상담 게시판 섹션 */}
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                💬 상담 게시판
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Box sx={{ mb: 2 }}>
+                <input
+                  type="text"
+                  placeholder="제목"
+                  value={newPostTitle}
+                  onChange={(e) => setNewPostTitle(e.target.value)}
+                  style={{
+                    width: "100%",
+                    marginBottom: 8,
+                    padding: 8,
+                    borderRadius: 4,
+                    border: "1px solid #ccc",
+                  }}
+                />
+                <textarea
+                  placeholder="내용을 입력하세요"
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
+                  style={{
+                    width: "100%",
+                    minHeight: 60,
+                    marginBottom: 8,
+                    padding: 8,
+                    borderRadius: 4,
+                    border: "1px solid #ccc",
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleAddPost}
+                  disabled={!newPostTitle.trim() || !newPostContent.trim()}
+                  fullWidth
+                >
+                  게시글 작성
+                </Button>
+                {counselError && (
+                  <Alert severity="error" sx={{ mt: 1 }}>
+                    {counselError}
+                  </Alert>
+                )}
+              </Box>
+              {/* 게시글 목록 렌더링 자리 (생략 가능) */}
+            </Paper>
             {/* 추천 도서 섹션 */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3, bgcolor: "info.50" }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-              📚 추천 도서
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            <Typography color="text.secondary" sx={{ mb: 2 }}>
-              자녀의 독서 수준에 맞는 추천 도서를 확인하세요.
-            </Typography>
-            <Button
-              variant="contained"
-              color="info"
-              href="/parent/recommended-books"
-              fullWidth
-              sx={{ mt: 1 }}
-            >
-              추천 도서 전체 보기
-            </Button>
-          </Paper>
+            <Grid item xs={12}>
+              <Paper sx={{ p: 3, bgcolor: "info.50" }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  📚 추천 도서
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <Typography color="text.secondary" sx={{ mb: 2 }}>
+                  자녀의 독서 수준에 맞는 추천 도서를 확인하세요.
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="info"
+                  href="/parent/recommended-books"
+                  fullWidth
+                  sx={{ mt: 1 }}
+                >
+                  추천 도서 전체 보기
+                </Button>
+              </Paper>
+            </Grid>
+          </Box>
         </Grid>
       </Grid>
     </Box>
