@@ -9,3 +9,4 @@ supabase/seed.sql
 .claude/settings.local.json
 nul
 frontend/.env
+docs/
