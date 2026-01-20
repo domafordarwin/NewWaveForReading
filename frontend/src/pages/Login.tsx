@@ -51,7 +51,7 @@ const userTypeIcons: Record<UserType, React.ReactNode> = {
   SYSTEM_ADMIN: <Settings />,
 };
 
-// 테스트 계정 정보
+// 테스트 계정 정보//
 const testAccounts: Record<
   UserType,
   { email: string; password: string; label: string }
