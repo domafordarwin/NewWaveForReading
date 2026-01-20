@@ -48,6 +48,7 @@ import {
   ChildCare,
 } from "@mui/icons-material";
 import { getCurrentUser } from "../utils/session";
+import { useSupabase } from "../services/supabaseClient";
 
 interface ChildInfo {
   user_id: number;
@@ -70,6 +71,10 @@ interface EvaluationData {
   grade_level: string;
   percentile: number;
   evaluated_at: string;
+}
+
+interface RelationData {
+  student: ChildInfo[] | ChildInfo;
 }
 
 interface SessionData {
@@ -102,6 +107,7 @@ const getGradeBandLabel = (band: string): string => {
 const ParentChildren = () => {
   const user = useMemo(() => getCurrentUser(), []);
   const userId = user?.userId ?? null;
+  const supabase = useSupabase();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [children, setChildren] = useState<ChildInfo[]>([]);
@@ -116,27 +122,6 @@ const ParentChildren = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [linking, setLinking] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
-
-  const demoChildren: ChildInfo[] = [
-    {
-      user_id: 1,
-      name: "김민준",
-      grade: 2,
-      school_name: "신명중학교",
-      student_grade_level: "중저",
-      email: "student1@example.com",
-      student_code: "SMJ_123456",
-    },
-    {
-      user_id: 2,
-      name: "이서연",
-      grade: 3,
-      school_name: "신명중학교",
-      student_grade_level: "중저",
-      email: "student2@example.com",
-      student_code: "SMJ_654321",
-    },
-  ];
 
   const demoSessions: Record<number, SessionData[]> = useMemo(
     () => ({
@@ -204,12 +189,62 @@ const ParentChildren = () => {
   );
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    setChildren(demoChildren);
-    setSelectedChild(demoChildren[0] ?? null);
-    setLoading(false);
-  }, [userId]);
+    const loadChildren = async () => {
+      if (!supabase || !userId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const { data: relationsData, error: relationsError } = await supabase
+          .from("student_parent_relations")
+          .select(
+            `
+            student_id,
+            student:users!student_parent_relations_student_id_fkey(
+              user_id,
+              name,
+              grade,
+              school_name,
+              student_grade_level,
+              email,
+              student_code
+            )
+          `,
+          )
+          .eq("parent_id", userId);
+
+        if (relationsError) {
+          setError(relationsError.message);
+          setChildren([]);
+          setSelectedChild(null);
+          return;
+        }
+
+        const childList = (relationsData || [])
+          .map((r: RelationData) =>
+            Array.isArray(r.student) ? r.student[0] : r.student,
+          )
+          .filter(Boolean);
+
+        setChildren(childList);
+        setSelectedChild(childList[0] ?? null);
+      } catch (err: unknown) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "자녀 정보를 불러오는데 실패했습니다.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChildren();
+  }, [supabase, userId]);
 
   const selectedChildId = selectedChild?.user_id ?? null;
   useEffect(() => {
@@ -235,6 +270,7 @@ const ParentChildren = () => {
   };
 
   const handleSearchStudents = async () => {
+    if (!supabase) return;
     const keyword = searchName.trim();
     if (!keyword) {
       setSearchResults([]);
@@ -244,10 +280,21 @@ const ParentChildren = () => {
     setSearchLoading(true);
     setLinkError(null);
     try {
-      const results = demoChildren.filter((child) =>
-        child.name.includes(keyword),
-      );
-      setSearchResults(results);
+      const { data, error: searchError } = await supabase
+        .from("users")
+        .select(
+          "user_id, name, grade, school_name, student_grade_level, email, student_code",
+        )
+        .eq("user_type", "STUDENT")
+        .ilike("name", `%${keyword}%`)
+        .order("name")
+        .limit(20);
+
+      if (searchError) {
+        setLinkError(searchError.message);
+      } else {
+        setSearchResults(data || []);
+      }
     } catch (err) {
       setLinkError(
         err instanceof Error ? err.message : "학생 검색에 실패했습니다.",
@@ -258,27 +305,64 @@ const ParentChildren = () => {
   };
 
   const handleLinkStudent = async (student: ChildInfo) => {
-    if (!userId) return;
-    setLinking(true);
-    setLinkError(null);
-    const alreadyLinked = children.some(
-      (child) => child.user_id === student.user_id,
-    );
-    if (alreadyLinked) {
-      setLinkError("이미 연결된 자녀입니다.");
-      setLinking(false);
+    if (!supabase || !userId) return;
+    if (!student.student_code) {
+      setLinkError("학생 고유 코드가 없어 연결할 수 없습니다.");
       return;
     }
 
-    const nextChildren = [...children, student];
-    setChildren(nextChildren);
-    if (!selectedChild) {
-      setSelectedChild(student);
+    setLinking(true);
+    setLinkError(null);
+    try {
+      const { data: matchedStudent, error: matchError } = await supabase
+        .from("users")
+        .select("user_id, student_code")
+        .eq("student_code", student.student_code)
+        .single();
+
+      if (matchError || !matchedStudent) {
+        setLinkError("학생 고유 코드를 확인할 수 없습니다.");
+        return;
+      }
+
+      const { error: linkError } = await supabase
+        .from("student_parent_relations")
+        .insert({
+          parent_id: userId,
+          student_id: matchedStudent.user_id,
+          student_code: matchedStudent.student_code,
+        });
+
+      if (linkError) {
+        if (linkError.code === "23505") {
+          setLinkError("이미 연결된 자녀입니다.");
+        } else {
+          setLinkError(linkError.message);
+        }
+        return;
+      }
+
+      const alreadyLinked = children.some(
+        (child) => child.user_id === matchedStudent.user_id,
+      );
+      if (!alreadyLinked) {
+        const nextChildren = [...children, student];
+        setChildren(nextChildren);
+        if (!selectedChild) {
+          setSelectedChild(student);
+        }
+      }
+
+      setLinkDialogOpen(false);
+      setSearchName("");
+      setSearchResults([]);
+    } catch (err) {
+      setLinkError(
+        err instanceof Error ? err.message : "자녀 연결에 실패했습니다.",
+      );
+    } finally {
+      setLinking(false);
     }
-    setLinkDialogOpen(false);
-    setSearchName("");
-    setSearchResults([]);
-    setLinking(false);
   };
 
   if (loading) {
