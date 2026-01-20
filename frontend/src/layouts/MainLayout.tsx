@@ -106,6 +106,7 @@ const menusByUserType: Record<
     { label: "평가 영역", icon: <Category />, path: "/question-dev/domains" },
     { label: "문항 은행", icon: <LibraryBooks />, path: "/question-dev/items" },
     { label: "기출 문항 DB", icon: <Quiz />, path: "/question-dev/past-exam" },
+    { label: "진단 평가", icon: <Assessment />, path: "/question-dev/diagnostic-assessments" },
     { label: "지문 관리", icon: <Article />, path: "/question-dev/stimuli" },
     { label: "문항 제작", icon: <SmartToy />, path: "/question-dev/authoring" },
     { label: "프롬프트 관리", icon: <Code />, path: "/question-dev/prompts" },

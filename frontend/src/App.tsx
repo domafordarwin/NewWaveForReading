@@ -42,6 +42,9 @@ import DiagnosticsPage from "./pages/DiagnosticsPage";
 import PromptManagement from "./pages/PromptManagement";
 import PastExamList from "./pages/PastExamList";
 import PastExamDetail from "./pages/PastExamDetail";
+import DiagnosticAssessmentList from "./pages/DiagnosticAssessmentList";
+import DiagnosticAssessmentCreate from "./pages/DiagnosticAssessmentCreate";
+import DiagnosticAssessmentDetail from "./pages/DiagnosticAssessmentDetail";
 
 const theme = createTheme({
   palette: {
@@ -167,6 +170,10 @@ function App() {
             {/* 기출 문항 DB */}
             <Route path="past-exam" element={<PastExamList />} />
             <Route path="past-exam/:id" element={<PastExamDetail />} />
+            {/* 진단 평가 */}
+            <Route path="diagnostic-assessments" element={<DiagnosticAssessmentList />} />
+            <Route path="diagnostic-assessments/create" element={<DiagnosticAssessmentCreate />} />
+            <Route path="diagnostic-assessments/:assessmentId" element={<DiagnosticAssessmentDetail />} />
           </Route>
 
           {/* 시스템 관리자 라우트 */}
