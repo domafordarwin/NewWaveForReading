@@ -100,6 +100,7 @@ const getGradeBandLabel = (band: string): string => {
 
 const ParentChildren = () => {
   const user = useMemo(() => getCurrentUser(), []);
+  const userId = user?.userId ?? null;
   const supabase = useSupabase();
 
   const [loading, setLoading] = useState(true);
@@ -114,7 +115,7 @@ const ParentChildren = () => {
   // 자녀 목록 로드
   useEffect(() => {
     const loadChildren = async () => {
-      if (!supabase || !user) {
+      if (!supabase || !userId) {
         setLoading(false);
         return;
       }
@@ -139,7 +140,7 @@ const ParentChildren = () => {
             )
           `,
           )
-          .eq("parent_id", user.userId);
+          .eq("parent_id", userId);
 
         if (relationsError) {
           console.warn("자녀 관계 로드 에러:", relationsError);
@@ -195,12 +196,13 @@ const ParentChildren = () => {
     };
 
     loadChildren();
-  }, [supabase, user]);
+  }, [supabase, userId]);
 
   // 선택된 자녀의 진단 세션 및 평가 결과 로드
+  const selectedChildId = selectedChild?.user_id ?? null;
   useEffect(() => {
     const loadChildData = async () => {
-      if (!supabase || !selectedChild) return;
+      if (!supabase || !selectedChildId) return;
       setChildDataLoading(true);
       try {
         // 진단 세션 조회
@@ -215,7 +217,7 @@ const ParentChildren = () => {
             stimulus:stimuli(title)
           `,
           )
-          .eq("student_id", selectedChild.user_id)
+          .eq("student_id", selectedChildId)
           .order("created_at", { ascending: false });
 
         setSessions(sessionsData || []);
@@ -241,7 +243,7 @@ const ParentChildren = () => {
       }
     };
     loadChildData();
-  }, [supabase, selectedChild]);
+  }, [supabase, selectedChildId]);
 
   // 통계 계산
   const stats = {

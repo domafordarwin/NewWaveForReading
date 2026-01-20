@@ -222,8 +222,11 @@ const SchoolAdminDashboard = () => {
                   fullWidth
                   startIcon={<PersonAdd />}
                   sx={{ py: 2 }}
+                  onClick={() =>
+                    (window.location.href = "/school-admin/students")
+                  }
                 >
-                  사용자 등록
+                  학생 관리
                 </Button>
               </Grid>
               <Grid item xs={6}>
@@ -232,8 +235,11 @@ const SchoolAdminDashboard = () => {
                   fullWidth
                   startIcon={<Class />}
                   sx={{ py: 2 }}
+                  onClick={() =>
+                    (window.location.href = "/school-admin/classes")
+                  }
                 >
-                  반 편성
+                  반 관리
                 </Button>
               </Grid>
               <Grid item xs={6}>

@@ -93,6 +93,7 @@ interface SessionData {
 
 const ParentDashboardNew = () => {
   const user = useMemo(() => getCurrentUser(), []);
+  const userId = user?.userId ?? null;
   const supabase = useSupabase();
 
   const [loading, setLoading] = useState(true);
@@ -111,7 +112,7 @@ const ParentDashboardNew = () => {
   // 자녀 목록 로드
   useEffect(() => {
     const loadChildren = async () => {
-      if (!supabase || !user) {
+      if (!supabase || !userId) {
         setLoading(false);
         return;
       }
@@ -135,7 +136,7 @@ const ParentDashboardNew = () => {
             )
           `,
           )
-          .eq("parent_id", user.userId);
+          .eq("parent_id", userId);
 
         if (relationsError) {
           console.warn("자녀 관계 로드 에러:", relationsError);
@@ -182,19 +183,20 @@ const ParentDashboardNew = () => {
     };
 
     loadChildren();
-  }, [supabase, user]);
+  }, [supabase, userId]);
 
   // 선택된 자녀의 평가 결과 로드
+  const selectedChildId = selectedChild?.user_id ?? null;
   useEffect(() => {
     const loadEvaluations = async () => {
-      if (!supabase || !selectedChild) return;
+      if (!supabase || !selectedChildId) return;
 
       try {
         // 자녀의 세션 ID 조회
         const { data: sessions } = await supabase
           .from("assessment_sessions")
           .select("session_id")
-          .eq("student_id", selectedChild.user_id);
+          .eq("student_id", selectedChildId);
 
         if (!sessions || sessions.length === 0) {
           setEvaluations([]);
@@ -221,7 +223,7 @@ const ParentDashboardNew = () => {
     };
 
     loadEvaluations();
-  }, [supabase, selectedChild]);
+  }, [supabase, selectedChildId]);
 
   // AI 리포트 생성
   const handleGenerateReport = async () => {

@@ -54,6 +54,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../utils/session";
 import { useSupabase } from "../services/supabaseClient";
 import {
@@ -110,6 +111,7 @@ interface EvaluationWithStudent {
 const TeacherDashboardNew = () => {
   const user = getCurrentUser();
   const supabase = useSupabase();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -534,7 +536,12 @@ const TeacherDashboardNew = () => {
                     ["completed", "teacher_reviewed"].includes(s.status),
                   ).length;
                   return (
-                    <TableRow key={student.user_id} hover>
+                    <TableRow
+                      key={student.user_id}
+                      hover
+                      onClick={() => navigate(`/teacher/students/${student.user_id}`)}
+                      sx={{ cursor: "pointer" }}
+                    >
                       <TableCell>{student.name}</TableCell>
                       <TableCell>{student.grade}학년</TableCell>
                       <TableCell>{student.school_name || "-"}</TableCell>
@@ -547,7 +554,13 @@ const TeacherDashboardNew = () => {
                       </TableCell>
                       <TableCell align="center">
                         <Tooltip title="상세 보기">
-                          <IconButton size="small">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/teacher/students/${student.user_id}`);
+                            }}
+                          >
                             <Visibility fontSize="small" />
                           </IconButton>
                         </Tooltip>
@@ -886,5 +899,7 @@ const TeacherDashboardNew = () => {
     </Box>
   );
 };
+
+export default TeacherDashboardNew;
 
 export default TeacherDashboardNew;

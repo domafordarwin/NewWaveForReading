@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { Person } from "@mui/icons-material";
 import { useSupabase } from "../services/supabaseClient";
+import { getCurrentUser } from "../utils/session";
 
 interface Student {
   user_id: number;
@@ -26,6 +27,7 @@ interface Student {
 
 const SchoolAdminStudents = () => {
   const supabase = useSupabase();
+  const user = getCurrentUser();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
@@ -39,7 +41,8 @@ const SchoolAdminStudents = () => {
         const { data, error } = await supabase
           .from("users")
           .select("user_id, name, grade, class_name, email")
-          .eq("user_type", "STUDENT");
+          .eq("user_type", "STUDENT")
+          .eq("school_id", user?.schoolId || 0);
         if (error) setError(error.message);
         else setStudents(data || []);
       } catch {
