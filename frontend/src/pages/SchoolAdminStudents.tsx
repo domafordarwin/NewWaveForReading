@@ -35,6 +35,12 @@ const SchoolAdminStudents = () => {
   useEffect(() => {
     const loadStudents = async () => {
       if (!supabase) return;
+      if (!user?.schoolId) {
+        setError("학교 정보를 확인할 수 없습니다.");
+        setStudents([]);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
@@ -42,7 +48,7 @@ const SchoolAdminStudents = () => {
           .from("users")
           .select("user_id, name, grade, class_name, email")
           .eq("user_type", "STUDENT")
-          .eq("school_id", user?.schoolId || 0);
+          .eq("school_id", user.schoolId);
         if (error) setError(error.message);
         else setStudents(data || []);
       } catch {
@@ -52,7 +58,7 @@ const SchoolAdminStudents = () => {
       }
     };
     loadStudents();
-  }, [supabase]);
+  }, [supabase, user]);
 
   return (
     <Box>

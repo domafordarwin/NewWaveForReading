@@ -114,7 +114,7 @@ export default function DiagnosticAssessmentDetail() {
         <Alert severity="error">{error || "평가를 찾을 수 없습니다."}</Alert>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate("/diagnostic-assessments")}
+          onClick={() => navigate("/question-dev/diagnostic-assessments")}
           sx={{ mt: 2 }}
         >
           목록으로
@@ -128,7 +128,7 @@ export default function DiagnosticAssessmentDetail() {
       <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate("/diagnostic-assessments")}
+          onClick={() => navigate("/question-dev/diagnostic-assessments")}
           sx={{ mr: 2 }}
         >
           목록으로

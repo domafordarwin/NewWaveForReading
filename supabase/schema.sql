@@ -12,6 +12,7 @@ create table if not exists public.users (
   school_name text,
   school_id bigint,
   grade integer,
+  class_name text,
   student_grade_level text,
   profile_image_url text,
   is_active boolean default true,

@@ -34,6 +34,10 @@ import {
   TextField,
   Tabs,
   Tab,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import {
   People,
@@ -108,6 +112,12 @@ interface EvaluationWithStudent {
   student_name?: string;
 }
 
+interface Stimulus {
+  stimulus_id: number;
+  title: string;
+  grade_band: string;
+}
+
 const TeacherDashboardNew = () => {
   const user = getCurrentUser();
   const supabase = useSupabase();
@@ -116,12 +126,23 @@ const TeacherDashboardNew = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // 데이터 상태
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [sessions, setSessions] = useState<AssessmentSession[]>([]);
   const [evaluations, setEvaluations] = useState<EvaluationWithStudent[]>([]);
+  const [stimuli, setStimuli] = useState<Stimulus[]>([]);
+
+  // 진단 배정 다이얼로그 상태
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [assignTargetStudent, setAssignTargetStudent] = useState<number | "">(
+    "",
+  );
+  const [assignTargetStimulus, setAssignTargetStimulus] = useState<number | "">(
+    "",
+  );
 
   // 통계
   const [statistics, setStatistics] = useState({
@@ -171,6 +192,7 @@ const TeacherDashboardNew = () => {
           .select("*")
           .eq("user_type", "STUDENT")
           .eq("is_active", true)
+          .eq("school_id", user?.schoolId || 0)
           .order("name");
 
         if (studentsError) {
@@ -184,9 +206,17 @@ const TeacherDashboardNew = () => {
           .from("classes")
           .select("*")
           .eq("is_active", true)
+          .eq("school_id", user?.schoolId || 0)
           .order("grade");
 
         setClasses(classesData || []);
+
+        // 지문 목록 로드 (진단 배정용)
+        const { data: stimuliData } = await supabase
+          .from("stimuli")
+          .select("stimulus_id, title, grade_band")
+          .order("title");
+        setStimuli(stimuliData || []);
 
         // 진단 세션 로드
         const { data: sessionsData, error: sessionsError } = await supabase
@@ -198,6 +228,7 @@ const TeacherDashboardNew = () => {
             stimulus:stimuli(title)
           `,
           )
+          .eq("school_id", user?.schoolId || 0)
           .order("created_at", { ascending: false })
           .limit(50);
 
@@ -286,7 +317,7 @@ const TeacherDashboardNew = () => {
 
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase, user]);
+  }, [supabase, user, refreshTrigger]);
 
   // 상태별 세션 수
   const statusData = [
@@ -380,6 +411,39 @@ const TeacherDashboardNew = () => {
     } catch (err) {
       console.error("피드백 저장 실패:", err);
       setError("피드백 저장에 실패했습니다.");
+    }
+  };
+
+  // 진단 배정 실행
+  const handleAssignAssessment = async () => {
+    if (!supabase || !user || !assignTargetStudent || !assignTargetStimulus)
+      return;
+
+    try {
+      // 선택된 지문의 학년군 정보 가져오기 (간소화를 위해 stimuli 상태에서 찾음)
+      const selectedStimulus = stimuli.find(
+        (s) => s.stimulus_id === assignTargetStimulus,
+      );
+
+      const { error: assignError } = await supabase
+        .from("assessment_sessions")
+        .insert({
+          student_id: assignTargetStudent,
+          stimulus_id: assignTargetStimulus,
+          assigned_by: user.userId,
+          grade_band: selectedStimulus?.grade_band || "초고", // 기본값 또는 지문 정보 사용
+          status: "assigned",
+        });
+
+      if (assignError) throw assignError;
+
+      setAssignDialogOpen(false);
+      setAssignTargetStudent("");
+      setAssignTargetStimulus("");
+      setRefreshTrigger((prev) => prev + 1); // 목록 갱신
+    } catch (err) {
+      console.error("진단 배정 실패:", err);
+      setError("진단 배정에 실패했습니다.");
     }
   };
 
@@ -512,7 +576,11 @@ const TeacherDashboardNew = () => {
             <Typography variant="h6" fontWeight="bold">
               학생 목록
             </Typography>
-            <Button variant="contained" startIcon={<Add />}>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => setAssignDialogOpen(true)}
+            >
               진단 배정
             </Button>
           </Box>
@@ -539,7 +607,9 @@ const TeacherDashboardNew = () => {
                     <TableRow
                       key={student.user_id}
                       hover
-                      onClick={() => navigate(`/teacher/students/${student.user_id}`)}
+                      onClick={() =>
+                        navigate(`/teacher/students/${student.user_id}`)
+                      }
                       sx={{ cursor: "pointer" }}
                     >
                       <TableCell>{student.name}</TableCell>
@@ -896,10 +966,64 @@ const TeacherDashboardNew = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* 진단 배정 다이얼로그 */}
+      <Dialog
+        open={assignDialogOpen}
+        onClose={() => setAssignDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>진단 배정</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+            <FormControl fullWidth>
+              <InputLabel>학생 선택</InputLabel>
+              <Select
+                value={assignTargetStudent}
+                label="학생 선택"
+                onChange={(e) =>
+                  setAssignTargetStudent(e.target.value as number)
+                }
+              >
+                {students.map((s) => (
+                  <MenuItem key={s.user_id} value={s.user_id}>
+                    {s.name} ({s.grade}학년)
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>진단 지문 선택</InputLabel>
+              <Select
+                value={assignTargetStimulus}
+                label="진단 지문 선택"
+                onChange={(e) =>
+                  setAssignTargetStimulus(e.target.value as number)
+                }
+              >
+                {stimuli.map((s) => (
+                  <MenuItem key={s.stimulus_id} value={s.stimulus_id}>
+                    {s.title} ({s.grade_band})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAssignDialogOpen(false)}>취소</Button>
+          <Button
+            variant="contained"
+            onClick={handleAssignAssessment}
+            disabled={!assignTargetStudent || !assignTargetStimulus}
+          >
+            배정하기
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
-
-export default TeacherDashboardNew;
 
 export default TeacherDashboardNew;
