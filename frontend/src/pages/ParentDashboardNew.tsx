@@ -100,40 +100,43 @@ const ParentDashboardNew = () => {
   } | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
 
-  const demoEvaluations: Record<number, EvaluationData[]> = {
-    1: [
-      {
-        evaluation_id: 9001,
-        session_id: 101,
-        comprehension_score: 18,
-        inference_score: 17,
-        critical_score: 16,
-        expression_score: 19,
-        total_score: 70,
-        grade_level: "B",
-        percentile: 62,
-        strengths: ["논리적인 흐름", "주제 이해"],
-        weaknesses: ["근거 보강 필요"],
-        evaluated_at: "2025-01-11T10:00:00Z",
-      },
-    ],
-    2: [
-      {
-        evaluation_id: 9101,
-        session_id: 201,
-        comprehension_score: 20,
-        inference_score: 19,
-        critical_score: 18,
-        expression_score: 20,
-        total_score: 77,
-        grade_level: "B",
-        percentile: 70,
-        strengths: ["표현력", "구체성"],
-        weaknesses: ["핵심 요약 보완"],
-        evaluated_at: "2025-01-13T10:00:00Z",
-      },
-    ],
-  };
+  const demoEvaluations = useMemo<Record<number, EvaluationData[]>>(
+    () => ({
+      1: [
+        {
+          evaluation_id: 9001,
+          session_id: 101,
+          comprehension_score: 18,
+          inference_score: 17,
+          critical_score: 16,
+          expression_score: 19,
+          total_score: 70,
+          grade_level: "B",
+          percentile: 62,
+          strengths: ["논리적인 흐름", "주제 이해"],
+          weaknesses: ["근거 보강 필요"],
+          evaluated_at: "2025-01-11T10:00:00Z",
+        },
+      ],
+      2: [
+        {
+          evaluation_id: 9101,
+          session_id: 201,
+          comprehension_score: 20,
+          inference_score: 19,
+          critical_score: 18,
+          expression_score: 20,
+          total_score: 77,
+          grade_level: "B",
+          percentile: 70,
+          strengths: ["표현력", "구체성"],
+          weaknesses: ["핵심 요약 보완"],
+          evaluated_at: "2025-01-13T10:00:00Z",
+        },
+      ],
+    }),
+    []
+  );
 
   useEffect(() => {
     const loadChildren = async () => {
@@ -195,7 +198,7 @@ const ParentDashboardNew = () => {
   useEffect(() => {
     if (!selectedChildId) return;
     setEvaluations(demoEvaluations[selectedChildId] || []);
-  }, [selectedChildId]);
+  }, [selectedChildId, demoEvaluations]);
 
   // AI 리포트 생성
   const handleGenerateReport = async () => {
