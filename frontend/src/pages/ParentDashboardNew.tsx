@@ -340,156 +340,213 @@ const ParentDashboardNew = () => {
       )}
 
       <Grid container spacing={3}>
-        {/* 자녀 정보 */}
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, height: "100%" }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-              <Person sx={{ mr: 1, verticalAlign: "middle" }} />
-              자녀 정보
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-
-            {children.length === 0 ? (
-              <Typography color="text.secondary">
-                연결된 자녀가 없습니다.
+        {/* 왼쪽 컬럼: 학생 정보/진단 결과/추이/분석 */}
+        <Grid item xs={12} md={7}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* 자녀 정보 */}
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                <Person sx={{ mr: 1, verticalAlign: "middle" }} />
+                자녀 정보
               </Typography>
-            ) : (
-              <List>
-                {children.map((child) => (
-                  <ListItem
-                    key={child.user_id}
-                    button
-                    selected={selectedChild?.user_id === child.user_id}
-                    onClick={() => setSelectedChild(child)}
-                    sx={{ borderRadius: 2, mb: 1 }}
-                  >
-                    <ListItemAvatar>
-                      <Avatar sx={{ bgcolor: "primary.main" }}>
-                        {child.name?.charAt(0)}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={child.name}
-                      secondary={`${child.school_name || "학교"} ${child.grade || ""}학년`}
+              <Divider sx={{ mb: 2 }} />
+              {children.length === 0 ? (
+                <Typography color="text.secondary">
+                  연결된 자녀가 없습니다.
+                </Typography>
+              ) : (
+                <List>
+                  {children.map((child) => (
+                    <ListItem
+                      key={child.user_id}
+                      button
+                      selected={selectedChild?.user_id === child.user_id}
+                      onClick={() => setSelectedChild(child)}
+                      sx={{ borderRadius: 2, mb: 1 }}
+                    >
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: "primary.main" }}>
+                          {child.name?.charAt(0)}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={child.name}
+                        secondary={`${child.school_name || "학교"} ${child.grade || ""}학년`}
+                      />
+                      {selectedChild?.user_id === child.user_id && (
+                        <ListItemSecondaryAction>
+                          <Chip label="선택됨" size="small" color="primary" />
+                        </ListItemSecondaryAction>
+                      )}
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </Paper>
+
+            {/* 요약 통계 */}
+            <Grid container spacing={2}>
+              <Grid item xs={6} sm={3}>
+                <Card sx={{ bgcolor: "primary.main", color: "white" }}>
+                  <CardContent sx={{ textAlign: "center" }}>
+                    <Assignment sx={{ fontSize: 32 }} />
+                    <Typography variant="h4" fontWeight="bold">
+                      {stats.totalAssessments}
+                    </Typography>
+                    <Typography variant="body2">완료 진단</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Card sx={{ bgcolor: "secondary.main", color: "white" }}>
+                  <CardContent sx={{ textAlign: "center" }}>
+                    <TrendingUp sx={{ fontSize: 32 }} />
+                    <Typography variant="h4" fontWeight="bold">
+                      {stats.averageScore}
+                    </Typography>
+                    <Typography variant="body2">평균 점수</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Card sx={{ bgcolor: "success.main", color: "white" }}>
+                  <CardContent sx={{ textAlign: "center" }}>
+                    <EmojiEvents sx={{ fontSize: 32 }} />
+                    <Typography variant="h4" fontWeight="bold">
+                      {stats.latestGrade}
+                    </Typography>
+                    <Typography variant="body2">현재 등급</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={6} sm={3}>
+                <Card sx={{ bgcolor: "info.main", color: "white" }}>
+                  <CardContent sx={{ textAlign: "center" }}>
+                    <School sx={{ fontSize: 32 }} />
+                    <Typography variant="h4" fontWeight="bold">
+                      {stats.percentile}%
+                    </Typography>
+                    <Typography variant="body2">백분위</Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+
+            {/* 성장 추이 차트 */}
+            {progressChartData.length > 1 && (
+              <Paper sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  <TrendingUp sx={{ mr: 1, verticalAlign: "middle" }} />
+                  성장 추이
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={progressChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis domain={[0, 100]} />
+                    <RechartsTooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="점수"
+                      stroke="#667eea"
+                      strokeWidth={2}
+                      dot={{ fill: "#667eea" }}
                     />
-                    {selectedChild?.user_id === child.user_id && (
-                      <ListItemSecondaryAction>
-                        <Chip label="선택됨" size="small" color="primary" />
-                      </ListItemSecondaryAction>
-                    )}
-                  </ListItem>
-                ))}
-              </List>
+                  </LineChart>
+                </ResponsiveContainer>
+              </Paper>
             )}
-          </Paper>
+
+            {/* 영역별 분석 */}
+            {radarChartData.length > 0 && (
+              <Paper sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  영역별 분석 (최근)
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <ResponsiveContainer width="100%" height={250}>
+                  <RadarChart data={radarChartData}>
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="subject" />
+                    <PolarRadiusAxis domain={[0, 25]} />
+                    <Radar
+                      name="점수"
+                      dataKey="score"
+                      stroke="#764ba2"
+                      fill="#764ba2"
+                      fillOpacity={0.6}
+                    />
+                    <Legend />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </Paper>
+            )}
+          </Box>
         </Grid>
 
-        {/* 요약 통계 */}
-        <Grid item xs={12} md={8}>
-          <Grid container spacing={2}>
-            <Grid item xs={6} sm={3}>
-              <Card sx={{ bgcolor: "primary.main", color: "white" }}>
-                <CardContent sx={{ textAlign: "center" }}>
-                  <Assignment sx={{ fontSize: 32 }} />
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.totalAssessments}
-                  </Typography>
-                  <Typography variant="body2">완료 진단</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <Card sx={{ bgcolor: "secondary.main", color: "white" }}>
-                <CardContent sx={{ textAlign: "center" }}>
-                  <TrendingUp sx={{ fontSize: 32 }} />
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.averageScore}
-                  </Typography>
-                  <Typography variant="body2">평균 점수</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <Card sx={{ bgcolor: "success.main", color: "white" }}>
-                <CardContent sx={{ textAlign: "center" }}>
-                  <EmojiEvents sx={{ fontSize: 32 }} />
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.latestGrade}
-                  </Typography>
-                  <Typography variant="body2">현재 등급</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <Card sx={{ bgcolor: "info.main", color: "white" }}>
-                <CardContent sx={{ textAlign: "center" }}>
-                  <School sx={{ fontSize: 32 }} />
-                  <Typography variant="h4" fontWeight="bold">
-                    {stats.percentile}%
-                  </Typography>
-                  <Typography variant="body2">백분위</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+        {/* 오른쪽 컬럼: 상담 게시판/지도 전략/추천 도서 */}
+        <Grid item xs={12} md={5}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* 상담 게시판 (임시) */}
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                상담 게시판
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Typography color="text.secondary" sx={{ mb: 2 }}>
+                상담 내역 및 신청 기능은 곧 제공됩니다.
+              </Typography>
+              <Button variant="outlined" color="primary" disabled>
+                상담 신청하기
+              </Button>
+            </Paper>
+
+            {/* 가정 지도 전략 */}
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                <Home sx={{ mr: 1, verticalAlign: "middle" }} />
+                가정에서 지도 방안
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              {aiReport && aiReport.homeSupport.length > 0 ? (
+                <List dense>
+                  {aiReport.homeSupport.map((support, i) => (
+                    <ListItem key={i}>
+                      <ListItemText primary={`${i + 1}. ${support}`} />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Typography color="text.secondary">
+                  AI 리포트 생성 후 가정 지도 전략이 제공됩니다.
+                </Typography>
+              )}
+            </Paper>
+
+            {/* 추천 도서 섹션 */}
+            <Paper sx={{ p: 3, bgcolor: "info.50" }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                📚 추천 도서
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Typography color="text.secondary" sx={{ mb: 2 }}>
+                자녀의 독서 수준에 맞는 추천 도서를 확인하세요.
+              </Typography>
+              <Button
+                variant="contained"
+                color="info"
+                href="/parent/recommended-books"
+                fullWidth
+                sx={{ mt: 1 }}
+              >
+                추천 도서 전체 보기
+              </Button>
+            </Paper>
+          </Box>
         </Grid>
 
-        {/* 성장 추이 차트 */}
-        {progressChartData.length > 1 && (
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                <TrendingUp sx={{ mr: 1, verticalAlign: "middle" }} />
-                성장 추이
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={progressChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis domain={[0, 100]} />
-                  <RechartsTooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="점수"
-                    stroke="#667eea"
-                    strokeWidth={2}
-                    dot={{ fill: "#667eea" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </Paper>
-          </Grid>
-        )}
-
-        {/* 영역별 분석 */}
-        {radarChartData.length > 0 && (
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                영역별 분석 (최근)
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <ResponsiveContainer width="100%" height={250}>
-                <RadarChart data={radarChartData}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="subject" />
-                  <PolarRadiusAxis domain={[0, 25]} />
-                  <Radar
-                    name="점수"
-                    dataKey="score"
-                    stroke="#764ba2"
-                    fill="#764ba2"
-                    fillOpacity={0.6}
-                  />
-                  <Legend />
-                </RadarChart>
-              </ResponsiveContainer>
-            </Paper>
-          </Grid>
-        )}
-
-        {/* AI 리포트 */}
+        {/* AI 리포트 (기존 위치 유지) */}
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
             <Box

@@ -57,13 +57,13 @@ const testAccounts: Record<
   { email: string; password: string; label: string }
 > = {
   STUDENT: {
-    email: "student1@example.com",
-    password: "test1234",
+    email: "student_000@readingpro.com",
+    password: "ehrtjtoanfruf$12#",
     label: "학생",
   },
   PARENT: {
-    email: "parent1@example.com",
-    password: "test1234",
+    email: "parent_000@readingpro.com",
+    password: "ehrtjtoanfruf$12#",
     label: "학부모",
   },
   SCHOOL_ADMIN: {

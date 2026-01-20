@@ -181,6 +181,14 @@ function App() {
               element={<ReportSample type="parent" />}
             />
             <Route path="info" element={<ReadingProInfo />} />
+            <Route
+              path="recommended-books"
+              element={
+                require("./pages/ParentRecommendedBooks").default
+                  ? require("./pages/ParentRecommendedBooks").default
+                  : require("./pages/ParentRecommendedBooks")
+              }
+            />
           </Route>
 
           {/* 진단 담당 교사 라우트 */}
