@@ -38,8 +38,6 @@ import {
   Quiz,
   Description,
   School,
-  ExpandMore,
-  ExpandLess,
   Flag,
   Bookmark,
   BookmarkBorder,
@@ -479,7 +477,6 @@ export default function MidHighDiagnosticAssessment() {
   );
   const [timeLeft, setTimeLeft] = useState(70 * 60); // 70분
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
-  const [showStimulusExpanded, setShowStimulusExpanded] = useState(true);
   const [showNavigator, setShowNavigator] = useState(false);
 
   // 제출 함수를 ref로 저장
@@ -582,22 +579,16 @@ export default function MidHighDiagnosticAssessment() {
   // 네비게이션
   const goToItem = (index: number) => {
     setCurrentItemIndex(index);
-    setShowStimulusExpanded(true);
   };
 
   const goNext = () => {
     if (currentItemIndex < MIDHIGH_ITEMS.length - 1) {
-      // 같은 지문이면 접은 상태 유지
-      const nextItem = MIDHIGH_ITEMS[currentItemIndex + 1];
-      setShowStimulusExpanded(nextItem.stimulus_id !== currentItem.stimulus_id);
       setCurrentItemIndex((prev) => prev + 1);
     }
   };
 
   const goPrev = () => {
     if (currentItemIndex > 0) {
-      const prevItem = MIDHIGH_ITEMS[currentItemIndex - 1];
-      setShowStimulusExpanded(prevItem.stimulus_id !== currentItem.stimulus_id);
       setCurrentItemIndex((prev) => prev - 1);
     }
   };
@@ -877,225 +868,239 @@ export default function MidHighDiagnosticAssessment() {
           </Paper>
         </Collapse>
 
-        {/* 문항 영역 */}
-        <Box sx={{ flex: 1, overflow: "auto", p: 3 }}>
-          {/* 지문 */}
+        {/* 문항 목록 네비게이터 */}
+        {/* 메인 컨텐츠: 왼쪽 지문 + 오른쪽 문항 */}
+        <Box sx={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          {/* 왼쪽: 지문 영역 */}
           {currentStimulus && (
-            <Paper
+            <Box
               sx={{
-                p: 3,
-                mb: 3,
+                width: "50%",
+                height: "100%",
+                overflow: "auto",
+                borderRight: "1px solid",
+                borderColor: "divider",
                 bgcolor: "grey.50",
-                border: "1px solid",
-                borderColor: "grey.300",
               }}
             >
-              <Box
+              <Paper
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  cursor: "pointer",
+                  m: 2,
+                  p: 3,
+                  minHeight: "calc(100% - 32px)",
+                  border: "1px solid",
+                  borderColor: "grey.300",
                 }}
-                onClick={() => setShowStimulusExpanded(!showStimulusExpanded)}
+                elevation={0}
               >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+                >
                   <MenuBook color="primary" />
-                  <Typography variant="h6" color="primary">
+                  <Typography variant="h6" color="primary" fontWeight="bold">
                     {currentStimulus.title}
                   </Typography>
                 </Box>
-                <IconButton size="small">
-                  {showStimulusExpanded ? <ExpandLess /> : <ExpandMore />}
-                </IconButton>
-              </Box>
-
-              <Collapse in={showStimulusExpanded}>
-                <Divider sx={{ my: 2 }} />
+                <Divider sx={{ mb: 2 }} />
                 <Typography
                   variant="body1"
                   sx={{
                     whiteSpace: "pre-wrap",
-                    lineHeight: 1.9,
+                    lineHeight: 2,
                     fontFamily: "serif",
                     fontSize: "1.05rem",
                   }}
                 >
                   {currentStimulus.content}
                 </Typography>
-              </Collapse>
-            </Paper>
+              </Paper>
+            </Box>
           )}
 
-          {/* 문항 */}
-          <Paper sx={{ p: 3 }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                mb: 3,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                {currentItem.item_type === "essay" ? (
-                  <Description color="success" />
-                ) : (
-                  <Quiz color="info" />
-                )}
-                <Chip
-                  label={`문항 ${currentItemIndex + 1}`}
-                  color="primary"
-                  size="small"
-                />
-                <Chip
-                  label={
-                    currentItem.item_type === "essay" ? "서술형" : "객관식"
-                  }
-                  variant="outlined"
-                  size="small"
-                />
-                <Chip
-                  label={`${currentItem.max_score}점`}
-                  color="secondary"
-                  variant="outlined"
-                  size="small"
-                />
+          {/* 오른쪽: 문항 영역 */}
+          <Box
+            sx={{
+              width: currentStimulus ? "50%" : "100%",
+              height: "100%",
+              overflow: "auto",
+              p: 2,
+            }}
+          >
+            {/* 문항 */}
+            <Paper sx={{ p: 3 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 3,
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {currentItem.item_type === "essay" ? (
+                    <Description color="success" />
+                  ) : (
+                    <Quiz color="info" />
+                  )}
+                  <Chip
+                    label={`문항 ${currentItemIndex + 1}`}
+                    color="primary"
+                    size="small"
+                  />
+                  <Chip
+                    label={
+                      currentItem.item_type === "essay" ? "서술형" : "객관식"
+                    }
+                    variant="outlined"
+                    size="small"
+                  />
+                  <Chip
+                    label={`${currentItem.max_score}점`}
+                    color="secondary"
+                    variant="outlined"
+                    size="small"
+                  />
+                </Box>
+
+                <Tooltip
+                  title={currentResponse?.flagged ? "표시 해제" : "나중에 보기"}
+                >
+                  <IconButton onClick={toggleFlag} color="warning">
+                    {currentResponse?.flagged ? (
+                      <Bookmark />
+                    ) : (
+                      <BookmarkBorder />
+                    )}
+                  </IconButton>
+                </Tooltip>
               </Box>
 
-              <Tooltip
-                title={currentResponse?.flagged ? "표시 해제" : "나중에 보기"}
-              >
-                <IconButton onClick={toggleFlag} color="warning">
-                  {currentResponse?.flagged ? <Bookmark /> : <BookmarkBorder />}
-                </IconButton>
-              </Tooltip>
-            </Box>
-
-            <Typography
-              variant="h6"
-              sx={{
-                mb: 3,
-                p: 2,
-                bgcolor: "grey.50",
-                borderRadius: 2,
-                lineHeight: 1.8,
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {currentItem.stem}
-            </Typography>
-
-            {/* 객관식 */}
-            {(currentItem.item_type === "mcq_single" ||
-              currentItem.item_type === "mcq_multi") && (
-              <>
-                {currentItem.item_type === "mcq_multi" && (
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    복수 선택이 가능합니다.
-                  </Alert>
-                )}
-                {currentItem.item_type === "mcq_single" ? (
-                  <RadioGroup
-                    value={currentResponse?.selected_options?.[0] ?? ""}
-                    onChange={(e) => handleMcqChange(parseInt(e.target.value))}
-                  >
-                    {currentItem.options.map((option, idx) => (
-                      <FormControlLabel
-                        key={idx}
-                        value={idx}
-                        control={<Radio />}
-                        label={
-                          <Typography
-                            sx={{ py: 1 }}
-                          >{`${["①", "②", "③", "④", "⑤"][idx]} ${option}`}</Typography>
-                        }
-                        sx={{
-                          border: 1,
-                          borderColor:
-                            currentResponse?.selected_options?.[0] === idx
-                              ? "primary.main"
-                              : "divider",
-                          borderRadius: 1,
-                          mb: 1,
-                          mx: 0,
-                          p: 1,
-                          bgcolor:
-                            currentResponse?.selected_options?.[0] === idx
-                              ? "primary.50"
-                              : "transparent",
-                          "&:hover": {
-                            bgcolor: "grey.100",
-                          },
-                        }}
-                      />
-                    ))}
-                  </RadioGroup>
-                ) : (
-                  <FormGroup>
-                    {currentItem.options.map((option, idx) => (
-                      <FormControlLabel
-                        key={idx}
-                        control={
-                          <Checkbox
-                            checked={
-                              currentResponse?.selected_options?.includes(
-                                idx,
-                              ) ?? false
-                            }
-                            onChange={() => handleMcqChange(idx)}
-                          />
-                        }
-                        label={
-                          <Typography
-                            sx={{ py: 1 }}
-                          >{`${["①", "②", "③", "④", "⑤"][idx]} ${option}`}</Typography>
-                        }
-                        sx={{
-                          border: 1,
-                          borderColor:
-                            currentResponse?.selected_options?.includes(idx)
-                              ? "primary.main"
-                              : "divider",
-                          borderRadius: 1,
-                          mb: 1,
-                          mx: 0,
-                          p: 1,
-                          bgcolor: currentResponse?.selected_options?.includes(
-                            idx,
-                          )
-                            ? "primary.50"
-                            : "transparent",
-                          "&:hover": {
-                            bgcolor: "grey.100",
-                          },
-                        }}
-                      />
-                    ))}
-                  </FormGroup>
-                )}
-              </>
-            )}
-
-            {/* 서술형 */}
-            {currentItem.item_type === "essay" && (
-              <TextField
-                fullWidth
-                multiline
-                rows={10}
-                placeholder="답안을 작성하세요..."
-                value={currentResponse?.essay_text || ""}
-                onChange={(e) => handleEssayChange(e.target.value)}
-                variant="outlined"
+              <Typography
+                variant="h6"
                 sx={{
-                  "& .MuiOutlinedInput-root": {
-                    fontSize: "1rem",
-                    lineHeight: 1.8,
-                  },
+                  mb: 3,
+                  p: 2,
+                  bgcolor: "grey.50",
+                  borderRadius: 2,
+                  lineHeight: 1.8,
+                  whiteSpace: "pre-wrap",
                 }}
-              />
-            )}
-          </Paper>
+              >
+                {currentItem.stem}
+              </Typography>
+
+              {/* 객관식 */}
+              {(currentItem.item_type === "mcq_single" ||
+                currentItem.item_type === "mcq_multi") && (
+                <>
+                  {currentItem.item_type === "mcq_multi" && (
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      복수 선택이 가능합니다.
+                    </Alert>
+                  )}
+                  {currentItem.item_type === "mcq_single" ? (
+                    <RadioGroup
+                      value={currentResponse?.selected_options?.[0] ?? ""}
+                      onChange={(e) =>
+                        handleMcqChange(parseInt(e.target.value))
+                      }
+                    >
+                      {currentItem.options.map((option, idx) => (
+                        <FormControlLabel
+                          key={idx}
+                          value={idx}
+                          control={<Radio />}
+                          label={
+                            <Typography
+                              sx={{ py: 1 }}
+                            >{`${["①", "②", "③", "④", "⑤"][idx]} ${option}`}</Typography>
+                          }
+                          sx={{
+                            border: 1,
+                            borderColor:
+                              currentResponse?.selected_options?.[0] === idx
+                                ? "primary.main"
+                                : "divider",
+                            borderRadius: 1,
+                            mb: 1,
+                            mx: 0,
+                            p: 1,
+                            bgcolor:
+                              currentResponse?.selected_options?.[0] === idx
+                                ? "primary.50"
+                                : "transparent",
+                            "&:hover": {
+                              bgcolor: "grey.100",
+                            },
+                          }}
+                        />
+                      ))}
+                    </RadioGroup>
+                  ) : (
+                    <FormGroup>
+                      {currentItem.options.map((option, idx) => (
+                        <FormControlLabel
+                          key={idx}
+                          control={
+                            <Checkbox
+                              checked={
+                                currentResponse?.selected_options?.includes(
+                                  idx,
+                                ) ?? false
+                              }
+                              onChange={() => handleMcqChange(idx)}
+                            />
+                          }
+                          label={
+                            <Typography
+                              sx={{ py: 1 }}
+                            >{`${["①", "②", "③", "④", "⑤"][idx]} ${option}`}</Typography>
+                          }
+                          sx={{
+                            border: 1,
+                            borderColor:
+                              currentResponse?.selected_options?.includes(idx)
+                                ? "primary.main"
+                                : "divider",
+                            borderRadius: 1,
+                            mb: 1,
+                            mx: 0,
+                            p: 1,
+                            bgcolor:
+                              currentResponse?.selected_options?.includes(idx)
+                                ? "primary.50"
+                                : "transparent",
+                            "&:hover": {
+                              bgcolor: "grey.100",
+                            },
+                          }}
+                        />
+                      ))}
+                    </FormGroup>
+                  )}
+                </>
+              )}
+
+              {/* 서술형 */}
+              {currentItem.item_type === "essay" && (
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={10}
+                  placeholder="답안을 작성하세요..."
+                  value={currentResponse?.essay_text || ""}
+                  onChange={(e) => handleEssayChange(e.target.value)}
+                  variant="outlined"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      fontSize: "1rem",
+                      lineHeight: 1.8,
+                    },
+                  }}
+                />
+              )}
+            </Paper>
+          </Box>
         </Box>
       </Box>
 
