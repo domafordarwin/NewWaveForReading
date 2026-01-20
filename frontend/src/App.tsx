@@ -49,6 +49,7 @@ import StudentAssessmentList from "./pages/StudentAssessmentList";
 import StudentAssessmentTake from "./pages/StudentAssessmentTake";
 import StudentAssessmentComplete from "./pages/StudentAssessmentComplete";
 import StudentAssessmentResult from "./pages/StudentAssessmentResult";
+import MidHighDiagnosticAssessment from "./pages/MidHighDiagnosticAssessment";
 
 const theme = createTheme({
   palette: {
@@ -113,9 +114,23 @@ function App() {
             />
             {/* 진단 평가 */}
             <Route path="assessments" element={<StudentAssessmentList />} />
-            <Route path="assessments/:assessmentId/take" element={<StudentAssessmentTake />} />
-            <Route path="assessments/:assessmentId/complete" element={<StudentAssessmentComplete />} />
-            <Route path="assessments/results/:attemptId" element={<StudentAssessmentResult />} />
+            <Route
+              path="assessments/:assessmentId/take"
+              element={<StudentAssessmentTake />}
+            />
+            <Route
+              path="assessments/:assessmentId/complete"
+              element={<StudentAssessmentComplete />}
+            />
+            <Route
+              path="assessments/results/:attemptId"
+              element={<StudentAssessmentResult />}
+            />
+            {/* 중등 고학년 진단 평가 */}
+            <Route
+              path="midhigh-diagnostic"
+              element={<MidHighDiagnosticAssessment />}
+            />
           </Route>
 
           {/* 학부모 라우트 */}
@@ -180,9 +195,18 @@ function App() {
             <Route path="past-exam" element={<PastExamList />} />
             <Route path="past-exam/:id" element={<PastExamDetail />} />
             {/* 진단 평가 */}
-            <Route path="diagnostic-assessments" element={<DiagnosticAssessmentList />} />
-            <Route path="diagnostic-assessments/create" element={<DiagnosticAssessmentCreate />} />
-            <Route path="diagnostic-assessments/:assessmentId" element={<DiagnosticAssessmentDetail />} />
+            <Route
+              path="diagnostic-assessments"
+              element={<DiagnosticAssessmentList />}
+            />
+            <Route
+              path="diagnostic-assessments/create"
+              element={<DiagnosticAssessmentCreate />}
+            />
+            <Route
+              path="diagnostic-assessments/:assessmentId"
+              element={<DiagnosticAssessmentDetail />}
+            />
           </Route>
 
           {/* 시스템 관리자 라우트 */}
@@ -195,6 +219,12 @@ function App() {
           <Route path="/diagnostics" element={<MainLayout />}>
             <Route index element={<DiagnosticsPage />} />
           </Route>
+
+          {/* 진단 평가 직접 접근 (레이아웃 없이 전체 화면) */}
+          <Route
+            path="/diagnostic/midhigh"
+            element={<MidHighDiagnosticAssessment />}
+          />
         </Routes>
       </Router>
     </ThemeProvider>
