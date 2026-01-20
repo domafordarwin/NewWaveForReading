@@ -40,6 +40,8 @@ import StimuliNew from "./pages/StimuliNew";
 import TestPage from "./pages/TestPage";
 import DiagnosticsPage from "./pages/DiagnosticsPage";
 import PromptManagement from "./pages/PromptManagement";
+import PastExamList from "./pages/PastExamList";
+import PastExamDetail from "./pages/PastExamDetail";
 
 const theme = createTheme({
   palette: {
@@ -162,6 +164,9 @@ function App() {
             <Route path="test/:id" element={<TestPage />} />
             <Route path="domains" element={<DomainList />} />
             <Route path="prompts" element={<PromptManagement />} />
+            {/* 기출 문항 DB */}
+            <Route path="past-exam" element={<PastExamList />} />
+            <Route path="past-exam/:id" element={<PastExamDetail />} />
           </Route>
 
           {/* 시스템 관리자 라우트 */}

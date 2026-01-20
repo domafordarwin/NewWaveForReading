@@ -52,36 +52,60 @@ interface MainLayoutProps {
 // Menu configuration updated: 2025-01-19
 
 // 사용자 타입별 메뉴 구성
-const menusByUserType: Record<UserType, { label: string; icon: React.ReactNode; path: string }[]> = {
+const menusByUserType: Record<
+  UserType,
+  { label: string; icon: React.ReactNode; path: string }[]
+> = {
   STUDENT: [
     { label: "대시보드", icon: <Dashboard />, path: "/student/dashboard" },
     { label: "진단 목록", icon: <Assessment />, path: "/student/assessments" },
     { label: "내 결과", icon: <Person />, path: "/student/results" },
-    { label: "보고서 샘플", icon: <Description />, path: "/student/report-sample" },
+    {
+      label: "보고서 샘플",
+      icon: <Description />,
+      path: "/student/report-sample",
+    },
   ],
   PARENT: [
     { label: "대시보드", icon: <Dashboard />, path: "/parent/dashboard" },
     { label: "자녀 정보", icon: <FamilyRestroom />, path: "/parent/children" },
-    { label: "보고서 샘플", icon: <Description />, path: "/parent/report-sample" },
+    {
+      label: "보고서 샘플",
+      icon: <Description />,
+      path: "/parent/report-sample",
+    },
     { label: "리딩 PRO 소개", icon: <Info />, path: "/parent/info" },
   ],
   SCHOOL_ADMIN: [
     { label: "대시보드", icon: <Dashboard />, path: "/school-admin/dashboard" },
     { label: "학생 관리", icon: <Person />, path: "/school-admin/students" },
     { label: "반 관리", icon: <School />, path: "/school-admin/classes" },
-    { label: "보고서 샘플", icon: <Description />, path: "/school-admin/report-sample" },
+    {
+      label: "보고서 샘플",
+      icon: <Description />,
+      path: "/school-admin/report-sample",
+    },
   ],
   ASSESSMENT_TEACHER: [
     { label: "대시보드", icon: <Dashboard />, path: "/teacher/dashboard" },
     { label: "학생 관리", icon: <Person />, path: "/teacher/students" },
     { label: "진단 배정", icon: <Assignment />, path: "/teacher/assessments" },
-    { label: "보고서 샘플", icon: <Description />, path: "/teacher/report-sample" },
-    { label: "독서 발문 가이드", icon: <MenuBook />, path: "/teacher/reading-question-guide" },
+    {
+      label: "보고서 샘플",
+      icon: <Description />,
+      path: "/teacher/report-sample",
+    },
+    {
+      label: "독서 발문 가이드",
+      icon: <MenuBook />,
+      path: "/teacher/reading-question-guide",
+    },
   ],
   QUESTION_DEVELOPER: [
     { label: "대시보드", icon: <Dashboard />, path: "/question-dev/dashboard" },
     { label: "평가 영역", icon: <Category />, path: "/question-dev/domains" },
     { label: "문항 은행", icon: <LibraryBooks />, path: "/question-dev/items" },
+    { label: "기출 문항 DB", icon: <Quiz />, path: "/question-dev/past-exam" },
     { label: "지문 관리", icon: <Article />, path: "/question-dev/stimuli" },
     { label: "문항 제작", icon: <SmartToy />, path: "/question-dev/authoring" },
     { label: "프롬프트 관리", icon: <Code />, path: "/question-dev/prompts" },
@@ -133,7 +157,15 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
   const drawer = (
     <Box>
-      <Box sx={{ p: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
+      <Box
+        sx={{
+          p: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 0.5,
+        }}
+      >
         <Box
           component="img"
           src={logoImage}
@@ -213,14 +245,19 @@ const MainLayout = ({ children }: MainLayoutProps) => {
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleLogout}>
-              <ListItemIcon><Logout fontSize="small" /></ListItemIcon>
+              <ListItemIcon>
+                <Logout fontSize="small" />
+              </ListItemIcon>
               로그아웃
             </MenuItem>
           </Menu>
         </Toolbar>
       </AppBar>
 
-      <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
+      <Box
+        component="nav"
+        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+      >
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -228,7 +265,10 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
         >
           {drawer}
@@ -237,7 +277,10 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           variant="permanent"
           sx={{
             display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
           open
         >
