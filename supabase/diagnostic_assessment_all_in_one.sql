@@ -297,29 +297,36 @@ BEGIN
 END $$;
 
 -- =========================================================
--- STEP 3: assessment_items 테이블 스키마 확인/수정
+-- STEP 3: assessment_items 테이블 스키마 수정
 -- (item_bank를 직접 참조하도록 변경)
 -- =========================================================
 
--- assessment_items 테이블이 item_bank를 참조하도록 재생성
+-- assessment_items 테이블 수정
 DO $$
 BEGIN
-  -- 기존 테이블이 있으면 item_id 컬럼 추가
+  -- item_id 컬럼 추가 (없으면)
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_name = 'assessment_items' AND column_name = 'item_id'
   ) THEN
-    -- item_id 컬럼 추가
     ALTER TABLE public.assessment_items 
-    ADD COLUMN IF NOT EXISTS item_id BIGINT REFERENCES public.item_bank(item_id) ON DELETE CASCADE;
-    
+    ADD COLUMN item_id BIGINT REFERENCES public.item_bank(item_id) ON DELETE CASCADE;
     RAISE NOTICE 'assessment_items 테이블에 item_id 컬럼 추가됨';
   END IF;
+  
+  -- draft_item_id NOT NULL 제약 제거
+  ALTER TABLE public.assessment_items 
+  ALTER COLUMN draft_item_id DROP NOT NULL;
+  RAISE NOTICE 'draft_item_id NOT NULL 제약 제거됨';
+  
+EXCEPTION
+  WHEN others THEN
+    RAISE NOTICE 'STEP 3 스키마 수정 중 경고: %', SQLERRM;
 END $$;
 
 DO $$
 BEGIN
-  RAISE NOTICE 'STEP 3: assessment_items 스키마 확인 완료';
+  RAISE NOTICE 'STEP 3: assessment_items 스키마 수정 완료';
 END $$;
 
 -- =========================================================
