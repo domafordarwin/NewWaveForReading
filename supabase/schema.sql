@@ -11,8 +11,10 @@ create table if not exists public.users (
   phone text,
   school_name text,
   school_id bigint,
+  school_code text,
   grade integer,
   class_name text,
+  student_code text,
   student_grade_level text,
   profile_image_url text,
   is_active boolean default true,
@@ -20,6 +22,84 @@ create table if not exists public.users (
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+create unique index if not exists users_student_code_unique
+  on public.users(student_code)
+  where student_code is not null;
+
+-- 학교명 기반 영문 이니셜(3자리) 생성
+create or replace function public.school_code_from_name(school_name text)
+returns text
+language plpgsql
+immutable
+as $$
+declare
+  cleaned text;
+begin
+  if school_name is null or length(trim(school_name)) = 0 then
+    return 'SCH';
+  end if;
+
+  if school_name = '신명중학교' then
+    return 'SMJ';
+  end if;
+
+  cleaned := regexp_replace(upper(school_name), '[^A-Z0-9]', '', 'g');
+  if length(cleaned) >= 3 then
+    return substr(cleaned, 1, 3);
+  end if;
+
+  return rpad(cleaned, 3, 'X');
+end;
+$$;
+
+-- 학교 코드 + 6자리 랜덤으로 학생 고유 코드 생성
+create or replace function public.generate_student_code(school_code text)
+returns text
+language plpgsql
+as $$
+declare
+  prefix text;
+  candidate text;
+begin
+  prefix := coalesce(nullif(school_code, ''), 'SCH');
+
+  loop
+    candidate := prefix || '_' ||
+      lpad(((random() * 999999)::int)::text, 6, '0');
+    exit when not exists (
+      select 1 from public.users where student_code = candidate
+    );
+  end loop;
+
+  return candidate;
+end;
+$$;
+
+-- 사용자 저장 시 학교 코드/학생 코드 자동 부여
+create or replace function public.users_assign_codes()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.school_name is not null and (new.school_code is null or new.school_code = '') then
+    new.school_code := public.school_code_from_name(new.school_name);
+  end if;
+
+  if new.user_type = 'STUDENT' and (new.student_code is null or new.student_code = '') then
+    new.student_code := public.generate_student_code(new.school_code);
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_users_assign_codes on public.users;
+create trigger trg_users_assign_codes
+before insert or update of school_name, school_code, user_type, student_code
+on public.users
+for each row
+execute function public.users_assign_codes();
 
 -- RLS 설정
 alter table public.users enable row level security;

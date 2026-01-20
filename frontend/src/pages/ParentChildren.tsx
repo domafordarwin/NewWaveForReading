@@ -32,6 +32,12 @@ import {
   TableRow,
   Tabs,
   Tab,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from "@mui/material";
 import {
   Person,
@@ -51,6 +57,7 @@ interface ChildInfo {
   school_name: string;
   student_grade_level: string;
   email: string;
+  student_code?: string;
 }
 
 interface EvaluationData {
@@ -111,6 +118,12 @@ const ParentChildren = () => {
   const [evaluations, setEvaluations] = useState<EvaluationData[]>([]);
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [childDataLoading, setChildDataLoading] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [searchName, setSearchName] = useState("");
+  const [searchResults, setSearchResults] = useState<ChildInfo[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   // 자녀 목록 로드
   useEffect(() => {
@@ -136,13 +149,21 @@ const ParentChildren = () => {
               grade,
               school_name,
               student_grade_level,
-              email
+              email,
+              student_code
             )
           `,
           )
           .eq("parent_id", userId);
 
         if (relationsError) {
+          if (relationsError.message?.includes("Failed to fetch")) {
+            setError("네트워크 오류로 자녀 정보를 불러오지 못했습니다.");
+            setChildren([]);
+            setSelectedChild(null);
+            return;
+          }
+
           console.warn("자녀 관계 로드 에러:", relationsError);
 
           // 관계 테이블이 없으면 이메일 패턴으로 찾기 (레거시 호환)
@@ -179,6 +200,7 @@ const ParentChildren = () => {
             school_name: "서울중학교",
             student_grade_level: "중저",
             email: "student1@example.com",
+            student_code: "SCH_000000",
           };
           setChildren([demoChild]);
           setSelectedChild(demoChild);
@@ -259,6 +281,102 @@ const ParentChildren = () => {
     percentile: evaluations[0]?.percentile || 0,
   };
 
+  const handleSearchStudents = async () => {
+    if (!supabase) return;
+    const keyword = searchName.trim();
+    if (!keyword) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearchLoading(true);
+    setLinkError(null);
+    try {
+      const { data, error: searchError } = await supabase
+        .from("users")
+        .select(
+          "user_id, name, grade, school_name, student_grade_level, email, student_code",
+        )
+        .eq("user_type", "STUDENT")
+        .ilike("name", `%${keyword}%`)
+        .order("name")
+        .limit(20);
+
+      if (searchError) {
+        setLinkError(searchError.message);
+      } else {
+        setSearchResults(data || []);
+      }
+    } catch (err) {
+      setLinkError(
+        err instanceof Error ? err.message : "학생 검색에 실패했습니다.",
+      );
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleLinkStudent = async (student: ChildInfo) => {
+    if (!supabase || !userId) return;
+    if (!student.student_code) {
+      setLinkError("학생 고유 코드가 없어 연결할 수 없습니다.");
+      return;
+    }
+
+    setLinking(true);
+    setLinkError(null);
+    try {
+      const { data: matchedStudent, error: matchError } = await supabase
+        .from("users")
+        .select("user_id, student_code")
+        .eq("student_code", student.student_code)
+        .single();
+
+      if (matchError || !matchedStudent) {
+        setLinkError("학생 고유 코드를 확인할 수 없습니다.");
+        return;
+      }
+
+      const { error: linkError } = await supabase
+        .from("student_parent_relations")
+        .insert({
+          parent_id: userId,
+          student_id: matchedStudent.user_id,
+          student_code: matchedStudent.student_code,
+        });
+
+      if (linkError) {
+        if (linkError.code === "23505") {
+          setLinkError("이미 연결된 자녀입니다.");
+        } else {
+          setLinkError(linkError.message);
+        }
+        return;
+      }
+
+      const alreadyLinked = children.some(
+        (child) => child.user_id === matchedStudent.user_id,
+      );
+      if (!alreadyLinked) {
+        const nextChildren = [...children, student];
+        setChildren(nextChildren);
+        if (!selectedChild) {
+          setSelectedChild(student);
+        }
+      }
+
+      setLinkDialogOpen(false);
+      setSearchName("");
+      setSearchResults([]);
+    } catch (err) {
+      setLinkError(
+        err instanceof Error ? err.message : "자녀 연결에 실패했습니다.",
+      );
+    } finally {
+      setLinking(false);
+    }
+  };
+
   if (loading) {
     return (
       <Box
@@ -295,6 +413,14 @@ const ParentChildren = () => {
               <ChildCare sx={{ mr: 1, verticalAlign: "middle" }} />
               자녀 목록
             </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => setLinkDialogOpen(true)}
+              sx={{ mb: 2 }}
+            >
+              자녀 연결
+            </Button>
             <Divider sx={{ mb: 2 }} />
 
             {children.length === 0 ? (
@@ -338,7 +464,7 @@ const ParentChildren = () => {
                       primary={
                         <Typography fontWeight="bold">{child.name}</Typography>
                       }
-                      secondary={`${child.school_name || "학교"} ${child.grade || ""}학년`}
+                      secondary={`${child.school_name || "학교"} ${child.grade || ""}학년 · ${child.student_code || "-"}`}
                     />
                     {selectedChild?.user_id === child.user_id && (
                       <ListItemSecondaryAction>
@@ -635,6 +761,72 @@ const ParentChildren = () => {
           )}
         </Grid>
       </Grid>
+
+      <Dialog
+        open={linkDialogOpen}
+        onClose={() => setLinkDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>자녀 연결</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+            <TextField
+              label="학생 이름"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              fullWidth
+            />
+            <Button
+              variant="contained"
+              onClick={handleSearchStudents}
+              disabled={searchLoading}
+            >
+              검색
+            </Button>
+          </Box>
+          {linkError && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              {linkError}
+            </Alert>
+          )}
+          <List sx={{ mt: 1 }}>
+            {searchLoading ? (
+              <ListItem>
+                <ListItemText primary="검색 중..." />
+              </ListItem>
+            ) : searchResults.length === 0 ? (
+              <ListItem>
+                <ListItemText primary="검색 결과가 없습니다." />
+              </ListItem>
+            ) : (
+              searchResults.map((student) => (
+                <ListItem
+                  key={student.user_id}
+                  secondaryAction={
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => handleLinkStudent(student)}
+                      disabled={linking}
+                    >
+                      연결
+                    </Button>
+                  }
+                >
+                  <ListItemText
+                    primary={`${student.name} (${student.grade || "-"}학년)`}
+                    secondary={`${student.school_name || "학교"} · ${student.student_code || "-"}`}
+                  />
+                </ListItem>
+              ))
+            )}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLinkDialogOpen(false)}>닫기</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

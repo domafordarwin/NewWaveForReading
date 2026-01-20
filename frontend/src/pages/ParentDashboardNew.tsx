@@ -139,6 +139,13 @@ const ParentDashboardNew = () => {
           .eq("parent_id", userId);
 
         if (relationsError) {
+          if (relationsError.message?.includes("Failed to fetch")) {
+            setError("네트워크 오류로 자녀 정보를 불러오지 못했습니다.");
+            setChildren([]);
+            setSelectedChild(null);
+            return;
+          }
+
           console.warn("자녀 관계 로드 에러:", relationsError);
 
           // 관계 테이블이 없으면 이메일 패턴으로 찾기 (레거시 호환)
