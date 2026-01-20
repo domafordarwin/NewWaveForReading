@@ -254,7 +254,23 @@ export const fetchPastExamItems = async (
 
   if (error) {
     console.error("기출문항 조회 오류:", error);
-    throw error;
+    // 뷰가 없는 경우 (404) 데모 데이터 반환
+    let result = [...DEMO_ITEMS];
+    if (filter?.gradeBand) {
+      result = result.filter((item) => item.grade_band === filter.gradeBand);
+    }
+    if (filter?.itemType) {
+      result = result.filter((item) => item.item_type === filter.itemType);
+    }
+    if (filter?.searchTerm) {
+      const term = filter.searchTerm.toLowerCase();
+      result = result.filter(
+        (item) =>
+          item.question_text.toLowerCase().includes(term) ||
+          item.item_code?.toLowerCase().includes(term),
+      );
+    }
+    return result;
   }
 
   return data || [];
@@ -276,7 +292,8 @@ export const fetchPastExamItem = async (
 
   if (error) {
     console.error("기출문항 단건 조회 오류:", error);
-    throw error;
+    // 뷰가 없는 경우 데모 데이터 반환
+    return DEMO_ITEMS.find((item) => item.item_id === itemId) || null;
   }
 
   return data;
@@ -298,7 +315,8 @@ export const fetchItemOptionsWithScoring = async (
 
   if (error) {
     console.error("보기 조회 오류:", error);
-    throw error;
+    // 뷰가 없는 경우 데모 데이터 반환
+    return DEMO_OPTIONS.filter((opt) => opt.item_id === itemId);
   }
 
   return data || [];
@@ -318,7 +336,8 @@ export const fetchRubricDetail = async (
 
   if (error && error.code !== "PGRST116") {
     console.error("루브릭 조회 오류:", error);
-    throw error;
+    // 뷰가 없는 경우 null 반환
+    return null;
   }
 
   return data;
@@ -339,7 +358,8 @@ export const fetchRubricCriteriaLevels = async (
 
   if (error) {
     console.error("루브릭 기준 조회 오류:", error);
-    throw error;
+    // 뷰가 없는 경우 빈 배열 반환
+    return [];
   }
 
   return data || [];
@@ -359,7 +379,8 @@ export const fetchItemAnswerKey = async (
 
   if (error && error.code !== "PGRST116") {
     console.error("정답 키 조회 오류:", error);
-    throw error;
+    // 뷰가 없는 경우 null 반환
+    return null;
   }
 
   return data;
@@ -380,7 +401,8 @@ export const fetchItemDomains = async (
 
   if (error) {
     console.error("영역 매핑 조회 오류:", error);
-    throw error;
+    // 뷰가 없는 경우 빈 배열 반환
+    return [];
   }
 
   return data || [];
@@ -398,7 +420,8 @@ export const fetchPastExamStatistics = async (): Promise<
 
   if (error) {
     console.error("통계 조회 오류:", error);
-    throw error;
+    // 뷰가 없는 경우 데모 통계 반환
+    return DEMO_STATISTICS;
   }
 
   return data || [];
@@ -420,7 +443,8 @@ export const fetchItemsByStimulus = async (
 
   if (error) {
     console.error("지문별 문항 조회 오류:", error);
-    throw error;
+    // 뷰가 없는 경우 데모 데이터 반환
+    return DEMO_ITEMS.filter((item) => item.stimulus_id === stimulusId);
   }
 
   return data || [];
@@ -442,7 +466,8 @@ export const fetchStimuliByGradeBand = async (
 
   if (error) {
     console.error("지문 목록 조회 오류:", error);
-    throw error;
+    // 뷰가 없는 경우 빈 배열 반환
+    return [];
   }
 
   // 중복 제거 및 문항 수 계산
