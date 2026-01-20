@@ -109,6 +109,7 @@ const ParentChildren = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [evaluations, setEvaluations] = useState<EvaluationData[]>([]);
   const [sessions, setSessions] = useState<SessionData[]>([]);
+  const [childDataLoading, setChildDataLoading] = useState(false);
 
   // 자녀 목록 로드
   useEffect(() => {
@@ -200,7 +201,7 @@ const ParentChildren = () => {
   useEffect(() => {
     const loadChildData = async () => {
       if (!supabase || !selectedChild) return;
-
+      setChildDataLoading(true);
       try {
         // 진단 세션 조회
         const { data: sessionsData } = await supabase
@@ -235,9 +236,10 @@ const ParentChildren = () => {
         }
       } catch (err) {
         console.error("자녀 데이터 로드 실패:", err);
+      } finally {
+        setChildDataLoading(false);
       }
     };
-
     loadChildData();
   }, [supabase, selectedChild]);
 
@@ -467,7 +469,11 @@ const ParentChildren = () => {
                 {/* 진단 결과 탭 */}
                 {selectedTab === 0 && (
                   <>
-                    {evaluations.length === 0 ? (
+                    {childDataLoading ? (
+                      <Box sx={{ textAlign: "center", py: 4 }}>
+                        <CircularProgress />
+                      </Box>
+                    ) : evaluations.length === 0 ? (
                       <Box sx={{ textAlign: "center", py: 4 }}>
                         <Assessment
                           sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
@@ -540,7 +546,11 @@ const ParentChildren = () => {
                 {/* 진단 세션 탭 */}
                 {selectedTab === 1 && (
                   <>
-                    {sessions.length === 0 ? (
+                    {childDataLoading ? (
+                      <Box sx={{ textAlign: "center", py: 4 }}>
+                        <CircularProgress />
+                      </Box>
+                    ) : sessions.length === 0 ? (
                       <Box sx={{ textAlign: "center", py: 4 }}>
                         <Assessment
                           sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
