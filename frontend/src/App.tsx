@@ -9,6 +9,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 
 import MainLayout from "./layouts/MainLayout";
+import PrivateRoute from "./components/PrivateRoute";
 import Login from "./pages/Login";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentDashboardNew from "./pages/StudentDashboardNew";
@@ -50,6 +51,9 @@ import StudentAssessmentTake from "./pages/StudentAssessmentTake";
 import StudentAssessmentComplete from "./pages/StudentAssessmentComplete";
 import StudentAssessmentResult from "./pages/StudentAssessmentResult";
 import MidHighDiagnosticAssessment from "./pages/MidHighDiagnosticAssessment";
+import MidLowDiagnosticAssessment from "./pages/MidLowDiagnosticAssessment";
+import ElemHighDiagnosticAssessment from "./pages/ElemHighDiagnosticAssessment";
+import ElemLowDiagnosticAssessment from "./pages/ElemLowDiagnosticAssessment";
 
 const theme = createTheme({
   palette: {
@@ -103,7 +107,14 @@ function App() {
           <Route path="/login" element={<Login />} />
 
           {/* 학생 라우트 */}
-          <Route path="/student" element={<MainLayout />}>
+          <Route
+            path="/student"
+            element={
+              <PrivateRoute allowedUserTypes={["STUDENT"]}>
+                <MainLayout />
+              </PrivateRoute>
+            }
+          >
             <Route path="dashboard" element={<StudentDashboard />} />
             <Route path="dashboard-new" element={<StudentDashboardNew />} />
             <Route path="feedback" element={<StudentFeedback />} />
@@ -131,10 +142,32 @@ function App() {
               path="midhigh-diagnostic"
               element={<MidHighDiagnosticAssessment />}
             />
+            {/* 중등 저학년 진단 평가 */}
+            <Route
+              path="midlow-diagnostic"
+              element={<MidLowDiagnosticAssessment />}
+            />
+            {/* 초등 고학년 진단 평가 */}
+            <Route
+              path="elemhigh-diagnostic"
+              element={<ElemHighDiagnosticAssessment />}
+            />
+            {/* 초등 저학년 진단 평가 */}
+            <Route
+              path="elemlow-diagnostic"
+              element={<ElemLowDiagnosticAssessment />}
+            />
           </Route>
 
           {/* 학부모 라우트 */}
-          <Route path="/parent" element={<MainLayout />}>
+          <Route
+            path="/parent"
+            element={
+              <PrivateRoute allowedUserTypes={["PARENT"]}>
+                <MainLayout />
+              </PrivateRoute>
+            }
+          >
             <Route path="dashboard" element={<ParentDashboard />} />
             <Route path="dashboard-new" element={<ParentDashboardNew />} />
             <Route
@@ -145,7 +178,14 @@ function App() {
           </Route>
 
           {/* 진단 담당 교사 라우트 */}
-          <Route path="/teacher" element={<MainLayout />}>
+          <Route
+            path="/teacher"
+            element={
+              <PrivateRoute allowedUserTypes={["ASSESSMENT_TEACHER"]}>
+                <MainLayout />
+              </PrivateRoute>
+            }
+          >
             <Route path="dashboard" element={<TeacherDashboard />} />
             <Route path="dashboard-new" element={<TeacherDashboardNew />} />
             <Route
@@ -159,7 +199,14 @@ function App() {
           </Route>
 
           {/* 학교 관리자 라우트 */}
-          <Route path="/school-admin" element={<MainLayout />}>
+          <Route
+            path="/school-admin"
+            element={
+              <PrivateRoute allowedUserTypes={["SCHOOL_ADMIN"]}>
+                <MainLayout />
+              </PrivateRoute>
+            }
+          >
             <Route path="dashboard" element={<SchoolAdminDashboard />} />
             <Route
               path="report-sample"
@@ -168,7 +215,14 @@ function App() {
           </Route>
 
           {/* 문항 개발 교사 라우트 */}
-          <Route path="/question-dev" element={<MainLayout />}>
+          <Route
+            path="/question-dev"
+            element={
+              <PrivateRoute allowedUserTypes={["QUESTION_DEVELOPER"]}>
+                <MainLayout />
+              </PrivateRoute>
+            }
+          >
             <Route path="dashboard" element={<QuestionDeveloperDashboard />} />
             <Route path="items" element={<ItemBankList />} />
             <Route path="items/:id" element={<ItemDetail />} />
@@ -210,20 +264,62 @@ function App() {
           </Route>
 
           {/* 시스템 관리자 라우트 */}
-          <Route path="/admin" element={<MainLayout />}>
+          <Route
+            path="/admin"
+            element={
+              <PrivateRoute allowedUserTypes={["SYSTEM_ADMIN"]}>
+                <MainLayout />
+              </PrivateRoute>
+            }
+          >
             <Route path="dashboard" element={<SystemAdminDashboard />} />
             <Route path="diagnostics" element={<DiagnosticsPage />} />
           </Route>
 
-          {/* 진단 페이지 (모든 사용자 접근 가능) */}
-          <Route path="/diagnostics" element={<MainLayout />}>
+          {/* 진단 페이지 (로그인 필요) */}
+          <Route
+            path="/diagnostics"
+            element={
+              <PrivateRoute>
+                <MainLayout />
+              </PrivateRoute>
+            }
+          >
             <Route index element={<DiagnosticsPage />} />
           </Route>
 
-          {/* 진단 평가 직접 접근 (레이아웃 없이 전체 화면) */}
+          {/* 진단 평가 직접 접근 (로그인 필요) */}
           <Route
             path="/diagnostic/midhigh"
-            element={<MidHighDiagnosticAssessment />}
+            element={
+              <PrivateRoute>
+                <MidHighDiagnosticAssessment />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/diagnostic/midlow"
+            element={
+              <PrivateRoute>
+                <MidLowDiagnosticAssessment />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/diagnostic/elemhigh"
+            element={
+              <PrivateRoute>
+                <ElemHighDiagnosticAssessment />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/diagnostic/elemlow"
+            element={
+              <PrivateRoute>
+                <ElemLowDiagnosticAssessment />
+              </PrivateRoute>
+            }
           />
         </Routes>
       </Router>
