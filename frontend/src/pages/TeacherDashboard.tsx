@@ -86,7 +86,29 @@ const TeacherDashboard = () => {
           throw sessionsError;
         }
 
-        setSessions(sessionsData || []);
+        interface RawSession {
+          session_id: number | string;
+          status: string;
+          submitted_at: string | null;
+          created_at: string;
+          student?: { name: string }[]; // as returned by Supabase join
+          stimulus?: { title: string }[]; // as returned by Supabase join
+        }
+
+        setSessions(
+          (sessionsData || []).map((item: RawSession) => ({
+            session_id: Number(item.session_id),
+            status: String(item.status),
+            submitted_at: item.submitted_at ? String(item.submitted_at) : null,
+            created_at: String(item.created_at),
+            student: Array.isArray(item.student) && item.student.length > 0
+              ? { name: String(item.student[0].name) }
+              : undefined,
+            stimulus: Array.isArray(item.stimulus) && item.stimulus.length > 0
+              ? { title: String(item.stimulus[0].title) }
+              : undefined,
+          }))
+        );
       } catch (err) {
         setError(
           err instanceof Error
