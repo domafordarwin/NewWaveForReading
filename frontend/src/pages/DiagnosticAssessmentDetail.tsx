@@ -199,10 +199,19 @@ export default function DiagnosticAssessmentDetail() {
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 2 }}>
             {/* 학년군 */}
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mb: 1.5,
+              }}
+            >
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Class sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
-                <Typography variant="subtitle2" fontWeight="bold">학년군</Typography>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  학년군
+                </Typography>
               </Box>
               <Typography variant="subtitle2" color="primary" fontWeight="bold">
                 {getGradeBandLabel(assessment.grade_band)}
@@ -211,10 +220,21 @@ export default function DiagnosticAssessmentDetail() {
             <Divider sx={{ my: 1.5 }} />
 
             {/* 평가 유형 */}
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mb: 1.5,
+              }}
+            >
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Assessment sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
-                <Typography variant="subtitle2" fontWeight="bold">평가 유형</Typography>
+                <Assessment
+                  sx={{ mr: 1, color: "primary.main", fontSize: 20 }}
+                />
+                <Typography variant="subtitle2" fontWeight="bold">
+                  평가 유형
+                </Typography>
               </Box>
               <Typography variant="subtitle2" color="primary" fontWeight="bold">
                 {getAssessmentTypeLabel(assessment.assessment_type)}
@@ -223,10 +243,19 @@ export default function DiagnosticAssessmentDetail() {
             <Divider sx={{ my: 1.5 }} />
 
             {/* 제한 시간 */}
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mb: 1.5,
+              }}
+            >
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Schedule sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
-                <Typography variant="subtitle2" fontWeight="bold">제한 시간</Typography>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  제한 시간
+                </Typography>
               </Box>
               <Typography variant="subtitle2" color="primary" fontWeight="bold">
                 {assessment.time_limit_minutes
@@ -237,10 +266,18 @@ export default function DiagnosticAssessmentDetail() {
             <Divider sx={{ my: 1.5 }} />
 
             {/* 총 문항 수 */}
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <ListAlt sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
-                <Typography variant="subtitle2" fontWeight="bold">총 문항 수</Typography>
+                <Typography variant="subtitle2" fontWeight="bold">
+                  총 문항 수
+                </Typography>
               </Box>
               <Typography variant="subtitle2" color="primary" fontWeight="bold">
                 {assessment.item_count || 0}개
@@ -255,8 +292,8 @@ export default function DiagnosticAssessmentDetail() {
             fullWidth
             startIcon={<PlayArrow />}
             onClick={() => setPreviewOpen(true)}
-            sx={{ 
-              mt: 2, 
+            sx={{
+              mt: 2,
               py: 1.5,
               fontSize: "1rem",
               fontWeight: "bold",
@@ -281,7 +318,14 @@ export default function DiagnosticAssessmentDetail() {
           },
         }}
       >
-        <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", py: 1 }}>
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            py: 1,
+          }}
+        >
           <Typography variant="h6">
             {assessment.title} - 문항 미리보기
           </Typography>
@@ -304,7 +348,9 @@ export default function DiagnosticAssessmentDetail() {
           <Button onClick={() => setPreviewOpen(false)}>닫기</Button>
           <Button
             variant="contained"
-            onClick={() => window.open(getDiagnosticUrl(assessment.grade_band), "_blank")}
+            onClick={() =>
+              window.open(getDiagnosticUrl(assessment.grade_band), "_blank")
+            }
           >
             새 창에서 열기
           </Button>
