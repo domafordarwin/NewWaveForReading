@@ -33,9 +33,6 @@ import {
   EmojiEvents,
   Person,
   Assignment,
-  Lightbulb,
-  Home,
-  Psychology,
 } from "@mui/icons-material";
 import {
   LineChart,
@@ -53,11 +50,15 @@ import {
   Legend,
 } from "recharts";
 import { getCurrentUser } from "../utils/session";
+import type { CounselPost } from "../services/counselBoardService";
 import {
   generateParentReport,
   type AIEvaluationResult,
 } from "../services/aiFeedbackService";
 import { useSupabase } from "../services/supabaseClient";
+import {
+  type CounselComment,
+} from "../services/counselCommentService";
 
 interface ChildInfo {
   user_id: number;
@@ -101,6 +102,13 @@ const ParentDashboardNew = () => {
   } | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
 
+  const [newPostTitle, setNewPostTitle] = useState("");
+  const [newPostContent, setNewPostContent] = useState("");
+  // const [posting, setPosting] = useState(false);
+  const [counselPosts, setCounselPosts] = useState<CounselPost[]>([]);
+  const [counselLoading, setCounselLoading] = useState(false);
+  const [counselError, setCounselError] = useState<string | null>(null);
+
   const demoEvaluations = useMemo<Record<number, EvaluationData[]>>(
     () => ({
       1: [
@@ -136,7 +144,7 @@ const ParentDashboardNew = () => {
         },
       ],
     }),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -309,6 +317,82 @@ const ParentDashboardNew = () => {
           },
         ]
       : [];
+
+  // 상담 게시판: 게시글 작성
+  const handleAddPost = async () => {
+    if (!newPostTitle.trim() || !newPostContent.trim()) return;
+    // setPosting(true);
+    setCounselError(null);
+    try {
+      const { data, error } = await supabase
+        .from("counsel_posts")
+        .insert([
+          {
+            title: newPostTitle,
+            content: newPostContent,
+            user_id: userId,
+            created_at: new Date().toISOString(),
+          },
+        ])
+        .single();
+
+      if (error) throw error;
+
+      setCounselPosts((prev) => [...prev, data]);
+      setNewPostTitle("");
+      setNewPostContent("");
+    } catch (err) {
+      setCounselError("게시글 작성에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      // setPosting(false);
+    }
+  };
+
+  // 댓글 상태
+  const [commentMap, setCommentMap] = useState<
+    Record<number, CounselComment[]>
+  >({});
+  const [commentInput, setCommentInput] = useState<Record<number, string>>({});
+  const [commentLoading, setCommentLoading] = useState<Record<number, boolean>>(
+    {},
+  );
+  const [commentError, setCommentError] = useState<
+    Record<number, string | null>
+  >({});
+  // 게시글별 댓글 불러오기
+  const loadComments = async (postId: number) => {
+    setCommentLoading((prev) => ({ ...prev, [postId]: true }));
+    setCommentError((prev) => ({ ...prev, [postId]: null }));
+    try {
+      const comments = await fetchComments(postId);
+      setCommentMap((prev) => ({ ...prev, [postId]: comments }));
+    } catch (e: any) {
+      setCommentError((prev) => ({
+        ...prev,
+        [postId]: e.message || "댓글을 불러오지 못했습니다.",
+      }));
+    } finally {
+      setCommentLoading((prev) => ({ ...prev, [postId]: false }));
+    }
+  };
+  // 댓글 작성
+  const handleAddComment = async (postId: number) => {
+    if (!userId || !commentInput[postId]?.trim()) return;
+    setCommentLoading((prev) => ({ ...prev, [postId]: true }));
+    setCommentError((prev) => ({ ...prev, [postId]: null }));
+    try {
+      await addComment(postId, userId, commentInput[postId]);
+      setCommentInput((prev) => ({ ...prev, [postId]: "" }));
+      await loadComments(postId);
+    } catch (e: any) {
+      setCommentError((prev) => ({
+        ...prev,
+        [postId]: e.message || "댓글 작성에 실패했습니다.",
+      }));
+    } finally {
+      setCommentLoading((prev) => ({ ...prev, [postId]: false }));
+    }
+  };
 
   if (loading) {
     return (
@@ -484,188 +568,85 @@ const ParentDashboardNew = () => {
           </Box>
         </Grid>
 
-        {/* 오른쪽 컬럼: 상담 게시판/지도 전략/추천 도서 */}
+        {/* 오른쪽 컬럼: AI 리포트/가정 지도/상담 게시판 */}
         <Grid item xs={12} md={5}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {/* 상담 게시판 (임시) */}
+            {/* AI 리포트 섹션 */}
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" fontWeight="bold" gutterBottom>
-                상담 게시판
+                🤖 AI 학부모 리포트
               </Typography>
               <Divider sx={{ mb: 2 }} />
-              <Typography color="text.secondary" sx={{ mb: 2 }}>
-                상담 내역 및 신청 기능은 곧 제공됩니다.
-              </Typography>
-              <Button variant="outlined" color="primary" disabled>
-                상담 신청하기
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleGenerateReport}
+                disabled={reportLoading || !selectedChild || evaluations.length === 0}
+                sx={{ mb: 2 }}
+              >
+                {reportLoading ? <CircularProgress size={20} /> : "리포트 생성"}
               </Button>
-            </Paper>
-
-            {/* 가정 지도 전략 */}
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                <Home sx={{ mr: 1, verticalAlign: "middle" }} />
-                가정에서 지도 방안
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              {aiReport && aiReport.homeSupport.length > 0 ? (
-                <List dense>
-                  {aiReport.homeSupport.map((support, i) => (
-                    <ListItem key={i}>
-                      <ListItemText primary={`${i + 1}. ${support}`} />
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
+              {aiReport && (
+                <Box>
+                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
+                    요약
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    {aiReport.summary}
+                  </Typography>
+                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
+                    성장 분석
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    {aiReport.progressAnalysis}
+                  </Typography>
+                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
+                    추천 사항
+                  </Typography>
+                  <ul>
+                    {aiReport.recommendations.map((rec, idx) => (
+                      <li key={idx}>
+                        <Typography variant="body2">{rec}</Typography>
+                      </li>
+                    ))}
+                  </ul>
+                  <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 2 }}>
+                    가정 지도 팁
+                  </Typography>
+                  <ul>
+                    {aiReport.homeSupport.map((tip, idx) => (
+                      <li key={idx}>
+                        <Typography variant="body2">{tip}</Typography>
+                      </li>
+                    ))}
+                  </ul>
+                </Box>
+              )}
+              {!aiReport && !reportLoading && (
                 <Typography color="text.secondary">
-                  AI 리포트 생성 후 가정 지도 전략이 제공됩니다.
+                  AI 리포트는 자녀의 진단 결과를 바탕으로 생성됩니다.
                 </Typography>
               )}
             </Paper>
-
             {/* 추천 도서 섹션 */}
-            <Paper sx={{ p: 3, bgcolor: "info.50" }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                📚 추천 도서
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Typography color="text.secondary" sx={{ mb: 2 }}>
-                자녀의 독서 수준에 맞는 추천 도서를 확인하세요.
-              </Typography>
-              <Button
-                variant="contained"
-                color="info"
-                href="/parent/recommended-books"
-                fullWidth
-                sx={{ mt: 1 }}
-              >
-                추천 도서 전체 보기
-              </Button>
-            </Paper>
-          </Box>
-        </Grid>
-
-        {/* AI 리포트 (기존 위치 유지) */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
-              <Typography variant="h6" fontWeight="bold">
-                <Psychology sx={{ mr: 1, verticalAlign: "middle" }} />
-                AI 학습 리포트
-              </Typography>
-              <Button
-                variant="contained"
-                onClick={handleGenerateReport}
-                disabled={reportLoading || evaluations.length === 0}
-                startIcon={
-                  reportLoading ? <CircularProgress size={16} /> : <Lightbulb />
-                }
-              >
-                {reportLoading ? "생성 중..." : "리포트 생성"}
-              </Button>
-            </Box>
+          <Paper sx={{ p: 3, bgcolor: "info.50" }}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              📚 추천 도서
+            </Typography>
             <Divider sx={{ mb: 2 }} />
-
-            {aiReport ? (
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight="bold"
-                      gutterBottom
-                    >
-                      📋 학습 현황 요약
-                    </Typography>
-                    <Typography variant="body2">{aiReport.summary}</Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12}>
-                  <Box sx={{ p: 2, bgcolor: "primary.50", borderRadius: 2 }}>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight="bold"
-                      gutterBottom
-                    >
-                      📈 성장 분석
-                    </Typography>
-                    <Typography variant="body2">
-                      {aiReport.progressAnalysis}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      bgcolor: "success.50",
-                      borderRadius: 2,
-                      height: "100%",
-                    }}
-                  >
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight="bold"
-                      gutterBottom
-                    >
-                      <Lightbulb sx={{ mr: 1, verticalAlign: "middle" }} />
-                      권장 사항
-                    </Typography>
-                    <List dense>
-                      {aiReport.recommendations.map((rec, i) => (
-                        <ListItem key={i}>
-                          <ListItemText primary={`${i + 1}. ${rec}`} />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      bgcolor: "warning.50",
-                      borderRadius: 2,
-                      height: "100%",
-                    }}
-                  >
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight="bold"
-                      gutterBottom
-                    >
-                      <Home sx={{ mr: 1, verticalAlign: "middle" }} />
-                      가정에서 도울 수 있는 방법
-                    </Typography>
-                    <List dense>
-                      {aiReport.homeSupport.map((support, i) => (
-                        <ListItem key={i}>
-                          <ListItemText primary={`${i + 1}. ${support}`} />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
-                </Grid>
-              </Grid>
-            ) : (
-              <Box sx={{ textAlign: "center", py: 4 }}>
-                <Psychology
-                  sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
-                />
-                <Typography color="text.secondary">
-                  {evaluations.length === 0
-                    ? "아직 완료된 평가가 없습니다."
-                    : "'리포트 생성' 버튼을 클릭하면 AI가 자녀의 학습 현황을 분석해드립니다."}
-                </Typography>
-              </Box>
-            )}
+            <Typography color="text.secondary" sx={{ mb: 2 }}>
+              자녀의 독서 수준에 맞는 추천 도서를 확인하세요.
+            </Typography>
+            <Button
+              variant="contained"
+              color="info"
+              href="/parent/recommended-books"
+              fullWidth
+              sx={{ mt: 1 }}
+            >
+              추천 도서 전체 보기
+            </Button>
           </Paper>
         </Grid>
       </Grid>
