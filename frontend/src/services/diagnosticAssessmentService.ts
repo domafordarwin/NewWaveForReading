@@ -472,3 +472,79 @@ export async function getStudentAssessments(
   if (error) throw error;
   return data || [];
 }
+
+// ============================================
+// 문항 조회 (평가 생성용)
+// ============================================
+
+/**
+ * 학년군별 사용 가능한 문항 조회
+ */
+export async function getAvailableItems(filters?: {
+  grade_band?: string;
+  item_kind?: string;
+  status?: string;
+}): Promise<any[]> {
+  if (!supabase) throw new Error('Supabase client not initialized');
+
+  let query = supabase
+    .from('authoring_items')
+    .select(`
+      draft_item_id,
+      item_kind,
+      status,
+      stimulus_id,
+      current_version_id,
+      created_at,
+      stimuli (
+        stimulus_id,
+        title,
+        content_text,
+        grade_band
+      )
+    `)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  if (filters?.grade_band) {
+    // stimuli의 grade_band로 필터링 (관계 필터링)
+    query = query.eq('stimuli.grade_band', filters.grade_band);
+  }
+
+  if (filters?.item_kind) {
+    query = query.eq('item_kind', filters.item_kind);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  // 각 문항의 최신 버전 내용 조회
+  const itemsWithContent = await Promise.all(
+    (data || []).map(async (item: any) => {
+      if (!item.current_version_id) {
+        return {
+          ...item,
+          current_version: {
+            content_json: {},
+          },
+        };
+      }
+
+      const { data: version } = await supabase!
+        .from('authoring_item_versions')
+        .select('content_json')
+        .eq('version_id', item.current_version_id)
+        .single();
+
+      return {
+        ...item,
+        current_version: {
+          content_json: version?.content_json || {},
+        },
+      };
+    })
+  );
+
+  return itemsWithContent;
+}

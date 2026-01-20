@@ -21,6 +21,7 @@ import {
   addItemsToAssessment,
 } from '../services/diagnosticAssessmentService';
 import type { CreateAssessmentRequest } from '../types/diagnosticAssessment';
+import ItemSelector from '../components/ItemSelector';
 
 const steps = ['기본 정보 입력', '문항 선택', '완료'];
 
@@ -41,7 +42,7 @@ export default function DiagnosticAssessmentCreate() {
   });
 
   // Step 2: 선택된 문항들
-  const [selectedItems] = useState<
+  const [selectedItems, setSelectedItems] = useState<
     { draft_item_id: number; sequence_number: number; points: number }[]
   >([]);
 
@@ -186,16 +187,18 @@ export default function DiagnosticAssessmentCreate() {
       case 1:
         return (
           <Box>
-            <Alert severity="info" sx={{ mb: 3 }}>
-              문항 선택 기능은 다음 단계에서 구현됩니다. 임시로 다음 단계로
-              진행할 수 있습니다.
-            </Alert>
-            <Typography variant="body2" color="text.secondary">
-              평가 ID: {assessmentId}
+            <Typography variant="h6" gutterBottom>
+              평가에 포함할 문항을 선택하세요
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              선택된 문항 수: {selectedItems.length}개
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {formData.grade_band} 학년군의 문항들이 표시됩니다. 문항을 선택하고 배점을 설정하세요.
             </Typography>
+
+            <ItemSelector
+              gradeBand={formData.grade_band}
+              selectedItems={selectedItems}
+              onSelectionChange={setSelectedItems}
+            />
           </Box>
         );
 
