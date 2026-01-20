@@ -1,12 +1,19 @@
+# Folders to exclude
 docs/
+legacy/
+
+# Environment files
+.env
+frontend/.env
+
+# Supabase seed files
 supabase/*_items_seed.sql
 supabase/*_items_seed_corrected.sql
 supabase/*_item_keys_seed.sql
 supabase/*_rubrics_seed.sql
 supabase/domains_extended_seed.sql
 supabase/seed.sql
-.env
+
+# Others
 .claude/settings.local.json
 nul
-frontend/.env
-docs/
