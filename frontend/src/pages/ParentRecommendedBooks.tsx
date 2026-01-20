@@ -69,22 +69,25 @@ const ParentRecommendedBooks: React.FC = () => {
 
   useEffect(() => {
     // 진단 결과 기반 추천: 약점(weaknesses) 태그 포함 도서 우선, 학년별 필터
-    let books = BOOKS_DB.filter(
-      (book) => book.grade === SAMPLE_DIAGNOSIS.grade || book.grade === "공통",
-    );
-
-    // 약점 태그 포함 도서 우선 정렬
-    books = books.sort((a, b) => {
-      const aMatch = a.tags.some((tag) =>
-        SAMPLE_DIAGNOSIS.weaknesses.includes(tag),
+    const filteredBooks = React.useMemo(() => {
+      let books = BOOKS_DB.filter(
+        (book) =>
+          book.grade === SAMPLE_DIAGNOSIS.grade || book.grade === "공통",
       );
-      const bMatch = b.tags.some((tag) =>
-        SAMPLE_DIAGNOSIS.weaknesses.includes(tag),
-      );
-      return Number(bMatch) - Number(aMatch);
-    });
 
-    setFilteredBooks(books);
+      // 약점 태그 포함 도서 우선 정렬
+      books = books.sort((a, b) => {
+        const aMatch = a.tags.some((tag) =>
+          SAMPLE_DIAGNOSIS.weaknesses.includes(tag),
+        );
+        const bMatch = b.tags.some((tag) =>
+          SAMPLE_DIAGNOSIS.weaknesses.includes(tag),
+        );
+        return Number(bMatch) - Number(aMatch);
+      });
+
+      return books;
+    }, [BOOKS_DB, SAMPLE_DIAGNOSIS]);
   }, []);
 
   return (
