@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Paper,
@@ -14,16 +14,16 @@ import {
   Stepper,
   Step,
   StepLabel,
-} from '@mui/material';
-import { Assessment, Save, ArrowBack, ArrowForward } from '@mui/icons-material';
+} from "@mui/material";
+import { Assessment, Save, ArrowBack, ArrowForward } from "@mui/icons-material";
 import {
   createDiagnosticAssessment,
   addItemsToAssessment,
-} from '../services/diagnosticAssessmentService';
-import type { CreateAssessmentRequest } from '../types/diagnosticAssessment';
-import ItemSelector from '../components/ItemSelector';
+} from "../services/diagnosticAssessmentService";
+import type { CreateAssessmentRequest } from "../types/diagnosticAssessment";
+import ItemSelector from "../components/ItemSelector";
 
-const steps = ['기본 정보 입력', '문항 선택', '완료'];
+const steps = ["기본 정보 입력", "문항 선택", "완료"];
 
 export default function DiagnosticAssessmentCreate() {
   const navigate = useNavigate();
@@ -34,10 +34,10 @@ export default function DiagnosticAssessmentCreate() {
 
   // Step 1: 기본 정보
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    grade_band: '초저' as '초저' | '초고' | '중저' | '중고',
-    assessment_type: 'diagnostic' as 'diagnostic' | 'formative' | 'summative',
+    title: "",
+    description: "",
+    grade_band: "초저" as "초저" | "초고" | "중저" | "중고",
+    assessment_type: "diagnostic" as "diagnostic" | "formative" | "summative",
     time_limit_minutes: 60,
   });
 
@@ -54,7 +54,7 @@ export default function DiagnosticAssessmentCreate() {
     if (activeStep === 0) {
       // Step 1: 기본 정보 저장
       if (!formData.title.trim()) {
-        setError('평가 제목을 입력해주세요.');
+        setError("평가 제목을 입력해주세요.");
         return;
       }
 
@@ -75,14 +75,14 @@ export default function DiagnosticAssessmentCreate() {
         setAssessmentId(assessment.assessment_id);
         setActiveStep(1);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '평가 생성 실패');
+        setError(err instanceof Error ? err.message : "평가 생성 실패");
       } finally {
         setLoading(false);
       }
     } else if (activeStep === 1) {
       // Step 2: 문항 추가
       if (selectedItems.length === 0) {
-        setError('최소 1개 이상의 문항을 선택해주세요.');
+        setError("최소 1개 이상의 문항을 선택해주세요.");
         return;
       }
 
@@ -91,7 +91,7 @@ export default function DiagnosticAssessmentCreate() {
         setError(null);
 
         if (!assessmentId) {
-          throw new Error('평가 ID가 없습니다.');
+          throw new Error("평가 ID가 없습니다.");
         }
 
         await addItemsToAssessment({
@@ -101,7 +101,7 @@ export default function DiagnosticAssessmentCreate() {
 
         setActiveStep(2);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '문항 추가 실패');
+        setError(err instanceof Error ? err.message : "문항 추가 실패");
       } finally {
         setLoading(false);
       }
@@ -120,12 +120,12 @@ export default function DiagnosticAssessmentCreate() {
     switch (activeStep) {
       case 0:
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <TextField
               fullWidth
               label="평가 제목"
               value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
+              onChange={(e) => handleInputChange("title", e.target.value)}
               required
               placeholder="예: 2024년 1학기 진단 평가"
             />
@@ -134,7 +134,7 @@ export default function DiagnosticAssessmentCreate() {
               fullWidth
               label="평가 설명"
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={(e) => handleInputChange("description", e.target.value)}
               multiline
               rows={4}
               placeholder="평가에 대한 설명을 입력하세요"
@@ -146,7 +146,7 @@ export default function DiagnosticAssessmentCreate() {
                 value={formData.grade_band}
                 label="학년군"
                 onChange={(e) =>
-                  handleInputChange('grade_band', e.target.value)
+                  handleInputChange("grade_band", e.target.value)
                 }
               >
                 <MenuItem value="초저">초등 저학년 (1-2학년)</MenuItem>
@@ -162,7 +162,7 @@ export default function DiagnosticAssessmentCreate() {
                 value={formData.assessment_type}
                 label="평가 유형"
                 onChange={(e) =>
-                  handleInputChange('assessment_type', e.target.value)
+                  handleInputChange("assessment_type", e.target.value)
                 }
               >
                 <MenuItem value="diagnostic">진단 평가</MenuItem>
@@ -177,7 +177,10 @@ export default function DiagnosticAssessmentCreate() {
               label="제한 시간 (분)"
               value={formData.time_limit_minutes}
               onChange={(e) =>
-                handleInputChange('time_limit_minutes', parseInt(e.target.value))
+                handleInputChange(
+                  "time_limit_minutes",
+                  parseInt(e.target.value),
+                )
               }
               inputProps={{ min: 1 }}
             />
@@ -191,7 +194,8 @@ export default function DiagnosticAssessmentCreate() {
               평가에 포함할 문항을 선택하세요
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              {formData.grade_band} 학년군의 문항들이 표시됩니다. 문항을 선택하고 배점을 설정하세요.
+              {formData.grade_band} 학년군의 문항들이 표시됩니다. 문항을
+              선택하고 배점을 설정하세요.
             </Typography>
 
             <ItemSelector
@@ -204,8 +208,8 @@ export default function DiagnosticAssessmentCreate() {
 
       case 2:
         return (
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <Assessment sx={{ fontSize: 60, color: 'success.main', mb: 2 }} />
+          <Box sx={{ textAlign: "center", py: 4 }}>
+            <Assessment sx={{ fontSize: 60, color: "success.main", mb: 2 }} />
             <Typography variant="h5" gutterBottom>
               진단 평가가 생성되었습니다!
             </Typography>
@@ -229,11 +233,11 @@ export default function DiagnosticAssessmentCreate() {
   };
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+    <Box sx={{ maxWidth: 900, mx: "auto", p: 3 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate('/question-dev/diagnostic-assessments')}
+          onClick={() => navigate("/question-dev/diagnostic-assessments")}
           sx={{ mr: 2 }}
         >
           목록으로
@@ -261,7 +265,7 @@ export default function DiagnosticAssessmentCreate() {
         {renderStepContent()}
 
         {activeStep < 2 && (
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
             <Button
               onClick={handleBack}
               disabled={activeStep === 0}
@@ -275,11 +279,7 @@ export default function DiagnosticAssessmentCreate() {
               disabled={loading}
               endIcon={activeStep === 1 ? <Save /> : <ArrowForward />}
             >
-              {loading
-                ? '처리 중...'
-                : activeStep === 1
-                  ? '문항 저장'
-                  : '다음'}
+              {loading ? "처리 중..." : activeStep === 1 ? "문항 저장" : "다음"}
             </Button>
           </Box>
         )}

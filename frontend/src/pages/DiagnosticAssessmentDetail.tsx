@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Paper,
@@ -12,7 +12,7 @@ import {
   Card,
   CardContent,
   Grid,
-} from '@mui/material';
+} from "@mui/material";
 import {
   ArrowBack,
   Edit,
@@ -20,14 +20,15 @@ import {
   Schedule,
   Class,
   ListAlt,
-} from '@mui/icons-material';
-import { getDiagnosticAssessmentById } from '../services/diagnosticAssessmentService';
-import type { DiagnosticAssessmentWithItems } from '../types/diagnosticAssessment';
+} from "@mui/icons-material";
+import { getDiagnosticAssessmentById } from "../services/diagnosticAssessmentService";
+import type { DiagnosticAssessmentWithItems } from "../types/diagnosticAssessment";
 
 export default function DiagnosticAssessmentDetail() {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const navigate = useNavigate();
-  const [assessment, setAssessment] = useState<DiagnosticAssessmentWithItems | null>(null);
+  const [assessment, setAssessment] =
+    useState<DiagnosticAssessmentWithItems | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,7 +46,7 @@ export default function DiagnosticAssessmentDetail() {
       const data = await getDiagnosticAssessmentById(parseInt(assessmentId!));
       setAssessment(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '데이터 로드 실패');
+      setError(err instanceof Error ? err.message : "데이터 로드 실패");
     } finally {
       setLoading(false);
     }
@@ -53,37 +54,38 @@ export default function DiagnosticAssessmentDetail() {
 
   const getStatusChip = (status: string) => {
     const statusConfig = {
-      draft: { label: '초안', color: 'default' as const },
-      published: { label: '배포됨', color: 'success' as const },
-      archived: { label: '보관됨', color: 'default' as const },
+      draft: { label: "초안", color: "default" as const },
+      published: { label: "배포됨", color: "success" as const },
+      archived: { label: "보관됨", color: "default" as const },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
     return <Chip label={config.label} color={config.color} />;
   };
 
   const getGradeBandLabel = (gradeBand: string) => {
     const labels = {
-      '초저': '초등 저학년',
-      '초고': '초등 고학년',
-      '중저': '중등 저학년',
-      '중고': '중등 고학년',
+      초저: "초등 저학년",
+      초고: "초등 고학년",
+      중저: "중등 저학년",
+      중고: "중등 고학년",
     };
     return labels[gradeBand as keyof typeof labels] || gradeBand;
   };
 
   const getAssessmentTypeLabel = (type: string) => {
     const labels = {
-      diagnostic: '진단 평가',
-      formative: '형성 평가',
-      summative: '총괄 평가',
+      diagnostic: "진단 평가",
+      formative: "형성 평가",
+      summative: "총괄 평가",
     };
     return labels[type as keyof typeof labels] || type;
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
         <CircularProgress />
       </Box>
     );
@@ -92,10 +94,10 @@ export default function DiagnosticAssessmentDetail() {
   if (error || !assessment) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error || '평가를 찾을 수 없습니다.'}</Alert>
+        <Alert severity="error">{error || "평가를 찾을 수 없습니다."}</Alert>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate('/diagnostic-assessments')}
+          onClick={() => navigate("/diagnostic-assessments")}
           sx={{ mt: 2 }}
         >
           목록으로
@@ -106,10 +108,10 @@ export default function DiagnosticAssessmentDetail() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate('/diagnostic-assessments')}
+          onClick={() => navigate("/diagnostic-assessments")}
           sx={{ mr: 2 }}
         >
           목록으로
@@ -117,11 +119,15 @@ export default function DiagnosticAssessmentDetail() {
         <Typography variant="h4" component="h1" sx={{ flex: 1 }}>
           {assessment.title}
         </Typography>
-        {assessment.status === 'draft' && (
+        {assessment.status === "draft" && (
           <Button
             variant="contained"
             startIcon={<Edit />}
-            onClick={() => navigate(`/question-dev/diagnostic-assessments/${assessmentId}/edit`)}
+            onClick={() =>
+              navigate(
+                `/question-dev/diagnostic-assessments/${assessmentId}/edit`,
+              )
+            }
           >
             수정
           </Button>
@@ -131,8 +137,8 @@ export default function DiagnosticAssessmentDetail() {
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3, mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Assessment sx={{ mr: 1, color: 'primary.main' }} />
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <Assessment sx={{ mr: 1, color: "primary.main" }} />
               <Typography variant="h6">기본 정보</Typography>
             </Box>
             <Divider sx={{ mb: 2 }} />
@@ -141,9 +147,7 @@ export default function DiagnosticAssessmentDetail() {
               <Typography variant="subtitle2" color="text.secondary">
                 상태
               </Typography>
-              <Box sx={{ mt: 0.5 }}>
-                {getStatusChip(assessment.status)}
-              </Box>
+              <Box sx={{ mt: 0.5 }}>{getStatusChip(assessment.status)}</Box>
             </Box>
 
             <Box sx={{ mb: 2 }}>
@@ -151,7 +155,7 @@ export default function DiagnosticAssessmentDetail() {
                 설명
               </Typography>
               <Typography variant="body1" sx={{ mt: 0.5 }}>
-                {assessment.description || '설명 없음'}
+                {assessment.description || "설명 없음"}
               </Typography>
             </Box>
 
@@ -160,7 +164,7 @@ export default function DiagnosticAssessmentDetail() {
                 생성일
               </Typography>
               <Typography variant="body1" sx={{ mt: 0.5 }}>
-                {new Date(assessment.created_at).toLocaleString('ko-KR')}
+                {new Date(assessment.created_at).toLocaleString("ko-KR")}
               </Typography>
             </Box>
 
@@ -169,24 +173,26 @@ export default function DiagnosticAssessmentDetail() {
                 수정일
               </Typography>
               <Typography variant="body1" sx={{ mt: 0.5 }}>
-                {new Date(assessment.updated_at).toLocaleString('ko-KR')}
+                {new Date(assessment.updated_at).toLocaleString("ko-KR")}
               </Typography>
             </Box>
           </Paper>
 
           <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <ListAlt sx={{ mr: 1, color: 'primary.main' }} />
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <ListAlt sx={{ mr: 1, color: "primary.main" }} />
               <Typography variant="h6">포함된 문항</Typography>
             </Box>
             <Divider sx={{ mb: 2 }} />
 
             {assessment.items && assessment.items.length > 0 ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 {assessment.items.map((item, index) => (
                   <Card key={item.assessment_item_id} variant="outlined">
                     <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                      >
                         <Chip
                           label={`문항 ${index + 1}`}
                           size="small"
@@ -212,9 +218,7 @@ export default function DiagnosticAssessmentDetail() {
                 ))}
               </Box>
             ) : (
-              <Alert severity="info">
-                아직 문항이 추가되지 않았습니다.
-              </Alert>
+              <Alert severity="info">아직 문항이 추가되지 않았습니다.</Alert>
             )}
           </Paper>
         </Grid>
@@ -222,8 +226,8 @@ export default function DiagnosticAssessmentDetail() {
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Class sx={{ mr: 1, color: 'primary.main' }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                <Class sx={{ mr: 1, color: "primary.main" }} />
                 <Typography variant="h6">학년군</Typography>
               </Box>
               <Typography variant="h5" color="primary">
@@ -234,8 +238,8 @@ export default function DiagnosticAssessmentDetail() {
 
           <Card sx={{ mt: 2 }}>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Assessment sx={{ mr: 1, color: 'primary.main' }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                <Assessment sx={{ mr: 1, color: "primary.main" }} />
                 <Typography variant="h6">평가 유형</Typography>
               </Box>
               <Typography variant="h5" color="primary">
@@ -246,20 +250,22 @@ export default function DiagnosticAssessmentDetail() {
 
           <Card sx={{ mt: 2 }}>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Schedule sx={{ mr: 1, color: 'primary.main' }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                <Schedule sx={{ mr: 1, color: "primary.main" }} />
                 <Typography variant="h6">제한 시간</Typography>
               </Box>
               <Typography variant="h5" color="primary">
-                {assessment.time_limit_minutes ? `${assessment.time_limit_minutes}분` : '제한 없음'}
+                {assessment.time_limit_minutes
+                  ? `${assessment.time_limit_minutes}분`
+                  : "제한 없음"}
               </Typography>
             </CardContent>
           </Card>
 
           <Card sx={{ mt: 2 }}>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <ListAlt sx={{ mr: 1, color: 'primary.main' }} />
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                <ListAlt sx={{ mr: 1, color: "primary.main" }} />
                 <Typography variant="h6">총 문항 수</Typography>
               </Box>
               <Typography variant="h5" color="primary">
