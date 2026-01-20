@@ -7,7 +7,7 @@
  * - 성장 추이 차트
  * - AI 생성 학부모 리포트
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Paper,
@@ -92,7 +92,7 @@ interface SessionData {
 }
 
 const ParentDashboardNew = () => {
-  const user = getCurrentUser();
+  const user = useMemo(() => getCurrentUser(), []);
   const supabase = useSupabase();
 
   const [loading, setLoading] = useState(true);

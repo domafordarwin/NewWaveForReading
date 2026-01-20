@@ -6,7 +6,7 @@
  * - 자녀별 학습 현황 상세
  * - 자녀의 진단 결과 목록
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Paper,
@@ -99,7 +99,7 @@ const getGradeBandLabel = (band: string): string => {
 };
 
 const ParentChildren = () => {
-  const user = getCurrentUser();
+  const user = useMemo(() => getCurrentUser(), []);
   const supabase = useSupabase();
 
   const [loading, setLoading] = useState(true);
