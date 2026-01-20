@@ -50,16 +50,12 @@ import {
   Legend,
 } from "recharts";
 import { getCurrentUser } from "../utils/session";
-import type { CounselPost } from "../services/counselBoardService";
 import {
   generateParentReport,
   type AIEvaluationResult,
 } from "../services/aiFeedbackService";
 import { useSupabase } from "../services/supabaseClient";
-import {
-  type CounselComment,
-  fetchComments,
-} from "../services/counselCommentService";
+// import { type CounselComment, fetchComments } from "../services/counselCommentService";
 
 interface ChildInfo {
   user_id: number;
@@ -106,7 +102,6 @@ const ParentDashboardNew = () => {
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
   // const [posting, setPosting] = useState(false);
-  const [counselLoading, setCounselLoading] = useState(false);
   const [counselError, setCounselError] = useState<string | null>(null);
 
   const demoEvaluations = useMemo<Record<number, EvaluationData[]>>(
