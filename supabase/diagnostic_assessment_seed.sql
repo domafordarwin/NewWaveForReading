@@ -113,6 +113,43 @@ DECLARE
   v_draft_item_id INTEGER;
   v_project_id INTEGER := 1;  -- 기본 프로젝트 ID
 BEGIN
+  -- 초등 저학년 문항 복제
+  FOR v_item IN 
+    SELECT ib.item_id, ib.item_code, ib.stimulus_id, ib.grade_band, ib.item_type, 
+           ib.stem, ib.max_score, s.content_text as stimulus_text
+    FROM public.item_bank ib
+    LEFT JOIN public.stimuli s ON s.stimulus_id = ib.stimulus_id
+    WHERE ib.grade_band = '초저' AND ib.is_active = true
+    ORDER BY ib.item_code
+    LIMIT 15  -- 초등 저학년 15문항
+  LOOP
+    SELECT draft_item_id INTO v_draft_item_id 
+    FROM public.authoring_items 
+    WHERE item_code = v_item.item_code;
+    
+    IF v_draft_item_id IS NULL THEN
+      INSERT INTO public.authoring_items (
+        project_id,
+        item_code,
+        primary_stimulus_id,
+        item_type,
+        stem,
+        max_score,
+        status,
+        grade_band
+      ) VALUES (
+        v_project_id,
+        v_item.item_code,
+        v_item.stimulus_id,
+        v_item.item_type,
+        v_item.stem,
+        v_item.max_score,
+        'approved',
+        v_item.grade_band
+      );
+    END IF;
+  END LOOP;
+
   -- 초등 고학년 문항 복제
   FOR v_item IN 
     SELECT ib.item_id, ib.item_code, ib.stimulus_id, ib.grade_band, ib.item_type, 
@@ -231,6 +268,39 @@ END $OUTER$;
 -- =========================================================
 -- 3. 진단 평가에 문항 연결 (assessment_items)
 -- =========================================================
+
+-- 3.0 초등 저학년 진단 평가 문항 연결
+DO $$
+DECLARE
+  v_assessment_id INTEGER;
+  v_draft_item RECORD;
+  v_seq INTEGER := 1;
+BEGIN
+  -- 평가 ID 가져오기
+  SELECT assessment_id INTO v_assessment_id 
+  FROM public.diagnostic_assessments 
+  WHERE title = '2025학년도 초등 저학년 문해력 진단 평가';
+  
+  IF v_assessment_id IS NOT NULL THEN
+    -- 기존 연결 삭제
+    DELETE FROM public.assessment_items WHERE assessment_id = v_assessment_id;
+    
+    -- 문항 연결
+    FOR v_draft_item IN 
+      SELECT ai.draft_item_id, ai.item_code, ai.max_score
+      FROM public.authoring_items ai
+      WHERE ai.item_code LIKE 'ELEMLOW_%'
+      ORDER BY ai.item_code
+      LIMIT 15
+    LOOP
+      INSERT INTO public.assessment_items (assessment_id, draft_item_id, sequence_number, points)
+      VALUES (v_assessment_id, v_draft_item.draft_item_id, v_seq, v_draft_item.max_score);
+      v_seq := v_seq + 1;
+    END LOOP;
+    
+    RAISE NOTICE '초등 저학년 진단 평가에 % 개 문항 연결됨', v_seq - 1;
+  END IF;
+END $$;
 
 -- 3.1 초등 고학년 진단 평가 문항 연결
 DO $$

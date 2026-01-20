@@ -48,6 +48,7 @@ import DiagnosticAssessmentDetail from "./pages/DiagnosticAssessmentDetail";
 import StudentAssessmentList from "./pages/StudentAssessmentList";
 import StudentAssessmentTake from "./pages/StudentAssessmentTake";
 import StudentAssessmentComplete from "./pages/StudentAssessmentComplete";
+import StudentAssessmentResult from "./pages/StudentAssessmentResult";
 
 const theme = createTheme({
   palette: {
@@ -114,6 +115,7 @@ function App() {
             <Route path="assessments" element={<StudentAssessmentList />} />
             <Route path="assessments/:assessmentId/take" element={<StudentAssessmentTake />} />
             <Route path="assessments/:assessmentId/complete" element={<StudentAssessmentComplete />} />
+            <Route path="assessments/results/:attemptId" element={<StudentAssessmentResult />} />
           </Route>
 
           {/* 학부모 라우트 */}
