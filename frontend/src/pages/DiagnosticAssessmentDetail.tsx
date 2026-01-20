@@ -9,9 +9,12 @@ import {
   CircularProgress,
   Alert,
   Divider,
-  Card,
-  CardContent,
   Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -20,6 +23,8 @@ import {
   Schedule,
   Class,
   ListAlt,
+  PlayArrow,
+  Close,
 } from "@mui/icons-material";
 import { getDiagnosticAssessmentById } from "../services/diagnosticAssessmentService";
 import type { DiagnosticAssessmentWithItems } from "../types/diagnosticAssessment";
@@ -31,6 +36,7 @@ export default function DiagnosticAssessmentDetail() {
     useState<DiagnosticAssessmentWithItems | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     if (assessmentId) {
@@ -81,6 +87,17 @@ export default function DiagnosticAssessmentDetail() {
       summative: "총괄 평가",
     };
     return labels[type as keyof typeof labels] || type;
+  };
+
+  // 학년군에 따른 진단 평가 URL 반환
+  const getDiagnosticUrl = (gradeBand: string) => {
+    const urls: Record<string, string> = {
+      초저: "/diagnostic/elemlow",
+      초고: "/diagnostic/elemhigh",
+      중저: "/diagnostic/midlow",
+      중고: "/diagnostic/midhigh",
+    };
+    return urls[gradeBand] || "/diagnostic/midlow";
   };
 
   if (loading) {
@@ -177,104 +194,122 @@ export default function DiagnosticAssessmentDetail() {
               </Typography>
             </Box>
           </Paper>
-
-          <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <ListAlt sx={{ mr: 1, color: "primary.main" }} />
-              <Typography variant="h6">포함된 문항</Typography>
-            </Box>
-            <Divider sx={{ mb: 2 }} />
-
-            {assessment.items && assessment.items.length > 0 ? (
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {assessment.items.map((item, index) => (
-                  <Card key={item.assessment_item_id} variant="outlined">
-                    <CardContent>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", mb: 1 }}
-                      >
-                        <Chip
-                          label={`문항 ${index + 1}`}
-                          size="small"
-                          color="primary"
-                          sx={{ mr: 1 }}
-                        />
-                        <Chip
-                          label={`${item.points}점`}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        문항 ID: {item.draft_item_id}
-                      </Typography>
-                      {item.authoring_items && (
-                        <Typography variant="body2" color="text.secondary">
-                          문항 유형: {item.authoring_items.item_kind}
-                        </Typography>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
-            ) : (
-              <Alert severity="info">아직 문항이 추가되지 않았습니다.</Alert>
-            )}
-          </Paper>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Class sx={{ mr: 1, color: "primary.main" }} />
-                <Typography variant="h6">학년군</Typography>
+          <Paper sx={{ p: 2 }}>
+            {/* 학년군 */}
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Class sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
+                <Typography variant="subtitle2" fontWeight="bold">학년군</Typography>
               </Box>
-              <Typography variant="h5" color="primary">
+              <Typography variant="subtitle2" color="primary" fontWeight="bold">
                 {getGradeBandLabel(assessment.grade_band)}
               </Typography>
-            </CardContent>
-          </Card>
+            </Box>
+            <Divider sx={{ my: 1.5 }} />
 
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Assessment sx={{ mr: 1, color: "primary.main" }} />
-                <Typography variant="h6">평가 유형</Typography>
+            {/* 평가 유형 */}
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Assessment sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
+                <Typography variant="subtitle2" fontWeight="bold">평가 유형</Typography>
               </Box>
-              <Typography variant="h5" color="primary">
+              <Typography variant="subtitle2" color="primary" fontWeight="bold">
                 {getAssessmentTypeLabel(assessment.assessment_type)}
               </Typography>
-            </CardContent>
-          </Card>
+            </Box>
+            <Divider sx={{ my: 1.5 }} />
 
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Schedule sx={{ mr: 1, color: "primary.main" }} />
-                <Typography variant="h6">제한 시간</Typography>
+            {/* 제한 시간 */}
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Schedule sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
+                <Typography variant="subtitle2" fontWeight="bold">제한 시간</Typography>
               </Box>
-              <Typography variant="h5" color="primary">
+              <Typography variant="subtitle2" color="primary" fontWeight="bold">
                 {assessment.time_limit_minutes
                   ? `${assessment.time_limit_minutes}분`
                   : "제한 없음"}
               </Typography>
-            </CardContent>
-          </Card>
+            </Box>
+            <Divider sx={{ my: 1.5 }} />
 
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <ListAlt sx={{ mr: 1, color: "primary.main" }} />
-                <Typography variant="h6">총 문항 수</Typography>
+            {/* 총 문항 수 */}
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <ListAlt sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
+                <Typography variant="subtitle2" fontWeight="bold">총 문항 수</Typography>
               </Box>
-              <Typography variant="h5" color="primary">
+              <Typography variant="subtitle2" color="primary" fontWeight="bold">
                 {assessment.item_count || 0}개
               </Typography>
-            </CardContent>
-          </Card>
+            </Box>
+          </Paper>
+
+          {/* 진단 평가 바로가기 버튼 */}
+          <Button
+            variant="contained"
+            size="large"
+            fullWidth
+            startIcon={<PlayArrow />}
+            onClick={() => setPreviewOpen(true)}
+            sx={{ 
+              mt: 2, 
+              py: 1.5,
+              fontSize: "1rem",
+              fontWeight: "bold",
+            }}
+          >
+            진단 평가 바로가기
+          </Button>
         </Grid>
       </Grid>
+
+      {/* 진단 평가 미리보기 Dialog */}
+      <Dialog
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        maxWidth={false}
+        fullWidth
+        PaperProps={{
+          sx: {
+            width: "95vw",
+            height: "95vh",
+            maxWidth: "none",
+          },
+        }}
+      >
+        <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", py: 1 }}>
+          <Typography variant="h6">
+            {assessment.title} - 문항 미리보기
+          </Typography>
+          <IconButton onClick={() => setPreviewOpen(false)}>
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, overflow: "hidden" }}>
+          <Box
+            component="iframe"
+            src={getDiagnosticUrl(assessment.grade_band)}
+            sx={{
+              width: "100%",
+              height: "100%",
+              border: "none",
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPreviewOpen(false)}>닫기</Button>
+          <Button
+            variant="contained"
+            onClick={() => window.open(getDiagnosticUrl(assessment.grade_band), "_blank")}
+          >
+            새 창에서 열기
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
