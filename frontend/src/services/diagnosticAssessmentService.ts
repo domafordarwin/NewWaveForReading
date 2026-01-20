@@ -421,7 +421,248 @@ export async function submitAssessment(
     .single();
 
   if (error) throw error;
+
+  // 자동 채점 시작 (백그라운드)
+  gradeAssessment(attemptId).catch(console.error);
+
   return data;
+}
+
+// ============================================
+// 자동 채점
+// ============================================
+
+/**
+ * 평가 자동 채점 (객관식 + AI 서술형)
+ */
+export async function gradeAssessment(attemptId: number): Promise<void> {
+  if (!supabase) throw new Error("Supabase client not initialized");
+
+  try {
+    // 1. 응시 정보 및 문항 정보 조회
+    const { data: attempt, error: attemptError } = await supabase
+      .from("assessment_attempts")
+      .select(`
+        *,
+        diagnostic_assessments (
+          assessment_id,
+          items:assessment_items (
+            assessment_item_id,
+            draft_item_id,
+            points,
+            authoring_items (
+              item_kind,
+              current_version_id,
+              authoring_item_versions (
+                content_json
+              )
+            )
+          )
+        )
+      `)
+      .eq("attempt_id", attemptId)
+      .single();
+
+    if (attemptError) throw attemptError;
+    if (!attempt) throw new Error("Attempt not found");
+
+    // 2. 학생 응답 조회
+    const { data: responses, error: responsesError } = await supabase
+      .from("student_responses")
+      .select("*")
+      .eq("attempt_id", attemptId);
+
+    if (responsesError) throw responsesError;
+
+    // 3. 각 응답 채점
+    const items = (attempt.diagnostic_assessments as any)?.items || [];
+    let totalScore = 0;
+    let maxScore = 0;
+
+    for (const item of items) {
+      const response = responses?.find(
+        (r) => r.assessment_item_id === item.assessment_item_id
+      );
+
+      if (!response) continue;
+
+      maxScore += item.points;
+
+      if (response.response_type === "mcq") {
+        // 객관식 자동 채점
+        await gradeMcqResponse(response, item);
+
+        // 점수 조회 (채점 후)
+        const { data: updatedResponse } = await supabase
+          .from("student_responses")
+          .select("score")
+          .eq("response_id", response.response_id)
+          .single();
+
+        if (updatedResponse?.score) {
+          totalScore += updatedResponse.score;
+        }
+      } else if (response.response_type === "essay") {
+        // 서술형 AI 채점
+        await gradeEssayResponse(response, item);
+
+        // 점수 조회 (채점 후)
+        const { data: updatedResponse } = await supabase
+          .from("student_responses")
+          .select("score")
+          .eq("response_id", response.response_id)
+          .single();
+
+        if (updatedResponse?.score) {
+          totalScore += updatedResponse.score;
+        }
+      }
+    }
+
+    // 4. 총점 업데이트 및 상태 변경
+    await supabase
+      .from("assessment_attempts")
+      .update({
+        total_score: totalScore,
+        status: "graded",
+      })
+      .eq("attempt_id", attemptId);
+
+  } catch (error) {
+    console.error("Grading error:", error);
+    throw error;
+  }
+}
+
+/**
+ * 객관식 문항 자동 채점
+ */
+async function gradeMcqResponse(
+  response: StudentResponse,
+  item: any
+): Promise<void> {
+  if (!supabase) throw new Error("Supabase client not initialized");
+
+  try {
+    const contentJson = item.authoring_items?.authoring_item_versions?.[0]?.content_json;
+
+    if (!contentJson) {
+      throw new Error("Item content not found");
+    }
+
+    // 정답 인덱스 찾기
+    const correctIndex = contentJson.options?.findIndex(
+      (opt: any) => opt.is_correct === true
+    );
+
+    if (correctIndex === -1 || correctIndex === undefined) {
+      throw new Error("Correct answer not found");
+    }
+
+    // 정답 여부 확인
+    const isCorrect = response.selected_option_index === correctIndex;
+    const score = isCorrect ? item.points : 0;
+
+    // 채점 결과 저장
+    await supabase
+      .from("student_responses")
+      .update({
+        is_correct: isCorrect,
+        score: score,
+      })
+      .eq("response_id", response.response_id);
+
+  } catch (error) {
+    console.error("MCQ grading error:", error);
+    throw error;
+  }
+}
+
+/**
+ * 서술형 문항 AI 채점
+ */
+async function gradeEssayResponse(
+  response: StudentResponse,
+  item: any
+): Promise<void> {
+  if (!supabase) throw new Error("Supabase client not initialized");
+
+  try {
+    const contentJson = item.authoring_items?.authoring_item_versions?.[0]?.content_json;
+
+    if (!contentJson) {
+      throw new Error("Item content not found");
+    }
+
+    if (!response.essay_text) {
+      throw new Error("Essay text not found");
+    }
+
+    // AI 채점 API 호출
+    const apiUrl = import.meta.env.VITE_API_URL || '/api';
+    const gradeResponse = await fetch(`${apiUrl}/grade-essay`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        essayText: response.essay_text,
+        itemContent: contentJson,
+        rubric: contentJson.rubric,
+        maxPoints: item.points,
+      }),
+    });
+
+    if (!gradeResponse.ok) {
+      throw new Error(`Grading API failed: ${gradeResponse.statusText}`);
+    }
+
+    const gradingResult = await gradeResponse.json();
+
+    // 응답 테이블에 점수 저장
+    await supabase
+      .from("student_responses")
+      .update({
+        score: gradingResult.score,
+        is_correct: null, // 서술형은 정답/오답이 아닌 점수만
+      })
+      .eq("response_id", response.response_id);
+
+    // essay_gradings 테이블에 상세 채점 결과 저장
+    const criteriaScores = gradingResult.strengths && gradingResult.improvements ? [
+      {
+        area: "강점",
+        feedback: gradingResult.strengths.join(", "),
+      },
+      {
+        area: "개선점",
+        feedback: gradingResult.improvements.join(", "),
+      }
+    ] : [];
+
+    await supabase
+      .from("essay_gradings")
+      .insert({
+        response_id: response.response_id,
+        criteria_scores: criteriaScores,
+        total_score: gradingResult.score,
+        overall_feedback: gradingResult.feedback,
+        graded_by: 'ai',
+      });
+
+  } catch (error) {
+    console.error("Essay grading error:", error);
+
+    // 실패 시 임시 점수 부여
+    const fallbackScore = item.points * 0.5;
+    await supabase
+      .from("student_responses")
+      .update({
+        score: fallbackScore,
+        is_correct: null,
+      })
+      .eq("response_id", response.response_id);
+  }
 }
 
 /**
