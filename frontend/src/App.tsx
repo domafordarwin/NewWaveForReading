@@ -17,6 +17,7 @@ import StudentFeedback from "./pages/StudentFeedback";
 import ParentDashboard from "./pages/ParentDashboard";
 import ParentDashboardNew from "./pages/ParentDashboardNew";
 import ParentChildren from "./pages/ParentChildren";
+import ParentRecommendedBooks from "./pages/ParentRecommendedBooks";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import TeacherDashboardNew from "./pages/TeacherDashboardNew";
 import SchoolAdminDashboard from "./pages/SchoolAdminDashboard";
