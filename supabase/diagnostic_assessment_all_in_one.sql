@@ -297,54 +297,40 @@ BEGIN
 END $$;
 
 -- =========================================================
--- STEP 3: authoring_items에 문항 복제
+-- STEP 3: assessment_items 테이블 스키마 확인/수정
+-- (item_bank를 직접 참조하도록 변경)
 -- =========================================================
 
-DO $OUTER$
-DECLARE
-  v_item RECORD;
-  v_draft_item_id INTEGER;
-  v_project_id INTEGER := 1;
-  v_count INTEGER := 0;
+-- assessment_items 테이블이 item_bank를 참조하도록 재생성
+DO $$
 BEGIN
-  RAISE NOTICE 'STEP 3: authoring_items에 문항 복제 시작...';
-  
-  -- 모든 학년군 문항 복제
-  FOR v_item IN 
-    SELECT ib.item_id, ib.item_code, ib.stimulus_id, ib.grade_band, ib.item_type, 
-           ib.stem, ib.max_score
-    FROM public.item_bank ib
-    WHERE ib.is_active = true
-      AND ib.item_code ~ '^(ELEMLOW|ELEMHIGH|MIDLOW|MIDHIGH)_'
-    ORDER BY ib.grade_band, ib.item_code
-  LOOP
-    SELECT draft_item_id INTO v_draft_item_id 
-    FROM public.authoring_items 
-    WHERE item_code = v_item.item_code;
+  -- 기존 테이블이 있으면 item_id 컬럼 추가
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'assessment_items' AND column_name = 'item_id'
+  ) THEN
+    -- item_id 컬럼 추가
+    ALTER TABLE public.assessment_items 
+    ADD COLUMN IF NOT EXISTS item_id BIGINT REFERENCES public.item_bank(item_id) ON DELETE CASCADE;
     
-    IF v_draft_item_id IS NULL THEN
-      INSERT INTO public.authoring_items (
-        project_id, item_code, primary_stimulus_id, item_type, stem, max_score, status, grade_band
-      ) VALUES (
-        v_project_id, v_item.item_code, v_item.stimulus_id, v_item.item_type,
-        v_item.stem, v_item.max_score, 'approved', v_item.grade_band
-      );
-      v_count := v_count + 1;
-    END IF;
-  END LOOP;
+    RAISE NOTICE 'assessment_items 테이블에 item_id 컬럼 추가됨';
+  END IF;
+END $$;
 
-  RAISE NOTICE 'STEP 3 완료: % 개 문항 복제됨', v_count;
-END $OUTER$;
+DO $$
+BEGIN
+  RAISE NOTICE 'STEP 3: assessment_items 스키마 확인 완료';
+END $$;
 
 -- =========================================================
--- STEP 4: 진단 평가에 문항 연결
+-- STEP 4: 진단 평가에 문항 연결 (item_bank 직접 참조)
 -- =========================================================
 
 -- 초등 저학년
 DO $$
 DECLARE
   v_assessment_id INTEGER;
-  v_draft_item RECORD;
+  v_item RECORD;
   v_seq INTEGER := 1;
 BEGIN
   SELECT assessment_id INTO v_assessment_id 
@@ -354,14 +340,14 @@ BEGIN
   IF v_assessment_id IS NOT NULL THEN
     DELETE FROM public.assessment_items WHERE assessment_id = v_assessment_id;
     
-    FOR v_draft_item IN 
-      SELECT ai.draft_item_id, ai.item_code, ai.max_score
-      FROM public.authoring_items ai
-      WHERE ai.item_code LIKE 'ELEMLOW_%'
-      ORDER BY ai.item_code
+    FOR v_item IN 
+      SELECT ib.item_id, ib.item_code, ib.max_score
+      FROM public.item_bank ib
+      WHERE ib.item_code LIKE 'ELEMLOW_%' AND ib.is_active = true
+      ORDER BY ib.item_code
     LOOP
-      INSERT INTO public.assessment_items (assessment_id, draft_item_id, sequence_number, points)
-      VALUES (v_assessment_id, v_draft_item.draft_item_id, v_seq, v_draft_item.max_score);
+      INSERT INTO public.assessment_items (assessment_id, item_id, sequence_number, points)
+      VALUES (v_assessment_id, v_item.item_id, v_seq, v_item.max_score);
       v_seq := v_seq + 1;
     END LOOP;
     
@@ -373,7 +359,7 @@ END $$;
 DO $$
 DECLARE
   v_assessment_id INTEGER;
-  v_draft_item RECORD;
+  v_item RECORD;
   v_seq INTEGER := 1;
 BEGIN
   SELECT assessment_id INTO v_assessment_id 
@@ -383,14 +369,14 @@ BEGIN
   IF v_assessment_id IS NOT NULL THEN
     DELETE FROM public.assessment_items WHERE assessment_id = v_assessment_id;
     
-    FOR v_draft_item IN 
-      SELECT ai.draft_item_id, ai.item_code, ai.max_score
-      FROM public.authoring_items ai
-      WHERE ai.item_code LIKE 'ELEMHIGH_%'
-      ORDER BY ai.item_code
+    FOR v_item IN 
+      SELECT ib.item_id, ib.item_code, ib.max_score
+      FROM public.item_bank ib
+      WHERE ib.item_code LIKE 'ELEMHIGH_%' AND ib.is_active = true
+      ORDER BY ib.item_code
     LOOP
-      INSERT INTO public.assessment_items (assessment_id, draft_item_id, sequence_number, points)
-      VALUES (v_assessment_id, v_draft_item.draft_item_id, v_seq, v_draft_item.max_score);
+      INSERT INTO public.assessment_items (assessment_id, item_id, sequence_number, points)
+      VALUES (v_assessment_id, v_item.item_id, v_seq, v_item.max_score);
       v_seq := v_seq + 1;
     END LOOP;
     
@@ -402,7 +388,7 @@ END $$;
 DO $$
 DECLARE
   v_assessment_id INTEGER;
-  v_draft_item RECORD;
+  v_item RECORD;
   v_seq INTEGER := 1;
 BEGIN
   SELECT assessment_id INTO v_assessment_id 
@@ -412,14 +398,14 @@ BEGIN
   IF v_assessment_id IS NOT NULL THEN
     DELETE FROM public.assessment_items WHERE assessment_id = v_assessment_id;
     
-    FOR v_draft_item IN 
-      SELECT ai.draft_item_id, ai.item_code, ai.max_score
-      FROM public.authoring_items ai
-      WHERE ai.item_code LIKE 'MIDLOW_%'
-      ORDER BY ai.item_code
+    FOR v_item IN 
+      SELECT ib.item_id, ib.item_code, ib.max_score
+      FROM public.item_bank ib
+      WHERE ib.item_code LIKE 'MIDLOW_%' AND ib.is_active = true
+      ORDER BY ib.item_code
     LOOP
-      INSERT INTO public.assessment_items (assessment_id, draft_item_id, sequence_number, points)
-      VALUES (v_assessment_id, v_draft_item.draft_item_id, v_seq, v_draft_item.max_score);
+      INSERT INTO public.assessment_items (assessment_id, item_id, sequence_number, points)
+      VALUES (v_assessment_id, v_item.item_id, v_seq, v_item.max_score);
       v_seq := v_seq + 1;
     END LOOP;
     
@@ -431,7 +417,7 @@ END $$;
 DO $$
 DECLARE
   v_assessment_id INTEGER;
-  v_draft_item RECORD;
+  v_item RECORD;
   v_seq INTEGER := 1;
 BEGIN
   SELECT assessment_id INTO v_assessment_id 
@@ -441,14 +427,14 @@ BEGIN
   IF v_assessment_id IS NOT NULL THEN
     DELETE FROM public.assessment_items WHERE assessment_id = v_assessment_id;
     
-    FOR v_draft_item IN 
-      SELECT ai.draft_item_id, ai.item_code, ai.max_score
-      FROM public.authoring_items ai
-      WHERE ai.item_code LIKE 'MIDHIGH_%'
-      ORDER BY ai.item_code
+    FOR v_item IN 
+      SELECT ib.item_id, ib.item_code, ib.max_score
+      FROM public.item_bank ib
+      WHERE ib.item_code LIKE 'MIDHIGH_%' AND ib.is_active = true
+      ORDER BY ib.item_code
     LOOP
-      INSERT INTO public.assessment_items (assessment_id, draft_item_id, sequence_number, points)
-      VALUES (v_assessment_id, v_draft_item.draft_item_id, v_seq, v_draft_item.max_score);
+      INSERT INTO public.assessment_items (assessment_id, item_id, sequence_number, points)
+      VALUES (v_assessment_id, v_item.item_id, v_seq, v_item.max_score);
       v_seq := v_seq + 1;
     END LOOP;
     
@@ -475,21 +461,21 @@ SELECT
   ai.sequence_number,
   ai.points,
   
-  ait.draft_item_id,
-  ait.item_code,
-  ait.item_type,
-  ait.stem AS question_text,
-  ait.max_score,
+  ib.item_id,
+  ib.item_code,
+  ib.item_type,
+  ib.stem AS question_text,
+  ib.max_score,
   
   s.title AS stimulus_title,
   s.content_text AS stimulus_content,
   
-  CASE ait.item_type
+  CASE ib.item_type
     WHEN 'mcq_single' THEN '객관식 (단일)'
     WHEN 'mcq_multi' THEN '객관식 (복수)'
     WHEN 'short_text' THEN '단답형'
     WHEN 'essay' THEN '서술형'
-    ELSE ait.item_type
+    ELSE ib.item_type
   END AS item_type_label,
   
   CASE da.grade_band
@@ -502,8 +488,8 @@ SELECT
 
 FROM public.diagnostic_assessments da
 JOIN public.assessment_items ai ON ai.assessment_id = da.assessment_id
-JOIN public.authoring_items ait ON ait.draft_item_id = ai.draft_item_id
-LEFT JOIN public.stimuli s ON s.stimulus_id = ait.primary_stimulus_id
+JOIN public.item_bank ib ON ib.item_id = ai.item_id
+LEFT JOIN public.stimuli s ON s.stimulus_id = ib.stimulus_id
 ORDER BY da.grade_band, ai.sequence_number;
 
 COMMENT ON VIEW public.v_diagnostic_assessment_items IS '진단 평가와 연결된 문항 상세 뷰';
@@ -528,14 +514,14 @@ SELECT
   da.created_at,
   
   COUNT(ai.assessment_item_id) AS total_items,
-  COUNT(ai.assessment_item_id) FILTER (WHERE ait.item_type = 'mcq_single') AS mcq_single_count,
-  COUNT(ai.assessment_item_id) FILTER (WHERE ait.item_type = 'mcq_multi') AS mcq_multi_count,
-  COUNT(ai.assessment_item_id) FILTER (WHERE ait.item_type = 'essay') AS essay_count,
+  COUNT(ai.assessment_item_id) FILTER (WHERE ib.item_type = 'mcq_single') AS mcq_single_count,
+  COUNT(ai.assessment_item_id) FILTER (WHERE ib.item_type = 'mcq_multi') AS mcq_multi_count,
+  COUNT(ai.assessment_item_id) FILTER (WHERE ib.item_type = 'essay') AS essay_count,
   COALESCE(SUM(ai.points), 0) AS total_points
 
 FROM public.diagnostic_assessments da
 LEFT JOIN public.assessment_items ai ON ai.assessment_id = da.assessment_id
-LEFT JOIN public.authoring_items ait ON ait.draft_item_id = ai.draft_item_id
+LEFT JOIN public.item_bank ib ON ib.item_id = ai.item_id
 GROUP BY da.assessment_id, da.title, da.grade_band, da.status, da.time_limit_minutes, da.created_at
 ORDER BY 
   CASE da.grade_band
