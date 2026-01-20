@@ -57,6 +57,7 @@ import {
   generateParentReport,
   type AIEvaluationResult,
 } from "../services/aiFeedbackService";
+import { useSupabase } from "../services/supabaseClient";
 
 interface ChildInfo {
   user_id: number;
@@ -84,6 +85,7 @@ interface EvaluationData {
 const ParentDashboardNew = () => {
   const user = useMemo(() => getCurrentUser(), []);
   const userId = user?.userId ?? null;
+  const supabase = useSupabase();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,23 +99,6 @@ const ParentDashboardNew = () => {
     homeSupport: string[];
   } | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
-
-  const demoChildren: ChildInfo[] = [
-    {
-      user_id: 1,
-      name: "김민준",
-      grade: 2,
-      school_name: "신명중학교",
-      student_grade_level: "중저",
-    },
-    {
-      user_id: 2,
-      name: "이서연",
-      grade: 3,
-      school_name: "신명중학교",
-      student_grade_level: "중저",
-    },
-  ];
 
   const demoEvaluations: Record<number, EvaluationData[]> = {
     1: [
@@ -151,12 +136,60 @@ const ParentDashboardNew = () => {
   };
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    setChildren(demoChildren);
-    setSelectedChild(demoChildren[0] ?? null);
-    setLoading(false);
-  }, [userId]);
+    const loadChildren = async () => {
+      if (!supabase || !userId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const { data: relationsData, error: relationsError } = await supabase
+          .from("student_parent_relations")
+          .select(
+            `
+            student_id,
+            student:users!student_parent_relations_student_id_fkey(
+              user_id,
+              name,
+              grade,
+              school_name,
+              student_grade_level
+            )
+          `,
+          )
+          .eq("parent_id", userId);
+
+        if (relationsError) {
+          setError(relationsError.message);
+          setChildren([]);
+          setSelectedChild(null);
+          return;
+        }
+
+        const childList = (relationsData || [])
+          .map((r: { student: ChildInfo[] | ChildInfo }) =>
+            Array.isArray(r.student) ? r.student[0] : r.student,
+          )
+          .filter(Boolean) as ChildInfo[];
+
+        setChildren(childList);
+        setSelectedChild(childList[0] ?? null);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "자녀 정보를 불러오는데 실패했습니다.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChildren();
+  }, [supabase, userId]);
 
   const selectedChildId = selectedChild?.user_id ?? null;
   useEffect(() => {
