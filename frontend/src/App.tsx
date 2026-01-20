@@ -175,7 +175,10 @@ function App() {
             }
           >
             <Route path="dashboard" element={<ParentDashboardNew />} />
-            <Route path="dashboard-old" element={<ParentDashboard />} />
+            <Route
+              path="dashboard-old"
+              element={<Navigate to="/parent/dashboard" replace />}
+            />
             <Route path="children" element={<ParentChildren />} />
             <Route
               path="report-sample"
