@@ -48,7 +48,16 @@ const SchoolAdminClasses = () => {
           .select("class_id, class_name, grade, teacher:users!classes_teacher_id_fkey(name)")
           .eq("school_id", user.schoolId);
         if (error) setError(error.message);
-        else setClasses(data || []);
+        else setClasses(
+          (data || []).map((item: any) => ({
+            class_id: item.class_id,
+            class_name: item.class_name,
+            grade: item.grade,
+            teacher: Array.isArray(item.teacher) && item.teacher.length > 0
+              ? { name: item.teacher[0].name }
+              : null,
+          }))
+        );
       } catch {
         setError("반 정보를 불러오는데 실패했습니다.");
       } finally {

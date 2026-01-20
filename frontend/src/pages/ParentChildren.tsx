@@ -72,11 +72,6 @@ interface EvaluationData {
   evaluated_at: string;
 }
 
-interface RelationData {
-  student_id: number;
-  student: ChildInfo[] | ChildInfo;
-}
-
 interface SessionData {
   session_id: number;
   grade_band: string;
@@ -143,64 +138,70 @@ const ParentChildren = () => {
     },
   ];
 
-  const demoSessions: Record<number, SessionData[]> = {
-    1: [
-      {
-        session_id: 101,
-        grade_band: "중저",
-        status: "completed",
-        created_at: "2025-01-10T09:00:00Z",
-        stimulus: { title: "동물농장" },
-      },
-      {
-        session_id: 102,
-        grade_band: "중저",
-        status: "in_progress",
-        created_at: "2025-01-15T09:00:00Z",
-        stimulus: { title: "어린왕자" },
-      },
-    ],
-    2: [
-      {
-        session_id: 201,
-        grade_band: "중저",
-        status: "completed",
-        created_at: "2025-01-12T09:00:00Z",
-        stimulus: { title: "사피엔스" },
-      },
-    ],
-  };
+  const demoSessions: Record<number, SessionData[]> = useMemo(
+    () => ({
+      1: [
+        {
+          session_id: 101,
+          grade_band: "중저",
+          status: "completed",
+          created_at: "2025-01-10T09:00:00Z",
+          stimulus: { title: "동물농장" },
+        },
+        {
+          session_id: 102,
+          grade_band: "중저",
+          status: "in_progress",
+          created_at: "2025-01-15T09:00:00Z",
+          stimulus: { title: "어린왕자" },
+        },
+      ],
+      2: [
+        {
+          session_id: 201,
+          grade_band: "중저",
+          status: "completed",
+          created_at: "2025-01-12T09:00:00Z",
+          stimulus: { title: "사피엔스" },
+        },
+      ],
+    }),
+    [],
+  );
 
-  const demoEvaluations: Record<number, EvaluationData[]> = {
-    1: [
-      {
-        evaluation_id: 9001,
-        session_id: 101,
-        comprehension_score: 18,
-        inference_score: 17,
-        critical_score: 16,
-        expression_score: 19,
-        total_score: 70,
-        grade_level: "B",
-        percentile: 62,
-        evaluated_at: "2025-01-11T10:00:00Z",
-      },
-    ],
-    2: [
-      {
-        evaluation_id: 9101,
-        session_id: 201,
-        comprehension_score: 20,
-        inference_score: 19,
-        critical_score: 18,
-        expression_score: 20,
-        total_score: 77,
-        grade_level: "B",
-        percentile: 70,
-        evaluated_at: "2025-01-13T10:00:00Z",
-      },
-    ],
-  };
+  const demoEvaluations: Record<number, EvaluationData[]> = useMemo(
+    () => ({
+      1: [
+        {
+          evaluation_id: 9001,
+          session_id: 101,
+          comprehension_score: 18,
+          inference_score: 17,
+          critical_score: 16,
+          expression_score: 19,
+          total_score: 70,
+          grade_level: "B",
+          percentile: 62,
+          evaluated_at: "2025-01-11T10:00:00Z",
+        },
+      ],
+      2: [
+        {
+          evaluation_id: 9101,
+          session_id: 201,
+          comprehension_score: 20,
+          inference_score: 19,
+          critical_score: 18,
+          expression_score: 20,
+          total_score: 77,
+          grade_level: "B",
+          percentile: 70,
+          evaluated_at: "2025-01-13T10:00:00Z",
+        },
+      ],
+    }),
+    [],
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -217,7 +218,7 @@ const ParentChildren = () => {
     setSessions(demoSessions[selectedChildId] || []);
     setEvaluations(demoEvaluations[selectedChildId] || []);
     setChildDataLoading(false);
-  }, [selectedChildId]);
+  }, [selectedChildId, demoSessions, demoEvaluations]);
 
   // 통계 계산
   const stats = {
