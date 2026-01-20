@@ -183,11 +183,7 @@ function App() {
             <Route path="info" element={<ReadingProInfo />} />
             <Route
               path="recommended-books"
-              element={
-                require("./pages/ParentRecommendedBooks").default
-                  ? require("./pages/ParentRecommendedBooks").default
-                  : require("./pages/ParentRecommendedBooks")
-              }
+              element={<ParentRecommendedBooks />}
             />
           </Route>
 

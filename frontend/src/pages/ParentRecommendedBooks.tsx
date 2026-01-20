@@ -10,7 +10,6 @@ import {
   Button,
   Chip,
 } from "@mui/material";
-import { useSupabase } from "../services/supabaseClient";
 
 // 추천 도서 샘플 DB (실제 구현 시 Supabase에서 불러오기)
 const BOOKS_DB = [
@@ -82,7 +81,7 @@ const ParentRecommendedBooks: React.FC = () => {
       const bMatch = b.tags.some((tag) =>
         SAMPLE_DIAGNOSIS.weaknesses.includes(tag),
       );
-      return bMatch - aMatch;
+      return Number(bMatch) - Number(aMatch);
     });
 
     setFilteredBooks(books);
